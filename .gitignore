@@ -36,3 +36,9 @@ Thumbs.db
 # Node (frontend - later)
 node_modules/
 .next/
+
+# Audio Cache
+.audio_cache/
+*.wav
+*.mp3
+

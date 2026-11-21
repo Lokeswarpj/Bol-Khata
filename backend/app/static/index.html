@@ -27,27 +27,50 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
 
-    <!-- Top Navigation & Owner Trust Header -->
+    <!-- Top Navigation & Multi-Store Header -->
     <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
             <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
                     <i class="fa-solid fa-microphone-lines text-xl text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400">
-                        BolKhata <span class="text-[10px] uppercase px-2 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-full font-mono ml-2">Team Drona · PS2</span>
+                    <h1 class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400 flex items-center">
+                        BolKhata <span class="text-[9px] uppercase px-2 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-full font-mono ml-2 hidden sm:inline">Team Drona · PS2</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Autonomous Hands-Free Voice Khata for Kirana Stores</p>
+                    <!-- Store Profile Tag & Switcher Trigger -->
+                    <div class="flex items-center text-xs space-x-1.5 text-slate-300">
+                        <i class="fa-solid fa-store text-cyan-400 text-[11px]"></i>
+                        <span id="headerStoreName" class="font-semibold text-slate-100">Sri Balaji Kirana</span>
+                        <span class="text-slate-500">·</span>
+                        <span id="headerOwnerName" class="text-cyan-400 font-medium">Niranjan</span>
+                        <button onclick="openMerchantModal()" class="text-[10px] text-cyan-400 hover:text-cyan-200 underline ml-1 cursor-pointer font-semibold" title="Switch Store / Merchant Login">
+                            (Switch Store / Login)
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Auto-Language & Hands-Free Status Badges -->
-            <div class="flex items-center space-x-3">
-                <div class="hidden md:flex items-center space-x-2 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-xl text-xs text-emerald-300 font-medium shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1"></span>
-                    <i class="fa-solid fa-shield-halved mr-1 text-emerald-400"></i> Safe System Verified (AES-256)
+            <!-- Gnani Status, Standby & Actions -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <!-- Gnani Neural Voice Indicator -->
+                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-violet-950/80 border border-violet-700/60 text-violet-300 text-xs font-mono shadow-sm" title="Gnani.ai Timbre Neural TTS Active with Token-Saver Disk Cache">
+                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
+                    <i class="fa-solid fa-wand-magic-sparkles text-violet-400 text-xs"></i>
+                    <span class="hidden md:inline font-semibold">Gnani Voice</span>
+                    <span class="text-[9px] px-1 bg-violet-900 rounded text-violet-200">timbre-v2.5</span>
                 </div>
+
+                <!-- Wake-Word Standby State Indicator / Toggle -->
+                <button onclick="toggleStandbyMode()" id="standbyToggleBtn" class="px-2.5 py-1 rounded-xl text-xs font-medium border flex items-center bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500 transition" title="Say 'Stop' to sleep, 'BolKhata' to wake up">
+                    <i id="standbyIcon" class="fa-solid fa-shield-halved text-cyan-400 mr-1.5"></i>
+                    <span id="standbyText">Wake-Word: Active</span>
+                </button>
+
+                <!-- PWA Switcher Button -->
+                <a href="/app" class="hidden lg:flex items-center space-x-1 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-200 transition">
+                    <i class="fa-solid fa-mobile-screen-button text-cyan-400 mr-1"></i> PWA App
+                </a>
 
                 <!-- Hands-Free Toggle Switch -->
                 <button onclick="toggleHandsFree()" id="handsFreeBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/30">
@@ -65,16 +88,118 @@
     </div>
 
     <!-- Owner Trust & Welcome Banner -->
-    <div id="welcomeBanner" class="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 border-b border-cyan-900/40 px-4 py-2.5 transition">
+    <div id="welcomeBanner" class="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 border-b border-cyan-900/40 px-4 py-2 transition">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
             <div class="flex items-center space-x-2 text-cyan-200">
                 <i class="fa-solid fa-shield-halved text-cyan-400"></i>
-                <span class="font-semibold">Safe & Trusted AI Ledger: 100% Encrypted & DPDP Compliant</span>
-                <span class="hidden lg:inline text-slate-400 text-[11px]">| Hands-Free Auto-Listening activates once intro completes</span>
+                <span class="font-semibold" id="ownerBadgeText">Safe & Trusted AI Ledger: 100% Encrypted & DPDP Compliant</span>
+                <span class="hidden lg:inline text-slate-400 text-[11px]">| Hands-Free Auto-Listening active across counter</span>
             </div>
-            <button onclick="playWelcomeTrustMessage()" class="text-cyan-400 hover:text-cyan-200 font-medium underline flex items-center text-[11px]">
-                <i class="fa-solid fa-volume-high mr-1"></i> Re-play Welcome Trust Audio
-            </button>
+            <div class="flex items-center space-x-3">
+                <button onclick="openMerchantModal()" class="text-cyan-400 hover:text-cyan-200 font-medium underline flex items-center text-[11px]">
+                    <i class="fa-solid fa-users-gear mr-1"></i> Switch Merchant Account
+                </button>
+                <span class="text-slate-600">|</span>
+                <button onclick="playWelcomeTrustMessage()" class="text-cyan-400 hover:text-cyan-200 font-medium underline flex items-center text-[11px]">
+                    <i class="fa-solid fa-volume-high mr-1"></i> Re-play Welcome Audio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Merchant Account Manager Modal (Multi-Store Switcher, Sign Up & Login) -->
+    <div id="merchantModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-600/30 border border-cyan-500/60 flex items-center justify-center text-cyan-400">
+                        <i class="fa-solid fa-store text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-100">Store Owner Accounts</h3>
+                        <p class="text-[11px] text-slate-400">Multi-Store Database & Isolated Ledgers</p>
+                    </div>
+                </div>
+                <button onclick="closeMerchantModal()" class="text-slate-400 hover:text-white p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <!-- Modal Tabs: 1-Click Demo Switcher, Sign Up, Login -->
+            <div class="flex border-b border-slate-800 gap-2 text-xs">
+                <button onclick="setModalTab('switch')" id="tabBtn-switch" class="py-2 px-3 font-semibold border-b-2 border-cyan-400 text-cyan-300">
+                    <i class="fa-solid fa-arrows-split-up-and-left mr-1"></i> Demo Stores
+                </button>
+                <button onclick="setModalTab('signup')" id="tabBtn-signup" class="py-2 px-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-user-plus mr-1"></i> New Sign Up
+                </button>
+                <button onclick="setModalTab('login')" id="tabBtn-login" class="py-2 px-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Merchant Login
+                </button>
+            </div>
+
+            <!-- Tab 1: 1-Click Demo Merchants Switcher -->
+            <div id="modalTab-switch" class="space-y-3">
+                <p class="text-xs text-slate-300">
+                    Select a pre-configured Kirana merchant to test isolated ledgers, distinct customer profiles, and custom store accounting:
+                </p>
+                <div id="demoOwnersList" class="space-y-2 max-h-56 overflow-y-auto">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Tab 2: New Merchant Sign Up -->
+            <form id="modalTab-signup" onsubmit="submitMerchantSignup(event)" class="hidden space-y-3">
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Kirana Store Name *</label>
+                    <input id="signupStoreName" type="text" placeholder="e.g. Sri Balaji Kirana Store" required class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Owner / Merchant Name *</label>
+                    <input id="signupOwnerName" type="text" placeholder="e.g. Niranjan Patel" required class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Phone Number *</label>
+                        <input id="signupPhone" type="tel" placeholder="e.g. 9876543210" required class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">4-Digit PIN</label>
+                        <input id="signupPin" type="password" maxlength="4" placeholder="1234" value="1234" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Language Preference</label>
+                    <select id="signupLanguage" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                        <option value="en-IN">English (en-IN)</option>
+                        <option value="hi-IN">Hindi (hi-IN)</option>
+                        <option value="kn-IN">Kannada (kn-IN)</option>
+                        <option value="te-IN">Telugu (te-IN)</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeMerchantModal()" class="px-4 py-2 rounded-xl text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-600/30">Sign Up & Activate</button>
+                </div>
+            </form>
+
+            <!-- Tab 3: Merchant Login -->
+            <form id="modalTab-login" onsubmit="submitMerchantLogin(event)" class="hidden space-y-3">
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Merchant Phone Number *</label>
+                    <input id="loginPhone" type="tel" placeholder="e.g. 9876543210" required class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">4-Digit PIN</label>
+                    <input id="loginPin" type="password" maxlength="4" placeholder="1234" value="1234" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="closeMerchantModal()" class="px-4 py-2 rounded-xl text-xs bg-slate-800 text-slate-300 hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-600/30">Log In Store</button>
+                </div>
+            </form>
+
+            <div class="text-[11px] text-slate-400 text-center border-t border-slate-800 pt-3">
+                🎙️ <span class="font-semibold text-cyan-300">Voice Registration:</span> Just say <span class="text-white italic">"Mera naam Niranjan hai, dukaan Sri Balaji Kirana"</span>
+            </div>
         </div>
     </div>
 
@@ -84,12 +209,12 @@
         <!-- Left Column: Hands-Free Voice Counter (5 cols) -->
         <div class="lg:col-span-5 space-y-6">
 
-            <!-- Mic Controller Card with VAD & Auto-Listening -->
+            <!-- Mic Controller Card with VAD, Standby & Wake-Word -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 shadow-2xl relative overflow-hidden backdrop-blur">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
                         <span id="micPingDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-                        <h2 class="text-sm font-semibold text-slate-200">Continuous Hands-Free Counter</h2>
+                        <h2 class="text-sm font-semibold text-slate-200">Hands-Free Counter AI</h2>
                     </div>
                     <span id="detectedLangBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">
                         🌐 English (en-IN)
@@ -137,6 +262,17 @@
                     </div>
                 </div>
 
+                <!-- Standby / Wake-Word Helper Banner -->
+                <div id="standbyBanner" class="p-2.5 bg-slate-950/90 border border-slate-800 rounded-xl mb-3 text-center text-xs text-slate-300 flex items-center justify-between">
+                    <span class="flex items-center text-[11px]">
+                        <i class="fa-solid fa-ear-listen text-cyan-400 mr-1.5"></i>
+                        <span>Wake-Word: Say <strong class="text-cyan-300">"BolKhata"</strong> to speak, <strong class="text-amber-300">"Stop"</strong> to sleep</span>
+                    </span>
+                    <button onclick="toggleStandbyMode()" class="text-[10px] text-cyan-400 hover:underline">
+                        Toggle Sleep
+                    </button>
+                </div>
+
                 <!-- Live Spoken Correction Strike-Through Alert Banner -->
                 <div id="strikeThroughAlert" class="hidden p-3.5 bg-slate-800/90 border border-cyan-500/50 rounded-xl mb-3 strike-flash">
                     <div class="flex items-center justify-between">
@@ -164,151 +300,104 @@
 
                 <!-- Manual Text Input Fallback -->
                 <form onsubmit="handleTextSubmit(event)" class="flex gap-2 pt-2 border-t border-slate-800/80">
-                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Namaste bhaiya kaise ho..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Reset today's payment / Stop..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
                     <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-medium transition shadow-md shadow-cyan-600/30">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </form>
             </div>
 
-            <!-- Spoken Response Feed -->
+            <!-- Spoken Response Feed with Gnani Audio Indicator -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i class="fa-solid fa-volume-high text-cyan-400 mr-2"></i> BolKhata Spoken Voice Response
+                        <i class="fa-solid fa-volume-high text-cyan-400 mr-2"></i> BolKhata Spoken Response
                     </h3>
-                    <button onclick="replayAudio()" id="replayBtn" class="text-cyan-400 hover:text-cyan-300 text-xs hidden flex items-center">
-                        <i class="fa-solid fa-rotate-right mr-1"></i> Replay
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <span id="gnaniSpokenBadge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-violet-950 text-violet-300 border border-violet-800 font-mono">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-violet-400"></i> Gnani Neural Voice
+                        </span>
+                        <button onclick="replayAudio()" id="replayBtn" class="text-cyan-400 hover:text-cyan-300 text-xs hidden flex items-center cursor-pointer">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Replay
+                        </button>
+                    </div>
                 </div>
                 <div id="aiResponseBox" class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-sm text-slate-200 min-h-[70px] flex items-center">
-                    <span class="text-slate-400 italic">"Namaste! BolKhata live hai. Koi bhi hisaab boliye..."</span>
+                    <span class="text-slate-400 italic">"Namaste! BolKhata live hai. Boliye kya hisaab likhna hai..."</span>
                 </div>
             </div>
 
-            <!-- Realistic Kirana Store Test Scenarios -->
-            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-4">
-                
-                <!-- Normal Person Chitchat Scenarios -->
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center mb-2">
-                        <i class="fa-solid fa-comments text-cyan-400 mr-1.5"></i> Conversational Chitchat (Normal Person Talk)
-                    </h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                        <button onclick="sendPrompt('Hello, how are you?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-sky-400">English Greeting</div>
-                            "Hello, how are you?"
-                        </button>
-                        <button onclick="sendPrompt('Can you help me?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-cyan-400">Help & Capabilities</div>
-                            "Can you help me?"
-                        </button>
-                        <button onclick="sendPrompt('Namaste bhaiya, kaise ho?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-cyan-400">Hindi Greeting</div>
-                            "Namaste bhaiya, kaise ho?"
-                        </button>
-                        <button onclick="sendPrompt('Tum kaun ho?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-cyan-400">Identity & Role</div>
-                            "Tum kaun ho?"
-                        </button>
-                        <button onclick="sendPrompt('Kya ye safe hai?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-emerald-400">Safety & DPDP Trust</div>
-                            "Kya ye safe hai?"
-                        </button>
-                        <button onclick="sendPrompt('Shukriya bhaiya')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-amber-400">Polite Gratitude</div>
-                            "Shukriya bhaiya"
-                        </button>
+            <!-- 1-Click Realistic Kirana Audio Scenarios Card -->
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-flask text-cyan-400"></i>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">1-Click Realistic Audio Scenarios</h3>
                     </div>
+                    <span class="text-[10px] text-cyan-400 font-mono">Judge-Proof Demos</span>
                 </div>
 
-                <!-- Financial Ledger Scenarios -->
-                <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center mb-2">
-                        <i class="fa-solid fa-flask text-amber-400 mr-1.5"></i> 1-Click Realistic Kirana Audio Scenarios
-                    </h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        <!-- English Query Ramesh Balance -->
-                        <button onclick="sendPrompt('How much does Ramesh owe?')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-sky-400 flex items-center">
-                                <i class="fa-solid fa-question mr-1"></i> English Balance Query
-                            </div>
-                            "How much does Ramesh owe?"
-                        </button>
-                        <!-- English Store Total -->
-                        <button onclick="sendPrompt('What is the total balance?')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-emerald-400 flex items-center">
-                                <i class="fa-solid fa-calculator mr-1"></i> Dukaan Store Summary
-                            </div>
-                            "What is the total balance?"
-                        </button>
-                        <!-- Debt Clearing Test -->
-                        <button onclick="sendPrompt('Ramesh - Kirana Lane cleared his debt')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-emerald-800/60 rounded-xl transition text-slate-200 hover:text-emerald-300">
-                            <div class="font-bold text-emerald-400 flex items-center">
-                                <i class="fa-solid fa-circle-check mr-1"></i> Full Debt Settlement
-                            </div>
-                            "Ramesh cleared his debt"
-                        </button>
-                        <!-- Disambiguation -->
-                        <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-amber-400 flex items-center">
-                                <i class="fa-solid fa-users mr-1"></i> Disambiguate Ramesh
-                            </div>
-                            "Ramesh ka 500 udhaar"
-                        </button>
-                        <!-- Clarify Nickname response -->
-                        <button onclick="sendPrompt('Kirana Lane')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-cyan-400 flex items-center">
-                                <i class="fa-solid fa-reply mr-1"></i> Voice Nickname Reply
-                            </div>
-                            "Kirana Lane" (resolves ambiguity)
-                        </button>
-                        <!-- Correction -->
-                        <button onclick="sendPrompt('nahi, 430')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-rose-400 flex items-center">
-                                <i class="fa-solid fa-bolt mr-1"></i> Spoken Correction
-                            </div>
-                            "nahi, 430" (live strike-through)
-                        </button>
-                        <!-- Kannada Test -->
-                        <button onclick="sendPrompt('ರಮೇಶ್ - Kirana Lane ಗೆ 340 ಸಾಲ')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-purple-400 flex items-center">
-                                <i class="fa-solid fa-language mr-1"></i> Auto-Detect Kannada
-                            </div>
-                            "ರಮೇಶ್ ಗೆ 340 ಸಾಲ"
-                        </button>
-                        <!-- Telugu Test -->
-                        <button onclick="sendPrompt('రమేష్ - Kirana Lane కి 340 అప్పు')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-teal-400 flex items-center">
-                                <i class="fa-solid fa-language mr-1"></i> Auto-Detect Telugu
-                            </div>
-                            "రమేష్ కి 340 అప్పు"
-                        </button>
-                        <!-- Compound Utterance -->
-                        <button onclick="sendPrompt('Suresh General Store ka 340 udhaar, kal 200 diya tha')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300 sm:col-span-2">
-                            <div class="font-bold text-cyan-400 flex items-center">
-                                <i class="fa-solid fa-layer-group mr-1"></i> Compound Anaphora Utterance
-                            </div>
-                            "Suresh ka 340 udhaar, kal 200 diya tha"
-                        </button>
-                    </div>
-                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="sendPrompt('Ramesh cleared his debt')" class="p-2 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800 rounded-xl text-left transition">
+                        <div class="font-bold text-emerald-400 flex items-center"><i class="fa-solid fa-check-circle mr-1"></i> Full Debt Settlement</div>
+                        <div class="text-[10px] text-slate-300 mt-0.5 italic">"Ramesh cleared his debt"</div>
+                    </button>
 
+                    <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800 rounded-xl text-left transition">
+                        <div class="font-bold text-purple-400 flex items-center"><i class="fa-solid fa-people-arrows mr-1"></i> Disambiguate Ramesh</div>
+                        <div class="text-[10px] text-slate-300 mt-0.5 italic">"Ramesh ka 500 udhaar"</div>
+                    </button>
+
+                    <button onclick="sendPrompt('Kirana Lane')" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-left transition">
+                        <div class="font-bold text-cyan-300 flex items-center"><i class="fa-solid fa-reply mr-1"></i> Nickname Reply</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5 italic">"Kirana Lane" (resolves ambiguity)</div>
+                    </button>
+
+                    <button onclick="sendPrompt('nahi, 430')" class="p-2 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800 rounded-xl text-left transition">
+                        <div class="font-bold text-rose-400 flex items-center"><i class="fa-solid fa-bolt mr-1"></i> Spoken Correction</div>
+                        <div class="text-[10px] text-slate-300 mt-0.5 italic">"nahi, 430" (live strike-through)</div>
+                    </button>
+
+                    <button onclick="sendPrompt('Reset today\'s payment')" class="p-2 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-800 rounded-xl text-left transition">
+                        <div class="font-bold text-amber-400 flex items-center"><i class="fa-solid fa-rotate mr-1"></i> Reset Today's Jama</div>
+                        <div class="text-[10px] text-slate-300 mt-0.5 italic">"Reset today's payment"</div>
+                    </button>
+
+                    <button onclick="sendPrompt('Stop')" class="p-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-left transition">
+                        <div class="font-bold text-amber-300 flex items-center"><i class="fa-solid fa-moon mr-1"></i> Spoken Standby</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5 italic">"Stop" / "Ruko" (enters sleep)</div>
+                    </button>
+
+                    <button onclick="sendPrompt('ರಮೇಶ್ ಗೆ 340 ಸಾಲ')" class="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition">
+                        <div class="font-bold text-teal-400 flex items-center">🟡 Kannada Voice</div>
+                        <div class="text-[10px] text-slate-300 mt-0.5">"ರಮೇಶ್ ಗೆ 340 ಸಾಲ"</div>
+                    </button>
+
+                    <button onclick="sendPrompt('రమేష్ కి 340 అప్పు')" class="p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition">
+                        <div class="font-bold text-indigo-400 flex items-center">🟣 Telugu Voice</div>
+                        <div class="text-[10px] text-slate-300 mt-0.5">"రమేష్ కి 340 అప్పు"</div>
+                    </button>
+                </div>
             </div>
 
         </div>
 
-        <!-- Right Column: Financial Cards, Customers & Live Table (7 cols) -->
+        <!-- Right Column: Financial Cards, Separate Ledgers (Udhaar vs Jama) (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
 
-            <!-- Today's Financial Metrics -->
+            <!-- Today's Financial Metrics Card with 1-Click Reset Jama -->
             <div class="grid grid-cols-3 gap-3 sm:gap-4">
                 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl">
                     <div class="text-[11px] text-rose-400 font-semibold uppercase tracking-wider">Today Udhaar (Credit)</div>
                     <div id="statTodayCredit" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">₹0</div>
                 </div>
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl">
-                    <div class="text-[11px] text-emerald-400 font-semibold uppercase tracking-wider">Today Jama (Payment)</div>
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl relative">
+                    <div class="flex items-center justify-between">
+                        <div class="text-[11px] text-emerald-400 font-semibold uppercase tracking-wider">Today Jama (Payment)</div>
+                        <button onclick="triggerResetPayments()" class="text-[10px] text-amber-400 hover:text-amber-200 underline" title="Reset Today's Payments to ₹0">
+                            (Reset)
+                        </button>
+                    </div>
                     <div id="statTodayPayment" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">₹0</div>
                 </div>
                 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl">
@@ -317,60 +406,135 @@
                 </div>
             </div>
 
-            <!-- Customer Accounts Table (Showing Nicknames for Disambiguation) -->
+            <!-- Ledger View Mode Tabs: Udhaar vs Jama vs Customers vs All -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
-                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                    <div>
-                        <h2 class="text-sm font-semibold text-slate-200 flex items-center">
-                            <i class="fa-solid fa-users text-cyan-400 mr-2"></i> Khata Customers & Nicknames
-                        </h2>
-                        <p class="text-[11px] text-slate-400">Notice the two pre-seeded Ramesh profiles with distinct nicknames</p>
+                <div class="p-3 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button onclick="switchLedgerTab('udhaar')" id="ledgerTab-udhaar" class="px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-rose-950/80 text-rose-300 border-rose-800 shadow-sm">
+                            🔴 Udhaar (Debt) Ledger
+                        </button>
+                        <button onclick="switchLedgerTab('jama')" id="ledgerTab-jama" class="px-3 py-1.5 rounded-xl text-xs font-medium transition border bg-slate-900 text-slate-300 border-slate-800 hover:border-emerald-600">
+                            🟢 Jama (Payments) Ledger
+                        </button>
+                        <button onclick="switchLedgerTab('customers')" id="ledgerTab-customers" class="px-3 py-1.5 rounded-xl text-xs font-medium transition border bg-slate-900 text-slate-300 border-slate-800 hover:border-cyan-600">
+                            👥 Customers & Nicknames
+                        </button>
+                        <button onclick="switchLedgerTab('all')" id="ledgerTab-all" class="px-3 py-1.5 rounded-xl text-xs font-medium transition border bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700">
+                            📑 All Records
+                        </button>
                     </div>
-                    <button onclick="loadCustomers()" class="text-xs text-cyan-400 hover:text-cyan-300">
+                    <button onclick="refreshAllData()" class="text-xs text-cyan-400 hover:text-cyan-300">
                         <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
                     </button>
                 </div>
-                <div class="overflow-x-auto max-h-56">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
-                            <tr>
-                                <th class="p-3">Customer (Name & Nickname)</th>
-                                <th class="p-3">Net Balance</th>
-                                <th class="p-3 text-center">DPDP Opt-In</th>
-                                <th class="p-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customersTableBody" class="divide-y divide-slate-800/60 text-slate-200">
-                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Loading customer ledgers...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <!-- Live Ledger Transactions Table -->
-            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
-                <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                    <h2 class="text-sm font-semibold text-slate-200 flex items-center">
-                        <i class="fa-solid fa-book text-cyan-400 mr-2"></i> Real-Time Ledger Transactions
-                    </h2>
-                    <span id="txnCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">0 entries</span>
+                <!-- Ledger Tab 1: 🔴 Udhaar / Debt Ledger -->
+                <div id="ledgerView-udhaar" class="p-4 space-y-3">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span class="flex items-center text-rose-300 font-semibold">
+                            <i class="fa-solid fa-file-invoice-dollar mr-1.5 text-rose-400"></i> Outstanding Credit & Debtor Ledgers
+                        </span>
+                        <span id="udhaarCountBadge" class="font-mono text-[11px] text-slate-400">0 credit records</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5">Debtor Name</th>
+                                    <th class="p-2.5">Credit Amount</th>
+                                    <th class="p-2.5">Date</th>
+                                    <th class="p-2.5">Spoken Grocery Transcript</th>
+                                    <th class="p-2.5 text-right">Quick Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="udhaarTableBody" class="divide-y divide-slate-800/60 text-slate-200">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-500">Loading credit entries...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="overflow-x-auto max-h-64">
-                    <table class="w-full text-left text-xs">
-                        <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
-                            <tr>
-                                <th class="p-3">Customer</th>
-                                <th class="p-3">Direction</th>
-                                <th class="p-3">Amount</th>
-                                <th class="p-3">Date</th>
-                                <th class="p-3">Note / Spoken Transcript</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsTableBody" class="divide-y divide-slate-800/60 text-slate-200">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-500">No transactions recorded yet.</td></tr>
-                        </tbody>
-                    </table>
+
+                <!-- Ledger Tab 2: 🟢 Jama / Payment Ledger -->
+                <div id="ledgerView-jama" class="p-4 space-y-3 hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span class="flex items-center text-emerald-300 font-semibold">
+                            <i class="fa-solid fa-receipt mr-1.5 text-emerald-400"></i> Payment Receipts & Daily Collections
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="triggerResetPayments()" class="px-2.5 py-0.5 rounded-lg bg-amber-950 text-amber-300 border border-amber-800 text-[10px] font-semibold hover:bg-amber-900 transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Reset Today's Payments
+                            </button>
+                            <span id="jamaCountBadge" class="font-mono text-[11px] text-slate-400">0 payments</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5">Customer Name</th>
+                                    <th class="p-2.5">Amount Paid</th>
+                                    <th class="p-2.5">Date</th>
+                                    <th class="p-2.5">Receipt Confirmation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jamaTableBody" class="divide-y divide-slate-800/60 text-slate-200">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-500">Loading payment entries...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
+                <!-- Ledger Tab 3: 👥 Customers & Nicknames -->
+                <div id="ledgerView-customers" class="p-4 space-y-3 hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span class="flex items-center text-cyan-300 font-semibold">
+                            <i class="fa-solid fa-users mr-1.5 text-cyan-400"></i> Store Customers with Nicknames for Disambiguation
+                        </span>
+                        <span id="custCountBadge" class="font-mono text-[11px] text-slate-400">0 customers</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5">Customer & Nickname</th>
+                                    <th class="p-2.5">Net Balance</th>
+                                    <th class="p-2.5 text-center">DPDP Opt-In</th>
+                                    <th class="p-2.5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody" class="divide-y divide-slate-800/60 text-slate-200">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-500">Loading customer ledgers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Ledger Tab 4: 📑 Consolidated Transactions -->
+                <div id="ledgerView-all" class="p-4 space-y-3 hidden">
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span class="flex items-center text-slate-200 font-semibold">
+                            <i class="fa-solid fa-book mr-1.5 text-cyan-400"></i> Consolidated Store Audit Trail
+                        </span>
+                        <span id="txnCountBadge" class="font-mono text-[11px] text-slate-400">0 entries</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="p-2.5">Customer</th>
+                                    <th class="p-2.5">Type</th>
+                                    <th class="p-2.5">Amount</th>
+                                    <th class="p-2.5">Date</th>
+                                    <th class="p-2.5">Transcript / Note</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsTableBody" class="divide-y divide-slate-800/60 text-slate-200">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-500">No transactions recorded yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Responsible AI & DPDP Act Compliance Card -->
@@ -393,17 +557,19 @@
 
     <!-- Client-Side Automation Script (Zero-Clicks Required) -->
     <script>
-        let currentLanguage = 'en-IN'; // Default: English / multilingual
+        let currentLanguage = 'en-IN';
         let handsFreeActive = false;
         let micLocked = true;
         let isIntroPlaying = true;
         let isProcessing = false;
         let isSpeaking = false;
+        let isStandby = false; // Standby / Sleep mode: ignores ambient voices unless "BolKhata" is called
         let recognition = null;
         let lastSpokenText = "";
         let audioContext = null;
         let analyser = null;
         let micStream = null;
+        let storeOwner = null;
 
         const WELCOME_TRUST_MESSAGES = {
             'en-IN': "Namaste! Welcome to BolKhata. You are experiencing a safe and trusted AI ledger system built specifically for your store. All your ledger data is 100% encrypted, secure, and DPDP compliant. I am your hands-free assistant — you can talk naturally across the counter without touching the screen.",
@@ -442,7 +608,6 @@
             };
             if (badge) badge.innerText = langLabels[langCode] || langCode;
 
-            // Re-configure speech recognition acoustic model if initialized
             if (recognition) {
                 const targetModel = langCode === 'auto' ? 'en-IN' : langCode;
                 recognition.lang = targetModel;
@@ -451,6 +616,57 @@
                     setTimeout(restartRecognition, 200);
                 }
             }
+        }
+
+        // Ledger View Tab Switcher: Udhaar vs Jama vs Customers vs All
+        function switchLedgerTab(tab) {
+            const tabs = ['udhaar', 'jama', 'customers', 'all'];
+            tabs.forEach(t => {
+                const view = document.getElementById(`ledgerView-${t}`);
+                const btn = document.getElementById(`ledgerTab-${t}`);
+                if (view && btn) {
+                    if (t === tab) {
+                        view.classList.remove('hidden');
+                        if (t === 'udhaar') {
+                            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-rose-950/80 text-rose-300 border-rose-800 shadow-sm";
+                        } else if (t === 'jama') {
+                            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-emerald-950/80 text-emerald-300 border-emerald-800 shadow-sm";
+                        } else if (t === 'customers') {
+                            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-cyan-950/80 text-cyan-300 border-cyan-800 shadow-sm";
+                        } else {
+                            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition border bg-slate-800 text-white border-slate-700 shadow-sm";
+                        }
+                    } else {
+                        view.classList.add('hidden');
+                        btn.className = "px-3 py-1.5 rounded-xl text-xs font-medium transition border bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700";
+                    }
+                }
+            });
+        }
+
+        // Standby Mode Toggle (Say 'Stop' to sleep, 'BolKhata' to wake up)
+        function toggleStandbyMode() {
+            if (isStandby) {
+                wakeUpAssistant();
+            } else {
+                putAssistantToSleep();
+            }
+        }
+
+        function putAssistantToSleep() {
+            isStandby = true;
+            updateMicUIState('standby', 'Standby 🌙 — Ambient chatter ignored. Say "BolKhata" to wake up');
+            document.getElementById('standbyText').innerText = "Standby (Sleeping)";
+            document.getElementById('standbyIcon').className = "fa-solid fa-moon text-amber-400 mr-1.5";
+            document.getElementById('standbyToggleBtn').className = "px-2.5 py-1 rounded-xl text-xs font-medium border flex items-center bg-amber-950/80 text-amber-300 border-amber-800 shadow-sm transition";
+        }
+
+        function wakeUpAssistant() {
+            isStandby = false;
+            updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
+            document.getElementById('standbyText').innerText = "Wake-Word: Active";
+            document.getElementById('standbyIcon').className = "fa-solid fa-shield-halved text-cyan-400 mr-1.5";
+            document.getElementById('standbyToggleBtn').className = "px-2.5 py-1 rounded-xl text-xs font-medium border flex items-center bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500 transition";
         }
 
         // UI State Manager
@@ -479,6 +695,17 @@
                 if (handsFreeBtn) {
                     handsFreeBtn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-amber-950/80 text-amber-300 border-amber-800";
                     handsFreeStatusText.innerText = "Mic Locked";
+                }
+            } else if (state === 'standby') {
+                if (micBtn) micBtn.className = "w-28 h-28 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-950 text-indigo-300 flex items-center justify-center shadow-2xl relative cursor-pointer border-2 border-indigo-500/40";
+                if (micIcon) micIcon.className = "fa-solid fa-moon text-4xl text-amber-300 animate-pulse";
+                if (micRing) micRing.className = "absolute inset-0 rounded-full border-2 border-indigo-500/30";
+                if (micPingDot) micPingDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-400";
+                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-bed mr-1.5 text-indigo-300";
+                if (listeningText) listeningText.innerText = customText || "Standby 🌙 — Ambient chatter ignored. Say 'BolKhata' to wake up";
+                if (speechBadge) {
+                    speechBadge.innerText = "🌙 Standby (Waiting for 'BolKhata')";
+                    speechBadge.className = "text-indigo-400 font-medium";
                 }
             } else if (state === 'active') {
                 if (micBtn) micBtn.className = "w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/40 relative cursor-pointer";
@@ -535,10 +762,22 @@
             document.getElementById('liveTranscriptDisplay').innerText = "(Microphone locked while welcome intro is playing...)";
 
             const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
-            const welcomeText = WELCOME_TRUST_MESSAGES[langKey] || WELCOME_TRUST_MESSAGES['en-IN'];
+            let welcomeText;
+            if (storeOwner && storeOwner.owner_name) {
+                if (langKey.startsWith('kn')) {
+                    welcomeText = `ನಮಸ್ಕಾರ ${storeOwner.owner_name} ಅವರೇ! ${storeOwner.store_name} ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಲೆಡ್ಜರ್ 100% ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದೆ. ನಾನು ನಿಮ್ಮ ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ ಸಹಾಯಕ — ಪರದೆ ಮುಟ್ಟದೆಯೇ ಸಹಜವಾಗಿ ಮಾತನಾಡಿ.`;
+                } else if (langKey.startsWith('te')) {
+                    welcomeText = `నమస్కారం ${storeOwner.owner_name} గారు! ${storeOwner.store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురక్షితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి.`;
+                } else if (langKey.startsWith('hi')) {
+                    welcomeText = `Namaste ${storeOwner.owner_name} ji! ${storeOwner.store_name} ke BolKhata mein aapka swagat hai. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — bina screen ko chhue aam bolchaal mein baat kijiye.`;
+                } else {
+                    welcomeText = `Namaste ${storeOwner.owner_name} ji! Welcome to ${storeOwner.store_name}'s BolKhata. You are experiencing a safe and trusted AI ledger system. All your records are 100% encrypted and DPDP compliant. I am listening hands-free across the counter.`;
+                }
+            } else {
+                welcomeText = WELCOME_TRUST_MESSAGES[langKey] || WELCOME_TRUST_MESSAGES['en-IN'];
+            }
 
             speakText(welcomeText, langKey, null, () => {
-                // Intro is completely finished! Unlock microphone
                 finishIntroAndUnlockMic();
             });
         }
@@ -552,7 +791,7 @@
             if (banner) banner.style.display = 'none';
 
             updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
-            document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "Namaste" or record any entry)';
+            document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "BolKhata" or record any entry)';
 
             initAudioVAD();
             initContinuousSpeechRecognition();
@@ -582,7 +821,11 @@
 
                     recognition.onstart = () => {
                         if (!micLocked && !isSpeaking) {
-                            updateMicUIState('active');
+                            if (isStandby) {
+                                updateMicUIState('standby');
+                            } else {
+                                updateMicUIState('active');
+                            }
                         }
                     };
 
@@ -607,6 +850,31 @@
                         }
 
                         if (finalTranscript && !isProcessing && !micLocked && !isSpeaking) {
+                            const trimmed = finalTranscript.trim();
+                            const lower = trimmed.toLowerCase();
+
+                            // ── STANDBY FILTER ──
+                            // If assistant is on standby / asleep:
+                            // Check if speech contains wake word ('bolkhata', 'bol khata',Indic wake words)
+                            const wakeMatch = lower.includes('bolkhata') || lower.includes('bol khata') || lower.includes('बोल खाता') || lower.includes('ಬೋಲ್ ಖಾತಾ') || lower.includes('బోల్ ఖాతా');
+
+                            if (isStandby) {
+                                if (!wakeMatch) {
+                                    // Ambient room talk: silently drop without responding or hallucinating!
+                                    document.getElementById('liveTranscriptDisplay').innerText = `(Ambient room talk ignored: "${trimmed}". Say "BolKhata" to wake up)`;
+                                    return;
+                                } else {
+                                    // Wake word spoken! Awaken assistant
+                                    wakeUpAssistant();
+                                }
+                            }
+
+                            // Check if user spoke stop command
+                            const isStopWord = lower === 'stop' || lower === 'ruko' || lower === 'bas' || lower === 'chup' || lower === 'sleep' || lower === 'standby' || lower.includes('stop listening');
+                            if (isStopWord) {
+                                putAssistantToSleep();
+                            }
+
                             document.getElementById('liveTranscriptDisplay').innerText = `"${finalTranscript}"`;
                             document.getElementById('voiceTextInput').value = finalTranscript;
                             sendVoiceCommand(finalTranscript);
@@ -638,7 +906,7 @@
                 try {
                     recognition.start();
                 } catch (e) {
-                    // Already started or busy
+                    // Already running
                 }
             }
         }
@@ -685,7 +953,7 @@
             if (micLocked) return;
             handsFreeActive = !handsFreeActive;
             if (handsFreeActive) {
-                updateMicUIState('active');
+                updateMicUIState(isStandby ? 'standby' : 'active');
                 restartRecognition();
             } else {
                 updateMicUIState('paused');
@@ -697,8 +965,11 @@
 
         function manualMicToggle() {
             if (micLocked) {
-                // If clicked during intro, replay or proceed
                 playWelcomeTrustMessage();
+                return;
+            }
+            if (isStandby) {
+                wakeUpAssistant();
                 return;
             }
             if (!handsFreeActive) {
@@ -719,7 +990,11 @@
             document.getElementById('aiResponseBox').innerHTML = `<span class="text-cyan-400 flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
 
             try {
-                const payload = { text: text };
+                const payload = {
+                    text: text,
+                    session_id: "default_counter",
+                    owner_id: storeOwner ? storeOwner.id : 1
+                };
                 if (currentLanguage && currentLanguage !== 'auto') {
                     payload.language = currentLanguage;
                 }
@@ -739,6 +1014,18 @@
                 // Check for live 15s strike-through correction event
                 if (data.correction_event) {
                     showStrikeThroughEffect(data.correction_event);
+                }
+
+                // Check if intent was stop_listening
+                if (data.intent && data.intent.intent === 'stop_listening') {
+                    putAssistantToSleep();
+                } else if (data.intent && data.intent.intent === 'wake_up') {
+                    wakeUpAssistant();
+                }
+
+                // Check if store owner registered via voice
+                if (data.intent && data.intent.intent === 'register_owner') {
+                    await loadOwnerProfile();
                 }
 
                 displayAIResponse(data.message, data.audio_base64, data.language);
@@ -776,15 +1063,23 @@
             `;
             document.getElementById('replayBtn').classList.remove('hidden');
 
+            const gBadge = document.getElementById('gnaniSpokenBadge');
+            if (gBadge) {
+                if (audioBase64) {
+                    gBadge.classList.remove('hidden');
+                } else {
+                    gBadge.classList.add('hidden');
+                }
+            }
+
             // Pause microphone while speaking back
             updateMicUIState('speaking');
 
             speakText(message, lang, audioBase64, () => {
-                // Resume listening automatically 400ms after speech finishes (clears room echo)
                 isProcessing = false;
                 if (handsFreeActive && !micLocked) {
                     setTimeout(() => {
-                        updateMicUIState('active');
+                        updateMicUIState(isStandby ? 'standby' : 'active');
                         restartRecognition();
                     }, 400);
                 }
@@ -861,9 +1156,24 @@
             input.value = '';
         }
 
+        // 1-Click Reset Today's Payments Action
+        async function triggerResetPayments() {
+            try {
+                const res = await fetch('/api/owner/reset-today-payments', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    displayAIResponse(data.message, data.audio_base64, currentLanguage);
+                    refreshAllData();
+                }
+            } catch (e) {
+                alert("Error resetting today's payments: " + e.message);
+            }
+        }
+
         async function loadSummary() {
             try {
-                const res = await fetch('/api/ledger/summary');
+                const ownerParam = storeOwner ? `?owner_id=${storeOwner.id}` : '';
+                const res = await fetch(`/api/ledger/summary${ownerParam}`);
                 const data = await res.json();
                 document.getElementById('statTodayCredit').innerText = `₹${Math.round(data.today_credit).toLocaleString('en-IN')}`;
                 document.getElementById('statTodayPayment').innerText = `₹${Math.round(data.today_payments).toLocaleString('en-IN')}`;
@@ -875,26 +1185,33 @@
 
         async function loadCustomers() {
             try {
-                const res = await fetch('/api/customers/');
+                const ownerParam = storeOwner ? `?owner_id=${storeOwner.id}` : '';
+                const res = await fetch(`/api/customers/${ownerParam}`);
                 const data = await res.json();
                 const tbody = document.getElementById('customersTableBody');
+                document.getElementById('custCountBadge').innerText = `${data.length} customers`;
                 if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No customers registered.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No customers registered for this store.</td></tr>`;
                     return;
                 }
                 tbody.innerHTML = data.map(c => `
                     <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-3 font-medium text-slate-100">
+                        <td class="p-2.5 font-medium text-slate-100">
                             <div>${c.name}</div>
                             ${c.nickname ? `<div class="text-[10px] text-cyan-400 font-mono">Nickname: "${c.nickname}"</div>` : ''}
                         </td>
-                        <td class="p-3 font-semibold ${c.balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">₹${Math.round(c.balance).toLocaleString('en-IN')}</td>
-                        <td class="p-3 text-center">
+                        <td class="p-2.5 font-semibold ${c.balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">₹${Math.round(c.balance).toLocaleString('en-IN')}</td>
+                        <td class="p-2.5 text-center">
                             <button onclick="toggleConsent(${c.id}, ${!c.opted_in_reminders})" class="px-2 py-0.5 rounded-full text-[10px] font-medium border ${c.opted_in_reminders ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-slate-800 text-slate-400 border-slate-700'}">
                                 ${c.opted_in_reminders ? 'Opted In ✓' : 'Opted Out ✕'}
                             </button>
                         </td>
-                        <td class="p-3 text-right space-x-2">
+                        <td class="p-2.5 text-right space-x-2">
+                            ${c.balance > 0 ? `
+                                <button onclick="sendPrompt('${c.name} cleared his debt')" class="text-emerald-400 hover:text-emerald-300 text-[11px] underline mr-2" title="Clear Debt">
+                                    Clear Debt
+                                </button>
+                            ` : ''}
                             <button onclick="sendReminder(${c.id})" class="text-cyan-400 hover:text-cyan-300" title="Send Polite Reminder">
                                 <i class="fa-solid fa-paper-plane"></i>
                             </button>
@@ -908,27 +1225,73 @@
 
         async function loadTransactions() {
             try {
-                const res = await fetch('/api/ledger/transactions?limit=20');
+                const ownerParam = storeOwner ? `&owner_id=${storeOwner.id}` : '';
+                const res = await fetch(`/api/ledger/transactions?limit=60${ownerParam}`);
                 const data = await res.json();
-                const tbody = document.getElementById('transactionsTableBody');
+                
+                const allTbody = document.getElementById('transactionsTableBody');
+                const udhaarTbody = document.getElementById('udhaarTableBody');
+                const jamaTbody = document.getElementById('jamaTableBody');
+                
                 document.getElementById('txnCountBadge').innerText = `${data.length} entries`;
+
+                const credits = data.filter(t => t.direction === 'credit');
+                const payments = data.filter(t => t.direction === 'payment');
+
+                document.getElementById('udhaarCountBadge').innerText = `${credits.length} credit entries`;
+                document.getElementById('jamaCountBadge').innerText = `${payments.length} payment entries`;
+
+                // All Transactions Table
                 if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No transactions recorded yet.</td></tr>`;
-                    return;
+                    allTbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No transactions recorded yet.</td></tr>`;
+                } else {
+                    allTbody.innerHTML = data.map(t => `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="p-2.5 font-medium">${t.customer_name}</td>
+                            <td class="p-2.5">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.direction === 'credit' ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                                    ${t.direction === 'credit' ? 'Udhaar' : 'Jama'}
+                                </span>
+                            </td>
+                            <td class="p-2.5 font-bold text-slate-100">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                            <td class="p-2.5 text-slate-400">${t.transaction_date}</td>
+                            <td class="p-2.5 text-slate-400 truncate max-w-xs">${t.note || '-'}</td>
+                        </tr>
+                    `).join('');
                 }
-                tbody.innerHTML = data.map(t => `
-                    <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-3 font-medium">${t.customer_name}</td>
-                        <td class="p-3">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.direction === 'credit' ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
-                                ${t.direction === 'credit' ? 'Udhaar' : 'Jama'}
-                            </span>
-                        </td>
-                        <td class="p-3 font-bold text-slate-100">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                        <td class="p-3 text-slate-400">${t.transaction_date}</td>
-                        <td class="p-3 text-slate-400 truncate max-w-xs">${t.note || '-'}</td>
-                    </tr>
-                `).join('');
+
+                // Udhaar / Debt Ledger Table
+                if (credits.length === 0) {
+                    udhaarTbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No credit entries recorded.</td></tr>`;
+                } else {
+                    udhaarTbody.innerHTML = credits.map(t => `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="p-2.5 font-medium text-rose-200">${t.customer_name}</td>
+                            <td class="p-2.5 font-bold text-rose-400">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                            <td class="p-2.5 text-slate-400">${t.transaction_date}</td>
+                            <td class="p-2.5 text-slate-400 truncate max-w-xs">${t.note || '-'}</td>
+                            <td class="p-2.5 text-right">
+                                <button onclick="sendPrompt('${t.customer_name} cleared his debt')" class="px-2 py-1 bg-emerald-950 text-emerald-300 border border-emerald-800 rounded-lg text-[10px] hover:bg-emerald-900 transition font-semibold">
+                                    Clear Debt
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                // Jama / Payment Ledger Table
+                if (payments.length === 0) {
+                    jamaTbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No payment entries recorded.</td></tr>`;
+                } else {
+                    jamaTbody.innerHTML = payments.map(t => `
+                        <tr class="hover:bg-slate-800/40 transition">
+                            <td class="p-2.5 font-medium text-emerald-200">${t.customer_name}</td>
+                            <td class="p-2.5 font-bold text-emerald-400">+₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                            <td class="p-2.5 text-slate-400">${t.transaction_date}</td>
+                            <td class="p-2.5 text-slate-400 truncate max-w-xs">${t.note || 'Payment Received'}</td>
+                        </tr>
+                    `).join('');
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -957,6 +1320,158 @@
             }
         }
 
+        // ═══════════════════════════════════════════════════════════
+        // Merchant Accounts Management: Switch, Sign Up, Login
+        // ═══════════════════════════════════════════════════════════
+
+        function openMerchantModal() {
+            const modal = document.getElementById('merchantModal');
+            if (modal) modal.classList.remove('hidden');
+            loadAllOwnersForSwitcher();
+        }
+
+        function closeMerchantModal() {
+            const modal = document.getElementById('merchantModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function setModalTab(tab) {
+            const tabs = ['switch', 'signup', 'login'];
+            tabs.forEach(t => {
+                const view = document.getElementById(`modalTab-${t}`);
+                const btn = document.getElementById(`tabBtn-${t}`);
+                if (view && btn) {
+                    if (t === tab) {
+                        view.classList.remove('hidden');
+                        btn.className = "py-2 px-3 font-semibold border-b-2 border-cyan-400 text-cyan-300";
+                    } else {
+                        view.classList.add('hidden');
+                        btn.className = "py-2 px-3 font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200";
+                    }
+                }
+            });
+        }
+
+        async function loadAllOwnersForSwitcher() {
+            try {
+                const res = await fetch('/api/owner/all');
+                const data = await res.json();
+                const container = document.getElementById('demoOwnersList');
+                if (data.success && data.owners) {
+                    container.innerHTML = data.owners.map(o => `
+                        <div class="p-3 rounded-2xl border ${o.is_active ? 'bg-cyan-950/60 border-cyan-500/80 shadow-md' : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'} flex items-center justify-between transition">
+                            <div>
+                                <div class="font-bold text-slate-100 flex items-center">
+                                    <i class="fa-solid fa-store text-cyan-400 mr-2"></i> ${o.store_name}
+                                    ${o.is_active ? '<span class="ml-2 text-[9px] bg-cyan-900 text-cyan-300 px-2 py-0.5 rounded-full uppercase font-mono">Active Store</span>' : ''}
+                                </div>
+                                <div class="text-xs text-slate-400 mt-0.5">
+                                    Owner: <span class="text-slate-200">${o.owner_name}</span> · Phone: <span class="font-mono">${o.phone || 'N/A'}</span>
+                                </div>
+                            </div>
+                            <button onclick="switchActiveStore(${o.id})" class="px-3 py-1.5 rounded-xl text-xs font-semibold ${o.is_active ? 'bg-slate-800 text-slate-400 cursor-default' : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-md transition'}">
+                                ${o.is_active ? 'Selected' : 'Switch Store'}
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.warn("Could not load owners for switcher:", e);
+            }
+        }
+
+        async function switchActiveStore(ownerId) {
+            try {
+                const res = await fetch(`/api/owner/switch/${ownerId}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    closeMerchantModal();
+                    await loadOwnerProfile();
+                    refreshAllData();
+                    displayAIResponse(data.message, null, data.owner.language_preference);
+                }
+            } catch (e) {
+                alert("Error switching store: " + e.message);
+            }
+        }
+
+        async function submitMerchantSignup(e) {
+            e.preventDefault();
+            const storeName = document.getElementById('signupStoreName').value.trim();
+            const ownerName = document.getElementById('signupOwnerName').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const pin = document.getElementById('signupPin').value.trim();
+            const lang = document.getElementById('signupLanguage').value;
+
+            try {
+                const res = await fetch('/api/owner/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        store_name: storeName,
+                        owner_name: ownerName,
+                        phone: phone,
+                        pin: pin || "1234",
+                        language_preference: lang
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeMerchantModal();
+                    await loadOwnerProfile();
+                    refreshAllData();
+                    displayAIResponse(data.message, data.audio_base64, data.owner.language_preference);
+                } else {
+                    alert(data.detail || "Sign up error");
+                }
+            } catch (err) {
+                alert("Sign up failed: " + err.message);
+            }
+        }
+
+        async function submitMerchantLogin(e) {
+            e.preventDefault();
+            const phone = document.getElementById('loginPhone').value.trim();
+            const pin = document.getElementById('loginPin').value.trim();
+
+            try {
+                const res = await fetch('/api/owner/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        pin: pin || "1234"
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeMerchantModal();
+                    await loadOwnerProfile();
+                    refreshAllData();
+                    displayAIResponse(data.message, data.audio_base64, data.owner.language_preference);
+                } else {
+                    alert(data.detail || "Login error");
+                }
+            } catch (err) {
+                alert("Login failed: " + err.message);
+            }
+        }
+
+        async function loadOwnerProfile() {
+            try {
+                const res = await fetch('/api/owner/profile');
+                const data = await res.json();
+                if (data.registered && data.owner) {
+                    storeOwner = data.owner;
+                    document.getElementById('headerStoreName').innerText = storeOwner.store_name;
+                    document.getElementById('headerOwnerName').innerText = storeOwner.owner_name;
+                    document.getElementById('ownerBadgeText').innerText = `Safe & Trusted AI Ledger: ${storeOwner.store_name} (Owner: ${storeOwner.owner_name} ji)`;
+                }
+            } catch (e) {
+                console.warn("Could not load owner profile:", e);
+            }
+        }
+
         function refreshAllData() {
             loadSummary();
             loadCustomers();
@@ -964,11 +1479,11 @@
         }
 
         // On Load: Start in Locked State, Attempt Intro Audio
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadOwnerProfile();
             refreshAllData();
             updateMicUIState('locked', 'Preparing Safe System Welcome Intro...');
             
-            // Allow 1-click anywhere fallback if browser restricts audio autoplay
             const handleFirstGesture = () => {
                 document.removeEventListener('click', handleFirstGesture);
                 if (isIntroPlaying) {
@@ -977,7 +1492,6 @@
             };
             document.addEventListener('click', handleFirstGesture);
 
-            // Attempt autoplay intro after 600ms
             setTimeout(() => {
                 playWelcomeTrustMessage();
             }, 600);

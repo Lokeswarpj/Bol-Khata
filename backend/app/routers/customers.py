@@ -10,7 +10,7 @@ from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Customer, Transaction, CustomerCreate, CustomerUpdate, CustomerResponse
+from app.models import Customer, Transaction, StoreOwner, CustomerCreate, CustomerUpdate, CustomerResponse
 from app.services.ledger_engine import LedgerEngine
 
 router = APIRouter(prefix="/api/customers", tags=["Customers"])
@@ -19,10 +19,20 @@ router = APIRouter(prefix="/api/customers", tags=["Customers"])
 @router.get("/", response_model=List[CustomerResponse])
 async def list_customers(
     search: Optional[str] = Query(None),
+    owner_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all customers with their balances."""
-    query = select(Customer).order_by(Customer.name)
+    """List all customers with their balances for the active store owner."""
+    if owner_id is None:
+        owner_res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
+        active_o = owner_res.scalars().first()
+        active_owner_id = active_o.id if active_o else 1
+    else:
+        active_owner_id = owner_id
+
+    query = select(Customer).where(
+        or_(Customer.owner_id == active_owner_id, Customer.owner_id.is_(None))
+    ).order_by(Customer.name)
     
     if search:
         query = query.where(
@@ -35,7 +45,7 @@ async def list_customers(
     result = await db.execute(query)
     customers = result.scalars().all()
     
-    ledger = LedgerEngine(db)
+    ledger = LedgerEngine(db, owner_id=active_owner_id)
     responses = []
     for c in customers:
         balance = await ledger.get_customer_balance(c.id)

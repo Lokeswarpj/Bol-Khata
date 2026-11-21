@@ -7,12 +7,12 @@ from datetime import date
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func, and_, desc, case
+from sqlalchemy import select, func, and_, or_, desc, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models import (
-    Transaction, Customer,
+    Transaction, Customer, StoreOwner,
     ManualTransactionCreate, TransactionResponse, LedgerSummary,
     TransactionDirection,
 )
@@ -65,15 +65,26 @@ async def create_transaction(
 async def list_transactions(
     customer_id: Optional[int] = Query(None),
     direction: Optional[str] = Query(None),
+    owner_id: Optional[int] = Query(None),
     from_date: Optional[date] = Query(None),
     to_date: Optional[date] = Query(None),
     limit: int = Query(50, le=200),
     db: AsyncSession = Depends(get_db),
 ):
     """List ledger entries with optional filters."""
+    if owner_id is None:
+        owner_res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
+        active_o = owner_res.scalars().first()
+        active_owner_id = active_o.id if active_o else 1
+    else:
+        active_owner_id = owner_id
+
     query = select(Transaction, Customer.name).join(
         Customer, Transaction.customer_id == Customer.id
-    ).where(Transaction.corrected == False)
+    ).where(
+        Transaction.corrected == False,
+        or_(Transaction.owner_id == active_owner_id, Transaction.owner_id.is_(None))
+    )
     
     if customer_id:
         query = query.where(Transaction.customer_id == customer_id)
@@ -107,10 +118,17 @@ async def list_transactions(
 
 @router.get("/summary", response_model=LedgerSummary)
 async def get_summary(
+    owner_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get overall ledger summary."""
+    """Get overall ledger summary for the active store owner."""
     today = date.today()
+    if owner_id is None:
+        owner_res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
+        active_o = owner_res.scalars().first()
+        active_owner_id = active_o.id if active_o else 1
+    else:
+        active_owner_id = owner_id
     
     # Overall totals
     overall = await db.execute(
@@ -121,7 +139,10 @@ async def get_summary(
             func.coalesce(func.sum(case(
                 (Transaction.direction == "payment", Transaction.amount), else_=0
             )), 0).label("total_payment"),
-        ).where(Transaction.corrected == False)
+        ).where(
+            Transaction.corrected == False,
+            or_(Transaction.owner_id == active_owner_id, Transaction.owner_id.is_(None))
+        )
     )
     overall_row = overall.first()
     
@@ -137,6 +158,7 @@ async def get_summary(
         ).where(and_(
             Transaction.corrected == False,
             Transaction.transaction_date == today,
+            or_(Transaction.owner_id == active_owner_id, Transaction.owner_id.is_(None))
         ))
     )
     today_row = today_result.first()
@@ -144,7 +166,8 @@ async def get_summary(
     # Customer count with dues
     customer_count = await db.execute(
         select(func.count(func.distinct(Transaction.customer_id))).where(
-            Transaction.corrected == False
+            Transaction.corrected == False,
+            or_(Transaction.owner_id == active_owner_id, Transaction.owner_id.is_(None))
         )
     )
     

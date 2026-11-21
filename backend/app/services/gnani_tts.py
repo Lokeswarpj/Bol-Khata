@@ -57,12 +57,6 @@ class GnaniTTSService:
         lang = language or self.language
         voice_name = voice or self.voice
 
-        # Responsible AI disclosure on session start
-        if session_id and session_id not in self._first_turn_done:
-            disclosure = AI_DISCLOSURE.get(lang, AI_DISCLOSURE["en-IN"])
-            text = f"{disclosure} {text}"
-            self._first_turn_done[session_id] = True
-
         # Check local cache first (Saves 100% of Gnani tokens for cached sentences!)
         cache_file = self._get_cache_path(text, lang, voice_name)
         if os.path.exists(cache_file):

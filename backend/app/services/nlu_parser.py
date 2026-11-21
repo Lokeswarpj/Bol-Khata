@@ -1,7 +1,9 @@
 """
 BolKhata - Production Multilingual Kirana NLU Engine
 Engineered to eliminate false defaults and handle real-world Kirana store interactions:
-- Full Debt Settlement ("Ramesh cleared his debt" / "hisaab chukta kar diya")
+- Wake-word ("BolKhata") and Voice Standby ("Stop" / "Ruko")
+- Reset Today's Payments ("Reset today's payment" / "Aaj ki jama reset karo")
+- Full Debt Settlement ("Ramesh cleared his debt" / "hisaab chukta kar diya" / "ಸಾಲ ತೀರಿದೆ" / "అప్పు తీరిపోయింది")
 - Automatic Language Detection across Kannada, Telugu, Hindi, and English
 - Itemized grocery shop talk ("Ramesh 1 packet doodh le gaya 30 rupaye likh lo")
 - Multi-action compound utterances ("Ramesh ka 340 udhaar, kal 200 diya tha")
@@ -22,33 +24,48 @@ from app.services.date_parser import extract_date_from_text
 # Comprehensive Multilingual Intent Vocabularies
 # ═══════════════════════════════════════════════════════════════
 
-# Debt Clearing (Full Settlement) Keywords
+# Wake-word patterns
+WAKE_WORD_PATTERN = r'^(?:hey\s+|suno\s+|hello\s+|hi\s+|namaste\s+|oye\s+)?(?:bolkhata|bol\s*khata|बोल\s*खाता|ಬೋಲ್\s*ಖಾತಾ|బోల్\s*ఖాతా)(?:[\,\:\s]+|$)'
+
+# Stop / Sleep patterns
+STOP_COMMAND_PATTERN = r'\b(?:stop|ruko|ruk\s+ja|ruk\s+jao|bas|chup|chup\s+raho|shant|shant\s+raho|sleep|standby|band\s+karo|stop\s+listening|quiet|nillu|nillisi|saaku|aagu|aapu|chalu)\b|(?:रुको|बस|चुप|शांत|बंद\s*करो)|(?:ನಿಲ್ಲು|ಸಾಕು|ಶಾಂತವಾಗಿರು|ನಿಲ್ಲಿಸಿ)|(?:ఆగు|ఆపు|శాంతంగా\s*ఉండు|చాలు)'
+
+# Reset payments pattern
+RESET_PAYMENTS_PATTERN = r'\b(?:reset\s+(?:today(?:\'s)?\s+)?(?:payment|payments|jama|collection)|clear\s+(?:today(?:\'s)?\s+)?(?:payment|payments)|aaj\s+ki\s+jama\s+reset|aaj\s+ka\s+collection\s+reset|aaj\s+ke\s+payment\s+reset|aaj\s+ki\s+jama\s+(?:hata|clear|saaf)|jama\s+reset)\b|(?:ಇಂದಿನ\s*ಜಮಾ\s*ರದ್ದು|ಜಮಾ\s*ರೀಸೆಟ್)|(?:ఈరోజు\s*జమ\s*రీసెట్|ఈరోజు\s*పేమెంట్లు\s*రీసెట్|జమ\s*రీసెట్)'
+
+# Debt Clearing (Full Settlement) Keywords & Phrases
 CLEAR_DEBT_KEYWORDS = {
     # English
     "cleared", "clear", "settled", "settle", "paid off", "zeroed", "clearing",
     # Hindi
     "chukta", "चुक्ता", "chukti", "chuka diya", "chuka", "khatam", "खत्म",
-    "saaf", "साफ", "faisla", "phaisla",
+    "saaf", "साफ", "faisla", "phaisla", "barabar", "बराबर",
     # Kannada
-    "theerisi", "ತೀರಿಸಿ", "theerisiddaane", "mugisiddaane", "theerthu",
+    "theerisi", "ತೀರಿಸಿ", "theerisiddaane", "mugisiddaane", "theerthu", "teeride", "ತೀರಿದೆ",
     # Telugu
-    "theerchesadu", "తీర్చేశాడు", "theerchadu", "poorthi", "chellinchesadu",
+    "theerchesadu", "తీర్చేశాడు", "theerchadu", "poorthi", "chellinchesadu", "teeripoyindi", "తీరిపోయింది",
 }
 
 CLEAR_DEBT_PHRASES = [
-    r'cleared\s+(?:his|her|all|the)?\s*(?:debt|account|dues|balance|khata)',
+    r'cleared\s+(?:his|her|all|the)?\s*(?:debt|account|dues|balance|khata|dues)',
     r'cleared\s+all',
-    r'hisaab\s+(?:clear|chukta|khatam|saaf)',
-    r'poora\s+(?:de\s+diya|jama\s+kar\s+diya|chukta)',
-    r'saala\s+theerisi',
-    r'appu\s+theerchesadu',
+    r'has\s+cleared\s+(?:his|her|all|the)?\s*(?:debt|account|dues|balance)',
+    r'(?:clear|settle)\s+(?:debt|account|dues|balance|khata)\s+(?:for|of)?',
+    r'hisaab\s+(?:clear|chukta|khatam|saaf|barabar)',
+    r'poora\s+(?:de\s+diya|jama\s+kar\s+diya|chukta|chukaya)',
+    r'saara\s+(?:udhaar|karz)\s+(?:chukta|clear|khatam)',
+    r'udhaar\s+(?:chukta|clear|khatam)',
+    r'saala\s+(?:theerisi|teeride|mugiside|clear)',
+    r'appu\s+(?:theerchesadu|teeripoyindi|clear)',
+    r'baaki\s+(?:clear|theerindi|theerchesadu)',
 ]
 
 # Credit (Udhaar / Debt addition) Keywords
 CREDIT_KEYWORDS = {
     # Hindi
     "udhaar", "udhar", "उधार", "khata", "खाता", "likh", "लिख", "likho", "लिखो", "likhna",
-    "likhle", "likhlo", "baaki", "बाकी", "baki", "le gaya", "le gaye", "dena hai",
+    "likhle", "likhlo", "baaki", "बाकी", "baki", "le gaya", "le gaye", "dena hai", "liya",
+    "samaan liya", "kharida", "chahiye", "li", "di",
     # Kannada
     "saala", "ಸಾಲ", "baaki", "ಬಾಕಿ", "bare", "ಬರೆ", "bareyiri", "ಬರೆಯಿರಿ",
     "khaate", "ಖಾತೆ", "uddhaara", "ಉದ್ದಾರ", "thagondiddaane", "kodabeku",
@@ -56,14 +73,15 @@ CREDIT_KEYWORDS = {
     "appu", "అప్పు", "baaki", "బాకీ", "raayi", "రాయ్", "raayandi", "రాయండి",
     "khata", "ఖాతా", "theesukunnadu", "ivvaali",
     # English
-    "credit", "due", "loan", "borrowed", "took", "write", "bill",
+    "credit", "due", "loan", "borrowed", "took", "write", "bill", "bought",
 }
 
 # Payment (Jama / Money received) Keywords
 PAYMENT_KEYWORDS = {
     # Hindi
     "diya", "दिया", "diye", "दिये", "de gaya", "jama", "जमा", "wapas", "वापस",
-    "aaya", "aaye", "bhara", "vasool", "वसूूल", "mila", "मिला", "de diya",
+    "aaya", "aaye", "bhara", "vasool", "वसूूल", "vasooli", "mila", "मिला", "de diya",
+    "chuka diya", "bhugtan",
     # Kannada
     "kottiddaane", "ಕೊಟ್ಟಿದ್ದಾನೆ", "kotta", "ಕೊಟ್ಟ", "jama", "ಜಮಾ", "paavati", "ಪಾವತಿ",
     "bandide", "ಬಂದಿದೆ", "sandaaya",
@@ -116,6 +134,11 @@ SKIP_WORDS = {
     "how", "much", "what", "give", "show", "tell", "check", "me", "you", "does", "can", "please",
     "dukaan", "store", "shop", "total", "balance", "all", "owe", "owes",
     "aaj", "kal", "parso", "today", "yesterday", "ninne", "ninna", "ivattu", "eeroju", "abhi",
+    # Filter out query question words from being captured as customer names
+    "sabse", "kiska", "kisne", "kisko", "kaun", "highest", "most", "who", "kitna", "kitne",
+    "yaru", "yarige", "evaru", "evariki", "collection", "cash", "message", "reminder",
+    "bhejo", "send", "karo", "maadu", "cheyyi", "kaluhisi", "pampandi",
+    "bolkhata", "bol", "khata", "stop", "ruko", "bas", "sleep", "reset", "payments",
     # Indic script greetings & polite words
     "ನಮಸ್ಕಾರ", "ನಮಸ್ಕಾರಗಳು", "ಹೇಗಿದ್ದೀರಾ", "ಹೇಗಿದ್ದೀರಿ", "ಧನ್ಯವಾದ", "ಧನ್ಯವಾದಗಳು",
     "నమస్కారం", "నమస్కారాలు", "ఎలా", "ఉన్నారు", "బాగున్నారా", "ధన్యవాదాలు",
@@ -180,10 +203,18 @@ def detect_chitchat(text: str) -> Optional[str]:
 
 
 NAME_PATTERNS = [
+    # "Clear debt for Ramesh", "Clear Ramesh's debt"
+    r'(?:clear|settle)\s+(?:debt|account|dues)?\s*(?:for|of)?\s*([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)',
+    # "Ramesh cleared his debt", "Ramesh has cleared his debt"
+    r'([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:has\s+)?(?:cleared|settled|zeroed)\s+(?:his|her|all|the)?\s*(?:debt|account|dues|balance)',
     # English queries: "how much does ramesh owe", "what is ramesh balance", "show me ramesh total"
     r'(?:how\s+much\s+(?:does\s+)?|what\s+is\s+|show\s+(?:me\s+)?|check\s+|tell\s+(?:me\s+)?|give\s+(?:me\s+)?)([a-zA-Z]+)(?:\'s|\s+owe|\s+balance|\s+total|\s+account)',
     # Hyphenated descriptor names: 'Ramesh - Kirana Lane', 'Ramesh - Milk Dairy'
     r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ka|ke|ki|ko|ne|ge|ku|ki)\s',
+    # Name followed by took / borrowed / bought / gave / paid / le gaya / liya:
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:took|borrowed|bought|gave|paid|received|deposited|le\s+gaya|liya|diya)',
+    # Name at start followed by number or amount: e.g. "Ramesh 500" or "Ramesh 340 udhaar"
+    r'^([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:\d+|dedh|dhai|teen|char|paanch|one|two|three|four|five|\₹)',
     # "Ramesh cleared his debt", "Ramesh ne hisaab clear kar diya"
     r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ne|cleared|settled|paid|ka|ki)\s',
     # Direct "Ramesh ka 340"
@@ -210,18 +241,28 @@ def detect_language(text: str) -> str:
     kn_vocab = {
         "saala", "kottiddaane", "kotta", "ivattu", "ninne", "mooru", "eradu",
         "nooru", "eshtu", "ottu", "alla", "bare", "ge", "namaskara", "hegiddira",
-        "hegidiya", "chennagiddira", "yaaru", "dhanyavada", "sari", "nimma"
+        "hegidiya", "chennagiddira", "yaaru", "dhanyavada", "sari", "nimma",
+        "angadi", "grahakaru", "grahaka", "haalu", "akki", "bele", "sakkare",
+        "hecchu", "kadime", "kaluhisi", "kodabeku", "thagondiddaane", "teeride",
+        "theerisi", "nillu", "saaku"
     }
     te_vocab = {
         "appu", "icchaadu", "eeroju", "ninna", "moodu", "rendu", "vanda",
         "entha", "mottam", "kaadhu", "raayi", "ki", "namaskaram", "ela",
-        "unnaru", "bagunnara", "evaru", "dhanyavadalu", "sare", "meeru"
+        "unnaru", "bagunnara", "evaru", "dhanyavadalu", "sare", "meeru",
+        "dukanam", "customerlu", "paalu", "biyyam", "panchadara", "ekkuva",
+        "thakkuva", "pampandi", "theerchesadu", "ivvaali", "theesukunnadu",
+        "teeripoyindi", "aagu", "aapu"
     }
     hi_vocab = {
-        "udhaar", "diya", "hisaab", "chukta", "kitna", "aaj", "kal", "teen",
-        "sau", "chaalis", "nahi", "likh", "jama", "namaste", "kaise", "haal",
+        "udhaar", "diya", "diye", "hisaab", "chukta", "kitna", "kitne", "aaj", "kal", "teen",
+        "sau", "chaalis", "nahi", "likh", "likho", "jama", "namaste", "kaise", "haal",
         "kaun", "dhanyawaad", "shukriya", "bhaiya", "theek", "aapka", "surakshit",
-        "kya", "ye", "yeh", "hai", "hain", "kaisa", "chahiye", "batao", "bataiye", "bata"
+        "kya", "ye", "yeh", "hai", "hain", "kaisa", "chahiye", "batao", "bataiye", "bata",
+        "samaan", "liya", "kharida", "becha", "paise", "rupaye", "doodh", "chawal",
+        "cheeni", "chini", "tel", "sabun", "chai", "atta", "daal", "sabse", "zyada",
+        "jyada", "bada", "grahak", "dukaan", "bhejo", "kiska", "kisne", "vasool", "vasooli",
+        "ruko", "bas", "chup", "shant"
     }
 
     en_vocab = {
@@ -229,9 +270,11 @@ def detect_language(text: str) -> str:
         "today", "three", "forty", "hello", "hi", "how", "you", "who", "safe",
         "thanks", "thank", "good", "morning", "what", "is", "are", "does", "do",
         "can", "help", "owe", "owes", "due", "dues", "tell", "show", "give", "me",
-        "much", "why", "where", "name", "customer", "account", "please", "my",
+        "much", "why", "where", "name", "customer", "customers", "account", "please", "my",
         "your", "store", "shop", "khata", "ledger", "bolkhata", "secure", "about",
-        "sale", "sales", "check", "no", "yes", "all", "everyone"
+        "sale", "sales", "check", "no", "yes", "all", "everyone", "send", "reminder",
+        "collect", "collected", "highest", "most", "groceries", "milk", "rice", "sugar",
+        "stop", "sleep", "standby", "reset"
     }
 
     kn_score = len(tokens & kn_vocab)
@@ -292,6 +335,30 @@ def _extract_customer_name(text: str) -> Optional[str]:
     return None
 
 
+def _is_wake_command(text: str) -> Tuple[bool, Optional[str]]:
+    """
+    Checks if utterance is or starts with wake-word: 'BolKhata' / 'Hey BolKhata'.
+    Returns (is_wake, remaining_command_text_if_any).
+    """
+    m = re.match(WAKE_WORD_PATTERN, text.strip(), re.IGNORECASE)
+    if m:
+        remaining = text.strip()[m.end():].strip()
+        return True, (remaining if remaining else None)
+    return False, None
+
+
+def _is_stop_command(text: str) -> bool:
+    """Checks if merchant said stop/sleep/ruko/bas."""
+    text_clean = text.strip().lower()
+    return bool(re.search(STOP_COMMAND_PATTERN, text_clean, re.IGNORECASE))
+
+
+def _is_reset_payments_query(text: str) -> bool:
+    """Checks if merchant asked to reset today's payments."""
+    text_clean = text.strip().lower()
+    return bool(re.search(RESET_PAYMENTS_PATTERN, text_clean, re.IGNORECASE))
+
+
 def _is_debt_clearing_utterance(text: str) -> bool:
     """Detect if utterance indicates complete debt settlement."""
     text_lower = text.lower()
@@ -304,17 +371,145 @@ def _is_debt_clearing_utterance(text: str) -> bool:
         return True
     if "cleared" in tokens:
         return True
+    # Indic script checks
+    if any(k in text for k in ("ಸಾಲ ತೀರಿದೆ", "ಸಾಲ ಕ್ಲಿಯರ್", "ಅಪ್ಪು ತೀರಿపోయింది", "అప్పు తీరిపోయింది", "బాకీ క్లియర్", "उधार चुकता", "हिसाब चुकता")):
+        return True
     return False
+
+
+def _is_owner_registration(text: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    """
+    Detects if the shopkeeper is registering their name and store name.
+    e.g. "Mera naam Niranjan hai, dukaan Sri Balaji Kirana"
+         "Register my store Sri Balaji Kirana, owner Niranjan"
+    """
+    # 1. "mera naam <X> ... dukaan/store <Y>"
+    m1 = re.search(r'(?:mera\s+naam|my\s+name\s+is|nanna\s+hesaru|naa\s+peru)\s+([a-zA-Z\s]+?)(?:\s+hai|\.|\,)?\s+(?:dukaan|dukan|shop|store|angadi|dukanam)(?:\s+ka\s+naam|\s+is|\s+hesaru|\s+peru)?\s+([a-zA-Z0-9\s]+)', text, re.IGNORECASE)
+    if m1:
+        owner = re.sub(r'\b(?:hai|is|ide|undi)\b', '', m1.group(1), flags=re.IGNORECASE).strip().title()
+        store = m1.group(2).strip().title()
+        return True, owner, store
+
+    # 2. "dukaan <Y> ... owner/naam <X>"
+    m2 = re.search(r'(?:dukaan|dukan|store|shop|angadi|dukanam)\s+(?:ka\s+naam\s+)?([a-zA-Z0-9\s]+?)(?:hai|\.|,)?\s+(?:owner|malik|mera\s+naam|owner\s+is)\s+([a-zA-Z\s]+)', text, re.IGNORECASE)
+    if m2:
+        owner = re.sub(r'\b(?:hai|is|ide|undi)\b', '', m2.group(2), flags=re.IGNORECASE).strip().title()
+        store = m2.group(1).strip().title()
+        return True, owner, store
+
+    # 3. "register (my) store <Y> (owner) <X>"
+    m3 = re.search(r'register\s+(?:my\s+)?(?:store|shop|dukaan)\s+([a-zA-Z0-9\s]+?)(?:\s+(?:owner|by|name)\s+([a-zA-Z\s]+))?$', text, re.IGNORECASE)
+    if m3:
+        store = m3.group(1).strip().title()
+        owner = m3.group(2).strip().title() if m3.group(2) else "Store Owner"
+        return True, owner, store
+
+    return False, None, None
+
+
+def _is_owner_query(text: str) -> bool:
+    """Detects inquiries about the store owner's business health and overview."""
+    text_lower = text.lower()
+    return bool(re.search(r'\b(?:mera\s+store|mera\s+dukaan|meri\s+dukaan|my\s+store|my\s+shop|store\s+status|store\s+summary|how\s+is\s+my\s+store|business\s+status|dukaan\s+ka\s+hisaab|overall\s+dukaan|dukaan\s+summary)\b', text_lower))
+
+
+def _is_top_debtor_query(text: str) -> bool:
+    """Detects who owes the most money."""
+    text_lower = text.lower()
+    patterns = [
+        r'\b(?:sabse\s+(?:jyada|zyada|bada)|highest\s+(?:debt|balance|dues)|who\s+owes\s+the\s+most|top\s+debtor|max\s+udhaar|kiska\s+sabse\s+(?:jyada|zyada))\b',
+        r'(?:ಯಾರಿಗೆ\s*ಹೆಚ್ಚು\s*ಸಾಲ|ಹೆಚ್ಚು\s*ಬಾಕಿ)',
+        r'(?:ఎవరికి\s*ఎక్కువ\s*అప్పు|ఎక్కువ\s*బాకీ)',
+    ]
+    return any(re.search(p, text_lower) for p in patterns)
+
+
+def _is_customer_count_query(text: str) -> bool:
+    """Detects queries about total customers count."""
+    text_lower = text.lower()
+    patterns = [
+        r'\b(?:how\s+many\s+customers|total\s+customers|kitne\s+(?:customers|grahak|log)|count\s+of\s+customers)\b',
+        r'(?:ಎಷ್ಟು\s*ಗ್ರಾಹಕರು|ಒಟ್ಟು\s*ಗ್ರಾಹಕರು)',
+        r'(?:ఎంతమంది\s*కస్టమర్లు|మొత్తం\s*కస్టమర్లు)',
+    ]
+    return any(re.search(p, text_lower) for p in patterns)
+
+
+def _is_collections_today_query(text: str) -> bool:
+    """Detects queries about today's collection or payment receipts."""
+    text_lower = text.lower()
+    patterns = [
+        r'\b(?:how\s+much\s+(?:did\s+we\s+)?collect|today(?:\'s)?\s+collection|aaj\s+kitna\s+(?:jama|collection|paisa\s+aaya|cash\s+aaya|vasool))\b',
+        r'(?:ಇವತ್ತು\s*ಎಷ್ಟು\s*ಜಮಾ|ಇಂದು\s*ಎಷ್ಟು\s*ವಸೂಲಿ)',
+        r'(?:ఈరోజు\s*ఎంత\s*జమ|ఈరోజు\s*ఎంత\s*వసూలు)',
+    ]
+    return any(re.search(p, text_lower) for p in patterns)
+
+
+def _is_reminder_trigger(text: str) -> Tuple[bool, Optional[str]]:
+    """Detects request to trigger polite payment reminder."""
+    text_lower = text.lower()
+    if "reminder" not in text_lower:
+        return False, None
+    m1 = re.search(r'([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ko|ge|ki|ku)?\s*reminder', text, re.IGNORECASE)
+    if m1 and m1.group(1).lower() not in SKIP_WORDS:
+        return True, m1.group(1).strip().title()
+    m2 = re.search(r'(?:send\s+reminder\s+to|reminder\s+to|remind)\s+([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)', text, re.IGNORECASE)
+    if m2 and m2.group(1).lower() not in SKIP_WORDS:
+        return True, m2.group(1).strip().title()
+    cust = _extract_customer_name(text)
+    if cust and cust.lower() not in SKIP_WORDS:
+        return True, cust
+    return False, None
 
 
 def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]]:
     tokens = _tokenize_clause(clause_text)
 
-    # 1. Spoken Correction
+    # 0a. Stop / Sleep Command ("Stop", "Ruko", "Bas", "Sleep")
+    if _is_stop_command(clause_text):
+        return IntentType.STOP_LISTENING, None
+
+    # 0b. Wake-up Command ("BolKhata", "Hey BolKhata")
+    is_wake, remaining = _is_wake_command(clause_text)
+    if is_wake and not remaining:
+        return IntentType.WAKE_UP, None
+
+    # 0c. Reset Today's Payments ("Reset today's payment" / "Aaj ki jama reset karo")
+    if _is_reset_payments_query(clause_text):
+        return IntentType.RESET_TODAYS_PAYMENTS, None
+
+    # 0d. Owner Registration ("Mera naam Niranjan hai, dukaan Sri Balaji Kirana")
+    is_reg, owner_name, store_name = _is_owner_registration(clause_text)
+    if is_reg:
+        return IntentType.REGISTER_OWNER, f"{owner_name}|{store_name}"
+
+    # 0e. Store Owner Overview Query ("Mera store kaisa chal raha hai?")
+    if _is_owner_query(clause_text):
+        return IntentType.QUERY_OWNER, None
+
+    # 0f. Top Debtor Query ("Sabse zyada udhaar kiska hai?" / "Who owes the most?")
+    if _is_top_debtor_query(clause_text):
+        return IntentType.QUERY_TOP_DEBTOR, None
+
+    # 0g. Customer Count Query ("Total customers kitne hain?")
+    if _is_customer_count_query(clause_text):
+        return IntentType.QUERY_CUSTOMERS_COUNT, None
+
+    # 0h. Today Collections Query ("How much did we collect today?" / "Aaj kitna collection hua?")
+    if _is_collections_today_query(clause_text):
+        return IntentType.QUERY_COLLECTIONS_TODAY, None
+
+    # 0i. Reminder Trigger ("Ramesh ko reminder bhejo" / "Send reminder to Ramesh")
+    is_rem, rem_cust = _is_reminder_trigger(clause_text)
+    if is_rem:
+        return IntentType.TRIGGER_REMINDER, rem_cust
+
+    # 1. Spoken Correction ("nahi, 430")
     if tokens & CORRECTION_KEYWORDS:
         return IntentType.CORRECTION, None
 
-    # 2. Debt Clearing (CRITICAL FIX: Checks before adding credit!)
+    # 2. Debt Clearing ("Ramesh cleared his debt" / "hisaab chukta ho gaya")
     if _is_debt_clearing_utterance(clause_text):
         return IntentType.CLEAR_DEBT, None
 
@@ -355,8 +550,8 @@ def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]
 
 def _split_into_clauses(text: str) -> List[str]:
     tokens = _tokenize_clause(text)
-    # Do not split corrections or debt clearings
-    if (tokens & CORRECTION_KEYWORDS) or _is_debt_clearing_utterance(text):
+    # Do not split corrections, debt clearings, reset payments, or owner registrations
+    if (tokens & CORRECTION_KEYWORDS) or _is_debt_clearing_utterance(text) or _is_reset_payments_query(text) or _is_owner_registration(text)[0]:
         return [text.strip()]
 
     # Split by comma, semicolon, ' aur ', ' and ', ' mattu ', ' mari '
@@ -372,8 +567,14 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
     txn_date = extract_date_from_text(clause)
 
     # In chitchat, don't accidentally capture words as customer names
-    if intent == IntentType.CHITCHAT:
+    if intent in (IntentType.CHITCHAT, IntentType.STOP_LISTENING, IntentType.WAKE_UP, IntentType.RESET_TODAYS_PAYMENTS):
         cust_name = None
+        amount = None
+    elif intent == IntentType.TRIGGER_REMINDER:
+        cust_name = chitchat_topic or cust_name
+    elif intent in (IntentType.QUERY_TOP_DEBTOR, IntentType.QUERY_CUSTOMERS_COUNT, IntentType.QUERY_COLLECTIONS_TODAY, IntentType.QUERY_OWNER):
+        cust_name = None
+        amount = None
 
     direction = None
     if intent == IntentType.ADD_CREDIT:
@@ -386,7 +587,7 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
         confidence += 0.2
     if cust_name:
         confidence += 0.2
-    if amount is not None or intent in (IntentType.CLEAR_DEBT, IntentType.CHITCHAT):
+    if amount is not None or intent in (IntentType.CLEAR_DEBT, IntentType.CHITCHAT, IntentType.RESET_TODAYS_PAYMENTS, IntentType.STOP_LISTENING, IntentType.WAKE_UP):
         confidence += 0.1
 
     return ParsedIntent(
@@ -402,6 +603,22 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
 
 
 def parse_voice_utterance(text: str) -> List[ParsedIntent]:
+    # Check if prefixed with wake-word: e.g. "BolKhata, Ramesh ka 340 udhaar"
+    is_wake, remainder = _is_wake_command(text)
+    if is_wake:
+        if not remainder:
+            return [ParsedIntent(intent=IntentType.WAKE_UP, raw_text=text, confidence=1.0)]
+        else:
+            text = remainder
+
+    # Check for direct stop command
+    if _is_stop_command(text):
+        return [ParsedIntent(intent=IntentType.STOP_LISTENING, raw_text=text, confidence=1.0)]
+
+    # Check for reset payments command
+    if _is_reset_payments_query(text):
+        return [ParsedIntent(intent=IntentType.RESET_TODAYS_PAYMENTS, raw_text=text, confidence=1.0)]
+
     clauses = _split_into_clauses(text)
     results: List[ParsedIntent] = []
     current_customer: Optional[str] = None

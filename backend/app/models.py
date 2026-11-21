@@ -29,6 +29,7 @@ class Customer(Base):
     __tablename__ = "customers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(Integer, ForeignKey("store_owners.id"), nullable=True, default=1, index=True)
     name = Column(String(100), nullable=False, index=True)
     phone = Column(String(15), nullable=True)
     nickname = Column(String(50), nullable=True)  # For disambiguation
@@ -44,11 +45,28 @@ class Customer(Base):
     )
 
 
+class StoreOwner(Base):
+    """Store Owner profile (the Kirana merchant)."""
+    __tablename__ = "store_owners"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    store_name = Column(String(150), nullable=False)
+    owner_name = Column(String(100), nullable=False)
+    phone = Column(String(20), nullable=True, unique=True)
+    pin = Column(String(50), default="1234")
+    address = Column(String(200), nullable=True)
+    language_preference = Column(String(20), default="en-IN")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Transaction(Base):
     """A single ledger entry (credit/udhaar or payment/jama)."""
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(Integer, ForeignKey("store_owners.id"), nullable=True, default=1, index=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False, index=True)
     amount = Column(Float, nullable=False)
     direction = Column(String(10), nullable=False)  # "credit" (udhaar) or "payment" (jama)
@@ -76,10 +94,19 @@ class IntentType(str, Enum):
     ADD_CREDIT = "add_credit"       # "Ramesh ka 340 udhaar"
     ADD_PAYMENT = "add_payment"     # "Ramesh ne 200 diya"
     CLEAR_DEBT = "clear_debt"       # "Ramesh cleared his debt" / "hisaab clear kar diya"
+    RESET_TODAYS_PAYMENTS = "reset_todays_payments" # "Reset today's payments" / "Aaj ki jama reset karo"
+    STOP_LISTENING = "stop_listening" # "Stop" / "Ruko" / "Bas"
+    WAKE_UP = "wake_up"             # "BolKhata" / "Hey BolKhata"
     QUERY_BALANCE = "query_balance" # "Ramesh ka total?"
     QUERY_TODAY = "query_today"     # "Aaj kitna udhaar gaya?"
+    QUERY_TOP_DEBTOR = "query_top_debtor" # "Sabse zyada udhaar kiska hai?" / "Who owes the most?"
+    QUERY_CUSTOMERS_COUNT = "query_customers_count" # "Total customers kitne hain?"
+    QUERY_COLLECTIONS_TODAY = "query_collections_today" # "Aaj kitna collection hua?"
+    TRIGGER_REMINDER = "trigger_reminder" # "Ramesh ko reminder bhejo"
     CORRECTION = "correction"       # "nahi, 430"
     LIST_DUES = "list_dues"         # "Sabka hisaab bata"
+    REGISTER_OWNER = "register_owner" # "Mera naam Niranjan hai, dukaan Sri Balaji Kirana"
+    QUERY_OWNER = "query_owner"     # "Mera store kaisa chal raha hai?" / "Dukaan summary"
     CHITCHAT = "chitchat"           # Natural conversational chit-chat & greetings
     UNKNOWN = "unknown"
 
@@ -91,6 +118,53 @@ class VoiceInput(BaseModel):
     audio_base64: Optional[str] = None
     text: Optional[str] = None  # Pre-transcribed text (for testing)
     language: Optional[str] = None
+    session_id: Optional[str] = "default_counter"
+    owner_id: Optional[int] = None
+    generate_audio: bool = True  # Automatically synthesize Gnani neural voice
+
+
+class StoreOwnerSignup(BaseModel):
+    """Merchant sign-up schema."""
+    store_name: str
+    owner_name: str
+    phone: str
+    pin: Optional[str] = "1234"
+    address: Optional[str] = None
+    language_preference: Optional[str] = "en-IN"
+
+
+class StoreOwnerLogin(BaseModel):
+    """Merchant login schema."""
+    phone: str
+    pin: Optional[str] = "1234"
+
+
+class StoreOwnerCreate(BaseModel):
+    """Register or update store owner profile."""
+    store_name: str
+    owner_name: str
+    phone: Optional[str] = None
+    pin: Optional[str] = "1234"
+    address: Optional[str] = None
+    language_preference: Optional[str] = "en-IN"
+
+
+class StoreOwnerResponse(BaseModel):
+    id: int
+    store_name: str
+    owner_name: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    language_preference: str = "en-IN"
+    is_active: bool = True
+    created_at: datetime
+    total_credit: float = 0.0
+    total_payments: float = 0.0
+    net_outstanding: float = 0.0
+    customer_count: int = 0
+
+    class Config:
+        from_attributes = True
 
 
 class ManualTransactionCreate(BaseModel):
