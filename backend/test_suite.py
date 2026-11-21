@@ -258,8 +258,30 @@ async def run_all_tests():
     assert decoded["sub"] == "9876543210"
     print("  ✓ Cryptographic JWT Access Token generated and verified")
 
+    # ──────────────────────────────────────────────────────────
+    # 15. Multilingual Collections & Voice-to-UPI Verification
+    # ──────────────────────────────────────────────────────────
+    print("\n[TEST 15] Multilingual Collections & Customer Voice-to-UPI Verification:")
+    coll_tests = [
+        ("aaj ka collection kitna hai", IntentType.QUERY_COLLECTIONS_TODAY, None),
+        ("eeroju collection entha", IntentType.QUERY_COLLECTIONS_TODAY, None),
+        ("ivattina collection eshtu", IntentType.QUERY_COLLECTIONS_TODAY, None),
+        ("today collection", IntentType.QUERY_COLLECTIONS_TODAY, None),
+        ("Suresh se collection lo", IntentType.VOICE_TO_UPI, "Suresh"),
+        ("Suresh nunchi collection teesuko", IntentType.VOICE_TO_UPI, "Suresh"),
+        ("Suresh inda collection thagoli", IntentType.VOICE_TO_UPI, "Suresh"),
+        ("Collect from Suresh", IntentType.VOICE_TO_UPI, "Suresh"),
+    ]
+    for c_text, exp_intent, exp_cust in coll_tests:
+        p_list = parse_voice_utterance(c_text)
+        assert len(p_list) > 0, f"Expected parse for: {c_text}"
+        assert p_list[0].intent == exp_intent, f"Mismatch intent for {c_text}: got {p_list[0].intent}, expected {exp_intent}"
+        if exp_cust:
+            assert p_list[0].customer_name == exp_cust, f"Mismatch cust for {c_text}: got {p_list[0].customer_name}, expected {exp_cust}"
+        print(f"  ✓ '{c_text}' -> {exp_intent.value} (cust={exp_cust})")
+
     print("\n" + "=" * 75)
-    print("🏆 ALL 14 UNFAIR ADVANTAGE & ZERO-FAIL SCENARIOS PASSED WITH 100% SUCCESS!")
+    print("🏆 ALL 15 UNFAIR ADVANTAGE & ZERO-FAIL SCENARIOS PASSED WITH 100% SUCCESS!")
     print("=" * 75)
 
 

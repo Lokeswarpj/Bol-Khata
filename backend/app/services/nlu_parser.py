@@ -440,54 +440,96 @@ def _is_customer_count_query(text: str) -> bool:
     return any(re.search(p, text_lower) for p in patterns)
 
 
+COLLECTION_STOP_WORDS = {
+    "today", "aaj", "eeroju", "ivvala", "eroju", "ivattu", "ivattina", "indu",
+    "take", "collect", "collection", "payment", "qr", "upi", "code", "show",
+    "generate", "display", "get", "dikhao", "batao", "chupinchu", "cheppandi",
+    "heli", "thorisi", "inda", "hatthira", "nunchi", "nundi", "daggara", "se",
+    "ka", "ki", "ke", "ge", "karo", "lo", "teesuko", "thago", "thagoli", "maadu",
+    "kitna", "kitni", "entha", "eshtu", "hua", "aaya", "vachindi", "aindi",
+    "aayitu", "agide", "hai", "kya", "total", "store", "dukaan", "shop", "khata",
+    "hisaab", "hisab", "vasool", "vasooli", "vasulu", "jama", "for", "of", "from",
+    "to", "the", "and", "or", "me", "we", "us", "did", "how", "much", "paisa", "cash",
+    # Telugu
+    "ఎంత", "ఈరోజు", "ఇవాళ", "తీసుకో", "చూపించు", "చెప్పండి", "నుండి", "దగ్గర",
+    "కలెక్షన్", "వసూలు", "జమ", "చెల్లింపు", "పేమెంట్", "క్యూఆర్",
+    # Kannada
+    "ಎಷ್ಟು", "ಇವತ್ತು", "ಇವತ್ತಿನ", "ಇಂದು", "ತಗೋಳಿ", "ಹೇಳಿ", "ಆಯಿತು", "ಆಗಿದೆ",
+    "ಮಾಡಿದ", "ಮಾಡು", "ಇಂದ", "ಹತ್ತಿರ", "ತೋರಿಸಿ", "ಕಲೆಕ್ಷನ್", "ವಸೂಲಿ", "ಜಮಾ", "ಪಾವತಿ",
+    # Hindi
+    "आज", "कितना", "कितनी", "बताओ", "दिखाओ", "करो", "लो", "हुआ", "आया", "कलेक्शन", "जमा", "वसूली", "हिसाब"
+}
+
+
 def _is_collections_today_query(text: str) -> bool:
-    """Detects queries about today's collection or payment receipts."""
-    text_lower = text.lower()
+    """Detects queries about today's collection or payment receipts across Hindi, Telugu, Kannada, English."""
+    text_lower = text.lower().strip()
     patterns = [
-        r'\b(?:how\s+much\s+(?:did\s+we\s+)?collect|today(?:\'s)?\s+collection|aaj\s+kitna\s+(?:jama|collection|paisa\s+aaya|cash\s+aaya|vasool))\b',
-        r'(?:ಇವತ್ತು\s*ಎಷ್ಟು\s*ಜಮಾ|ಇಂದು\s*ಎಷ್ಟು\s*ವಸೂಲಿ)',
-        r'(?:ఈరోజు\s*ఎంత\s*జమ|ఈరోజు\s*ఎంత\s*వసూలు)',
+        # English
+        r"\b(?:how\s+much\s+(?:did\s+we\s+)?collect(?:\s+today)?|today(?:'s)?\s*(?:total\s+)?collections?|collections?\s+today|what\s+is\s+today(?:'s)?\s+collection|total\s+collection\s+today|today(?:'s)?\s+payment\s+receipts?)\b",
+        # Hindi (Roman)
+        r'\b(?:aaj\s+(?:ka|ki|ke)?\s*(?:kitna|kitni)?\s*(?:collection|jama|vasool|vasooli|paisa|cash|hisaab)\s*(?:kitna|kitni|hua|aaya|batao|kya\s+hai)?|aaj\s+kitna\s+(?:jama|collection|paisa\s+aaya|cash\s+aaya|vasool))\b',
+        # Hindi (Devanagari)
+        r'(?:आज|आज\s*का|आज\s*की|आज\s*के)\s*(?:कलेक्शन|जमा|वसूली|हिसाब|पैसा|कैश)\s*(?:कितना|बताओ|क्या\s*है|हुआ|आया)?',
+        r'आज\s*कितना\s*(?:कलेक्शन|जमा|वसूली|पैसा|कैश)',
+        # Telugu (Roman)
+        r'\b(?:eeroju|ivvala|eroju)\s*(?:entha)?\s*(?:collection|jama|vasulu|payment|hisaab)\s*(?:entha|vachindi|aindi|chupinchu|cheppandi)?\b',
+        r'\b(?:eeroju|ivvala|eroju)\b.*?\b(?:collection|jama|vasulu|payment)\b',
+        r'(?:collection|jama|vasulu|payment)\s*(?:entha\s+vachindi|entha|eeroju|ivvala)',
+        # Telugu (Script with script tolerance)
+        r'(?:[ఈ\u0C88]రోజు|ఇవాళ|[ఈ\u0C88]\s*రోజు)\s*(?:ఎంత)?\s*(?:కలెక్షన్|జమ|వసూలు|చెల్లింపు|పేమెంట్)\s*(?:ఎంత|వచ్చింది|అయింది|చెప్పండి)?',
+        r'(?:[ఈ\u0C88]రోజు|ఇవాళ|[ఈ\u0C88]\s*రోజు).*?(?:కలెక్షన్|జమ|వసూలు)',
+        # Kannada (Roman)
+        r'\b(?:ivattu|ivattina|indu)\s*(?:eshtu)?\s*(?:collection|jama|vasuli|payment|hisaab)\s*(?:eshtu|aayitu|agide|heli|thorisi)?\b',
+        r'\b(?:ivattu|ivattina|indu)\b.*?\b(?:collection|jama|vasuli|payment)\b',
+        r'(?:collection|jama|vasuli|payment)\s*(?:eshtu\s+aayitu|eshtu|ivattu|ivattina|indu)',
+        # Kannada (Script)
+        r'(?:ಇವತ್ತು|ಇವತ್ತಿನ|ಇಂದು)\s*(?:ಎಷ್ಟು)?\s*(?:ಕಲೆಕ್ಷನ್|ಜಮಾ|ವಸೂಲಿ|ಪಾವತಿ)\s*(?:ಎಷ್ಟು|ಆಯಿತು|ಆಗಿದೆ|ಹೇಳಿ)?',
+        r'(?:ಇವತ್ತು|ಇವತ್ತಿನ|ಇಂದು).*?(?:ಕಲೆಕ್ಷನ್|ಜಮಾ|ವಸೂಲಿ)',
     ]
     return any(re.search(p, text_lower) for p in patterns)
 
 
 def _is_voice_to_upi(text: str) -> Tuple[bool, Optional[str]]:
     """Detects voice-to-UPI payment QR requests in Telugu, Kannada, Hindi, and English."""
-    text_lower = text.lower()
-    # 1. Customer first with collection / payment request:
-    # e.g. "Suresh nunchi collection teesuko", "Suresh daggara payment teesuko", "Suresh se collection lo", "సురేష్ దగ్గర కలెక్షన్ తీసుకో"
+    text_lower = text.lower().strip()
+
+    # 1. Action first: "collect from Suresh", "take collection from Suresh", "show QR for Suresh"
+    m_act = re.search(
+        r'(?:collect(?:\s+(?:money|payment))?\s+from|take\s+collection\s+from|get\s+collection\s+from|show\s+qr\s+for|upi\s+for)\s+([a-zA-Z\u0900-\u0D7F]+)',
+        text_lower
+    )
+    if m_act:
+        c = m_act.group(1).strip().title()
+        if c.lower() not in COLLECTION_STOP_WORDS:
+            return True, c
+
+    # 2. Customer first with collection / payment request:
+    # "Suresh se collection lo", "Suresh nunchi collection teesuko", "Suresh inda collection thagoli", "సురేష్ నుండి కలెక్షన్ తీసుకో", "ಸುರೇಶ್ ಇಂದ ಕಲೆಕ್ಷನ್ ತಗೋಳಿ"
     m_cust_coll = re.search(
-        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:nunchi|nundi|daggara|ki|ge|se|ka|నుండి|దగ్గర|కి)?\s*(?:collection|payment|upi|hisaab|vasooli|కలెక్షన్|పేమెంట్|క్యూఆర్|చెల్లింపు)\s*(?:teesuko|thago|lo|karo|తీసుకో|చూపించు)?',
+        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:nunchi|nundi|daggara|inda|hatthira|se|ka|ki|ke|ge|నుండి|దగ్గర|ఇంద|ಹತ್ತಿರ|ಇಂದ|से|का|की)?\s*(?:collection|payment|upi|hisaab|vasooli|కలెక్షన్|పేమెంట్|క్యూఆర్|ಕಲೆಕ್ಷನ್|ಪಾವತಿ|ವಸೂಲಿ)\s*(?:teesuko|thago|lo|karo|thagoli|maadu|తీసుకో|చూపించు|ತಗೋಳಿ|ಮಾಡು|दिखाओ)?',
         text_lower
     )
     if m_cust_coll:
         cust = m_cust_coll.group(1).strip().title()
-        if cust.lower() not in ("upi", "qr", "payment", "collection", "hisaab", "hisab", "show", "me", "to", "for", "aaj", "today", "eeroju", "ivattu", "dukaan", "store", "shop", "khata", "total"):
+        if cust.lower() not in COLLECTION_STOP_WORDS:
             return True, cust
 
-    # 2. Customer first with QR / UPI requests:
-    # e.g. "Suresh ki upi qr", "Suresh qr code", "Suresh qr chupinchu", "Suresh upi qr dikhao"
+    # 3. Customer first with QR / UPI requests:
+    # e.g. "Suresh ki upi qr", "Suresh qr code", "Suresh qr chupinchu", "Suresh upi qr dikhao", "Suresh ge qr"
     m_cust_qr = re.search(
-        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:ka|ki|ke|se|ge|కి|యొక్క)?\s*(?:upi\s*qr|qr\s*code|qr\s*chupinchu|qr\s*dikhao|upi\s*dikhao|క్యూఆర్|qr)',
+        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:ka|ki|ke|se|ge|inda|daggara|కి|యొక్క|ಗೆ|ఇంద|ಇಂದ)?\s*(?:upi\s*qr|qr\s*code|qr\s*chupinchu|qr\s*dikhao|upi\s*dikhao|qr\s*thorisi|క్యూఆర్|qr)',
         text_lower
     )
     if m_cust_qr:
         cust = m_cust_qr.group(1).strip().title()
-        if cust.lower() not in ("show", "generate", "display", "get", "dikhao", "chupinchu", "qr", "upi", "aaj", "today", "eeroju", "ivattu", "dukaan", "store", "shop", "khata"):
+        if cust.lower() not in COLLECTION_STOP_WORDS:
             return True, cust
 
-    # 3. Action first: e.g. "show QR for Suresh", "collect from Suresh"
-    m_act_first = re.search(
-        r'(?:show|generate|display)?\s*(?:upi\s*qr|qr\s*code|qr|collection|payment)\s*(?:for|of|from|ki|ge)?\s+([a-zA-Z\u0900-\u0D7F]+)',
-        text_lower
-    )
-    if m_act_first:
-        cust = m_act_first.group(1).strip().title()
-        if cust.lower() not in ("upi", "qr", "payment", "collection", "hisaab", "show", "me", "to", "for", "dikhao", "chupinchu"):
-            return True, cust
-
-    if "collection" in text_lower or "qr" in text_lower or "upi" in text_lower or "కలెక్షన్" in text_lower or "క్యూఆర్" in text_lower:
-        words = [w.strip().title() for w in re.findall(r'[a-zA-Z\u0900-\u0D7F]+', text) if w.lower() not in ("collection", "payment", "teesuko", "lo", "karo", "show", "qr", "code", "upi", "for", "of", "from", "se", "ka", "ki", "nunchi", "daggara", "dikhao", "chupinchu", "తీసుకో", "చూపించు")]
+    # 4. Fallback if collection/upi/qr keywords present:
+    trigger_words = {'collection', 'qr', 'upi', 'కలెక్షన్', 'క్యూఆర్', 'ಕಲೆಕ್ಷನ್', 'ವಸೂಲಿ'}
+    if any(tw in text_lower for tw in trigger_words):
+        words = [w.strip().title() for w in re.findall(r'[a-zA-Z\u0900-\u0D7F]+', text) if w.lower() not in COLLECTION_STOP_WORDS]
         if words:
             return True, words[0]
 
