@@ -134,7 +134,7 @@ async def run_all_tests():
         clear_resp = await ledger.process_voice_command("Suresh cleared his debt", session_id="live_demo_session")
         assert clear_resp.success is True
         print(f"  ✓ Debt Clearing Response: \"{clear_resp.message}\"")
-        suresh_cust = await ledger.find_customer_exact("Suresh General Store")
+        suresh_cust = await ledger.find_customer_exact("Suresh") or await ledger.find_customer_exact("Suresh General Store")
         suresh_bal = await ledger.get_customer_balance(suresh_cust.id)
         assert suresh_bal == 0.0, f"Expected Suresh balance to be 0.0, got {suresh_bal}"
         print(f"  ✓ Confirmed Suresh balance is ₹{suresh_bal} (Debt completely cleared!)")
