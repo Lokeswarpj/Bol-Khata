@@ -14,6 +14,7 @@ import { ManualEntryModal } from '../components/ManualEntryModal';
 import { DevPanel } from '../components/DevPanel';
 import { BolKhataLogo } from '../components/BolKhataLogo';
 import { VoiceKhataBackground3D } from '../components/VoiceKhataBackground3D';
+import { getTranslation } from '../utils/i18n';
 import { CustomersView } from './CustomersView';
 import { CustomerDetailView } from './CustomerDetailView';
 import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff, Mic } from 'lucide-react';
@@ -110,7 +111,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
                 BolKhata
               </span>
               <MonoLabel variant="emerald" className="text-[9px] tracking-[0.25em]">
-                {storeOwner ? `${storeOwner.store_name} · ${storeOwner.owner_name}` : 'VOICE LEDGER'}
+                {storeOwner ? `${storeOwner.store_name} · ${storeOwner.owner_name}` : getTranslation('voiceLedger', settings.language)}
               </MonoLabel>
             </div>
           </div>
@@ -130,14 +131,14 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
             }`}>
               {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              <span>{isOnline ? 'LIVE' : 'OFFLINE'}</span>
+              <span>{isOnline ? getTranslation('statusLive', settings.language) : getTranslation('statusOffline', settings.language)}</span>
             </div>
 
             {/* Customers button */}
             <button
               onClick={() => setCurrentView('customers')}
               className="p-2 rounded-xl text-white/70 hover:text-white glass border border-white/10 hover:border-white/20 transition-colors"
-              title="Customers Directory"
+              title={getTranslation('customers', settings.language)}
             >
               <Users className="w-4 h-4" />
             </button>
@@ -146,7 +147,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
             <button
               onClick={() => setDevPanelOpen(true)}
               className="p-2 rounded-xl text-white/70 hover:text-white glass border border-white/10 hover:border-white/20 transition-colors"
-              title="Dev & Demo Panel"
+              title={getTranslation('devPanel', settings.language)}
             >
               <Wrench className="w-4 h-4" />
             </button>
@@ -155,7 +156,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
             <button
               onClick={() => setSettingsOpen(true)}
               className="p-2 rounded-xl text-white/70 hover:text-white glass border border-white/10 hover:border-white/20 transition-colors"
-              title="Settings"
+              title={getTranslation('settings', settings.language)}
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -177,86 +178,84 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
 
         {/* Big Balance Hero Cards */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Credit (Udhaar) Card */}
-          <div className="glass p-4 rounded-3xl border border-white/10 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl group-hover:bg-rose-500/10 transition-colors" />
-            <div className="flex items-center justify-between text-white/60 text-xs mb-3">
-              <span className="font-mono uppercase tracking-wider text-[11px]">Today Udhaar</span>
-              <div className="p-1 rounded-full bg-rose-500/10 text-rose-400">
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl font-serif text-paper font-semibold tracking-tight">
-                ₹{Math.round(todayCredit).toLocaleString('en-IN')}
-              </div>
-              <span className="text-[10px] text-white/40 font-mono mt-0.5 block">
-                Grahak se lena hai
+          {/* Udhaar Given (Rose) */}
+          <div className="glass rounded-3xl p-4 border border-white/10 relative overflow-hidden group">
+            <div className="flex items-center justify-between text-rose-400/80 mb-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
+                <ArrowUpRight className="w-3 h-3" /> {getTranslation('todayCredit', settings.language)}
               </span>
             </div>
+            <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-rose-400">
+              ₹{Math.round(todayCredit).toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-white/40 block mt-1">{getTranslation('givenToCustomers', settings.language)}</span>
           </div>
 
-          {/* Payment (Jama) Card */}
-          <div className="glass p-4 rounded-3xl border border-white/10 flex flex-col justify-between relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-colors" />
-            <div className="flex items-center justify-between text-white/60 text-xs mb-3">
-              <span className="font-mono uppercase tracking-wider text-[11px]">Today Jama</span>
-              <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-400">
-                <ArrowDownLeft className="w-3.5 h-3.5" />
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl font-serif text-paper font-semibold tracking-tight">
-                ₹{Math.round(todayPayment).toLocaleString('en-IN')}
-              </div>
-              <span className="text-[10px] text-white/40 font-mono mt-0.5 block">
-                Cash aagaya hai
+          {/* Jama Received (Emerald) */}
+          <div className="glass rounded-3xl p-4 border border-white/10 relative overflow-hidden group">
+            <div className="flex items-center justify-between text-emerald-400/80 mb-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
+                <ArrowDownLeft className="w-3 h-3" /> {getTranslation('todayPayment', settings.language)}
               </span>
             </div>
+            <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-emerald-400">
+              ₹{Math.round(todayPayment).toLocaleString('en-IN')}
+            </div>
+            <span className="text-[10px] text-white/40 block mt-1">{getTranslation('collectedPayment', settings.language)}</span>
           </div>
         </div>
 
-        {/* Action Bar (Manual Entry & Quick stats) */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <MonoLabel variant="muted" className="text-[10px]">
-              RECENT TRANSACTIONS
+        {/* Live Transcript / Heard Pill */}
+        <div className="glass rounded-2xl p-3 border border-white/10 flex items-center justify-between min-h-[52px]">
+          <div className="flex items-center gap-2.5 min-w-0 pr-2">
+            <MonoLabel variant="emerald" pulseDot={voiceState === 'listening'}>
+              {voiceState === 'listening'
+                ? getTranslation('listening', settings.language)
+                : voiceState === 'thinking'
+                ? getTranslation('thinking', settings.language)
+                : voiceState === 'speaking'
+                ? getTranslation('speaking', settings.language)
+                : getTranslation('heard', settings.language)}
             </MonoLabel>
-            <span className="text-xs text-white/40 font-mono">
-              ({entries.length})
+
+            <span className="text-xs text-white/80 truncate italic">
+              {heardTranscript ? `"${heardTranscript}"` : getTranslation('holdMicPrompt', settings.language)}
             </span>
           </div>
 
           <button
             onClick={() => setManualEntryOpen(true)}
             className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white glass px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 transition-all font-mono"
+            title={getTranslation('manualEntry', settings.language)}
           >
             <Plus className="w-3 h-3 text-emerald-400" />
             <span>MANUAL ENTRY</span>
           </button>
         </div>
 
-        {/* Feed of Ledger Entries */}
-        <div className="flex flex-col gap-2.5 pb-6">
-          {entries.length > 0 ? (
-            entries.slice(0, 15).map((entry) => (
-              <EntryCard
-                key={entry.id}
-                entry={entry}
-                onUndo={() => undoEntry(entry.id, entry.remote_id)}
-              />
-            ))
-          ) : (
-            <div className="glass rounded-3xl p-8 border border-white/10 text-center flex flex-col items-center justify-center my-6">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white/30 mb-3">
-                <Mic className="w-6 h-6 text-white/40" />
-              </div>
-              <h4 className="font-serif text-base text-paper mb-1">
-                Koi entry nahi mili
-              </h4>
-              <p className="text-xs text-white/50 max-w-xs font-sans leading-relaxed">
-                Neeche Mic button ko daba kar boliye: <br />
-                <span className="text-white/80 font-mono mt-1 block">"Ramesh ka 340 udhaar likh lo"</span>
+        {/* Recent Entries Header */}
+        <div className="flex items-center justify-between pt-1">
+          <MonoLabel variant="muted">
+            {getTranslation('recentLedgerEntries', settings.language)} ({entries.length})
+          </MonoLabel>
+          <span className="text-[11px] text-white/40">{getTranslation('latestOnTop', settings.language)}</span>
+        </div>
+
+        {/* Recent Entries List */}
+        <div className="space-y-2 pb-6">
+          {entries.slice(0, 15).map((entry, idx) => (
+            <EntryCard
+              key={entry.id || idx}
+              entry={entry}
+              onUndo={() => undoEntry(entry.id, entry.remote_id)}
+            />
+          ))}
+
+          {entries.length === 0 && (
+            <div className="text-center py-12 glass rounded-3xl border border-white/5 space-y-2">
+              <p className="font-serif text-lg text-white/70">{getTranslation('cleanKhata', settings.language)}</p>
+              <p className="text-xs text-white/40 max-w-xs mx-auto">
+                {getTranslation('emptyKhataHint', settings.language)}
               </p>
             </div>
           )}
@@ -279,7 +278,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
               title="Continuous Hands-Free Autonomous Listening"
             >
               <span className={`w-1.5 h-1.5 rounded-full ${settings.handsFree ? 'bg-cyan-400' : 'bg-white/30'}`} />
-              <span>HANDS-FREE {settings.handsFree ? 'ON' : 'OFF'}</span>
+              <span>{getTranslation('handsFree', settings.language)} {settings.handsFree ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Language Selector */}
@@ -314,7 +313,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
             onClickToggle={handleMicToggle}
           />
           <span className="text-[10px] text-white/40 font-mono tracking-wider uppercase">
-            {voiceState === 'listening' ? 'Recording... (release or tap)' : 'Hold or tap to speak'}
+            {voiceState === 'listening' ? getTranslation('recordingRelease', settings.language) : getTranslation('holdOrTapToSpeak', settings.language)}
           </span>
         </div>
       </div>

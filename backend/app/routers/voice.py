@@ -24,6 +24,22 @@ logger = logging.getLogger("bolkhata.voice")
 
 router = APIRouter(prefix="/api/voice", tags=["Voice"])
 
+LOCALIZED_NOT_UNDERSTOOD = {
+    "hi-IN": "Awaaz samajh nahi aayi. Kripya phir se boliye.",
+    "kn-IN": "ಧ್ವನಿ ಸ್ಪಷ್ಟವಾಗಿ ಕೇಳಿಸಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಹೇಳಿ.",
+    "te-IN": "వాయిస్ అర్థం కాలేదు. దయచేసి మళ్లీ చెప్పండి.",
+    "en-IN": "Could not understand audio. Please speak again.",
+    "auto": "Awaaz samajh nahi aayi. Phir se boliye.",
+}
+
+LOCALIZED_NO_INPUT = {
+    "hi-IN": "Koi input nahi mila. Audio ya text bhejiye.",
+    "kn-IN": "ಯಾವುದೇ ಧ್ವನಿ ಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೊಮ್ಮೆ ಮಾತನಾಡಿ.",
+    "te-IN": "ఎలాంటి వాయిస్ రాలేదు. దయచేసి మళ్లీ మాట్లాడండి.",
+    "en-IN": "No input received. Please speak or send text.",
+    "auto": "Koi input nahi mila. Audio ya text bhejiye.",
+}
+
 
 # ═══════════════════════════════════════════════════════════════
 # REST Endpoint: Process voice (audio file upload)
@@ -55,22 +71,26 @@ async def process_voice(
         )
         
         if not stt_result["success"] or not stt_result["transcript"]:
+            msg = LOCALIZED_NOT_UNDERSTOOD.get(language, LOCALIZED_NOT_UNDERSTOOD["hi-IN"])
             return VoiceResponse(
                 success=False,
-                message="Awaaz samajh nahi aayi. Kripya phir se boliye. (Could not understand the audio. Please try again.)",
+                message=msg,
+                language=language,
             )
         
         transcript = stt_result["transcript"]
     
     if not transcript:
+        msg = LOCALIZED_NO_INPUT.get(language, LOCALIZED_NO_INPUT["hi-IN"])
         return VoiceResponse(
             success=False,
-            message="Koi input nahi mila. Audio ya text bhejiye. (No input received.)",
+            message=msg,
+            language=language,
         )
     
     # Step 2: NLU + Ledger - Process the transcribed text
     ledger = LedgerEngine(db)
-    response = await ledger.process_voice_command(transcript, session_id=session_id)
+    response = await ledger.process_voice_command(transcript, session_id=session_id, language=language)
     
     # Step 3: TTS - Generate spoken response
     if response.message:
@@ -207,9 +227,19 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
                 )
                 
                 if not stt_result["success"] or not stt_result["transcript"]:
+                    err_msg = LOCALIZED_NOT_UNDERSTOOD.get(language, LOCALIZED_NOT_UNDERSTOOD["hi-IN"])
+                    err_audio_b64 = None
+                    try:
+                        tts_err = await tts_service.synthesize(text=err_msg, language=language, session_id=session_id)
+                        if tts_err.get("success"):
+                            err_audio_b64 = tts_err.get("audio_base64")
+                    except Exception:
+                        pass
+
                     await websocket.send_json({
                         "type": "error",
-                        "text": "Awaaz samajh nahi aayi. Phir se boliye.",
+                        "text": err_msg,
+                        "audio": err_audio_b64,
                     })
                     continue
                 
@@ -221,8 +251,8 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
             if not transcript:
                 continue
             
-            # Process the command through ledger engine
-            response = await ledger.process_voice_command(transcript, session_id, language=language)
+            # Process the command through ledger engine with selected language
+            response = await ledger.process_voice_command(transcript, session_id=session_id, language=language)
             
             # Generate TTS response with Gnani Neural Voice
             audio_b64 = None

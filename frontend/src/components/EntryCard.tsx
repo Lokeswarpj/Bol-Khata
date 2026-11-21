@@ -2,6 +2,8 @@ import React from 'react';
 import { MonoLabel } from './MonoLabel';
 import { RotateCcw } from 'lucide-react';
 import type { Entry } from '../types';
+import { useLedgerStore } from '../store/useLedgerStore';
+import { getTranslation } from '../utils/i18n';
 
 interface EntryCardProps {
   entry: Entry;
@@ -14,10 +16,13 @@ export const EntryCard: React.FC<EntryCardProps> = ({
   onUndo,
   shimmer = false
 }) => {
+  const { settings } = useLedgerStore();
   const isUdhaar = entry.type === 'credit';
   const amountColor = isUdhaar ? 'text-rose-400' : 'text-emerald-400';
   const sign = isUdhaar ? '+' : '-';
-  const labelText = isUdhaar ? 'UDHAAR' : 'JAMA';
+  const labelText = isUdhaar
+    ? getTranslation('udhaar', settings.language)
+    : getTranslation('jama', settings.language);
 
   return (
     <div className={`glass rounded-2xl p-4 flex items-center justify-between transition-all duration-200 hover:border-white/20 ${shimmer ? 'shimmer border-emerald-500/40' : ''}`}>

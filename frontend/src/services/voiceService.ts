@@ -1,5 +1,6 @@
 import { useLedgerStore } from '../store/useLedgerStore';
 import type { VoiceServerResponse, LatencyRecord } from '../types';
+import { getTranslation } from '../utils/i18n';
 
 // Web Speech API interfaces for live transcription
 interface IWindow extends Window {
@@ -234,9 +235,8 @@ class VoiceService {
       store.setLastLatency(record);
     } else if (data.type === 'error') {
       store.setVoiceState('idle');
-      if (data.text) {
-        store.setHeardTranscript(`⚠️ ${data.text}`);
-      }
+      const errorMsg = data.text || getTranslation('voiceNotUnderstood', store.settings.language);
+      store.setHeardTranscript(`⚠️ ${errorMsg}`);
     }
   }
 
@@ -293,7 +293,7 @@ class VoiceService {
 
     // Provide instant feedback in UI
     store.setVoiceState('listening');
-    store.setHeardTranscript('Suniye, bol rahe hain...');
+    store.setHeardTranscript(getTranslation('listeningFeedback', store.settings.language));
 
     // 1. Start live speech recognition if supported
     if (this.recognition) {
