@@ -399,13 +399,23 @@ class LedgerEngine:
             pending = session.pending_action
             clean_reply = text.strip().lower()
 
-            matched_cust: Optional[Dict[str, Any]] = None
-            for cand in pending.candidates:
-                cand_name = cand["name"].lower()
-                cand_nick = (cand.get("nickname") or "").lower()
-                if (cand_nick and cand_nick in clean_reply) or (cand_name in clean_reply) or (clean_reply in cand_name):
-                    matched_cust = cand
-                    break
+            # If the user speaks an explicit new intent (clear debt, stop, reset, query), cancel stale disambiguation
+            parsed_check = parse_voice_utterance(text)
+            is_new_explicit_command = any(
+                p.intent in (IntentType.CLEAR_DEBT, IntentType.STOP_LISTENING, IntentType.RESET_TODAYS_PAYMENTS, IntentType.QUERY_BALANCE)
+                for p in parsed_check
+            )
+
+            if is_new_explicit_command:
+                session.clear_pending_action()
+            else:
+                matched_cust: Optional[Dict[str, Any]] = None
+                for cand in pending.candidates:
+                    cand_name = cand["name"].lower()
+                    cand_nick = (cand.get("nickname") or "").lower()
+                    if (cand_nick and cand_nick in clean_reply) or (cand_name in clean_reply) or (clean_reply in cand_name):
+                        matched_cust = cand
+                        break
 
             if matched_cust:
                 session.clear_pending_action()
