@@ -142,6 +142,59 @@ async def process_text(
     return response
 
 
+@router.get("/welcome-intro")
+async def get_welcome_intro(
+    language: str = "hi-IN",
+    owner_id: Optional[int] = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Returns personalized hands-free welcome intro audio & text synthesized by Gnani Neural TTS.
+    """
+    from sqlalchemy import select
+    from app.models import StoreOwner
+
+    if owner_id:
+        res = await db.execute(select(StoreOwner).where(StoreOwner.id == owner_id))
+        owner = res.scalars().first()
+    else:
+        res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True))
+        owner = res.scalars().first()
+        if not owner:
+            res2 = await db.execute(select(StoreOwner).order_by(StoreOwner.id.asc()))
+            owner = res2.scalars().first()
+
+    owner_name = owner.owner_name if owner else "Merchant"
+    store_name = owner.store_name if owner else "BolKhata"
+    lang = language or (owner.language_preference if owner else "hi-IN") or "hi-IN"
+
+    if lang.startswith("kn"):
+        msg = f"ನಮಸ್ಕಾರ {owner_name} ಅವರೇ! {store_name} ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಲೆಡ್ಜರ್ 100% ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದೆ. ನಾನು ನಿಮ್ಮ ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ ಸಹಾಯಕ — ಪರದೆ ಮುಟ್ಟದೆಯೇ ಸಹಜವಾಗಿ ಮಾತನಾಡಿ."
+    elif lang.startswith("te"):
+        msg = f"నమస్కారం {owner_name} గారు! {store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురక్షితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి."
+    elif lang.startswith("hi"):
+        msg = f"Namaste {owner_name} ji! {store_name} ke BolKhata mein aapka swagat hai. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — bina screen ko chhue aam bolchaal mein baat kijiye."
+    else:
+        msg = f"Namaste {owner_name} ji! Welcome to {store_name}'s BolKhata. You are experiencing a safe and trusted AI ledger system. All records are 100% encrypted and DPDP compliant. I am listening hands-free across the counter."
+
+    audio_base64 = None
+    try:
+        tts_res = await tts_service.synthesize(text=msg, language=lang)
+        if tts_res.get("success"):
+            audio_base64 = tts_res.get("audio_base64")
+    except Exception as e:
+        logger.warning(f"Intro synthesis error: {e}")
+
+    return {
+        "success": True,
+        "message": msg,
+        "audio_base64": audio_base64,
+        "language": lang,
+        "store_name": store_name,
+        "owner_name": owner_name,
+    }
+
+
 # ═══════════════════════════════════════════════════════════════
 # WebSocket: Real-time voice processing
 # ═══════════════════════════════════════════════════════════════

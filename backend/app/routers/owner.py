@@ -134,41 +134,31 @@ async def signup_store_owner(
     if not data.store_name.strip() or not data.owner_name.strip():
         raise HTTPException(status_code=400, detail="Store name and Owner name are required.")
 
-    # Check if merchant phone already registered
-    if data.phone and data.phone.strip():
-        existing = await db.execute(select(StoreOwner).where(StoreOwner.phone == data.phone.strip()))
-        existing_owner = existing.scalars().first()
-        if existing_owner:
-            # Switch to this owner
-            await db.execute(update(StoreOwner).values(is_active=False))
-            existing_owner.is_active = True
-            existing_owner.store_name = data.store_name.strip()
-            existing_owner.owner_name = data.owner_name.strip()
-            if data.pin:
-                existing_owner.pin = data.pin.strip()
-            await db.commit()
-            await db.refresh(existing_owner)
-            owner = existing_owner
-        else:
-            # Set all existing owners to inactive
-            await db.execute(update(StoreOwner).values(is_active=False))
-            owner = StoreOwner(
-                store_name=data.store_name.strip(),
-                owner_name=data.owner_name.strip(),
-                phone=data.phone.strip() if data.phone else None,
-                pin=data.pin.strip() if data.pin else "1234",
-                address=data.address.strip() if data.address else None,
-                language_preference=data.language_preference or "en-IN",
-                is_active=True,
-            )
-            db.add(owner)
-            await db.commit()
-            await db.refresh(owner)
+    # Deactivate existing owners to make the new store active
+    await db.execute(update(StoreOwner).values(is_active=False))
+
+    phone_val = data.phone.strip() if data.phone else None
+    existing = None
+    if phone_val:
+        q = select(StoreOwner).where(
+            StoreOwner.phone == phone_val,
+            StoreOwner.store_name == data.store_name.strip()
+        )
+        existing = (await db.execute(q)).scalars().first()
+
+    if existing:
+        existing.is_active = True
+        existing.owner_name = data.owner_name.strip()
+        if data.pin:
+            existing.pin = data.pin.strip()
+        await db.commit()
+        await db.refresh(existing)
+        owner = existing
     else:
-        await db.execute(update(StoreOwner).values(is_active=False))
         owner = StoreOwner(
             store_name=data.store_name.strip(),
             owner_name=data.owner_name.strip(),
+            phone=phone_val,
             pin=data.pin.strip() if data.pin else "1234",
             address=data.address.strip() if data.address else None,
             language_preference=data.language_preference or "en-IN",
@@ -356,32 +346,17 @@ async def register_store_owner(
     if not data.store_name.strip() or not data.owner_name.strip():
         raise HTTPException(status_code=400, detail="Store name and Owner name are required.")
 
-    result = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
-    owner = result.scalars().first()
-
-    if owner:
-        owner.store_name = data.store_name.strip()
-        owner.owner_name = data.owner_name.strip()
-        if data.phone:
-            owner.phone = data.phone.strip()
-        if data.pin:
-            owner.pin = data.pin.strip()
-        if data.address:
-            owner.address = data.address.strip()
-        if data.language_preference:
-            owner.language_preference = data.language_preference
-    else:
-        owner = StoreOwner(
-            store_name=data.store_name.strip(),
-            owner_name=data.owner_name.strip(),
-            phone=data.phone.strip() if data.phone else None,
-            pin=data.pin.strip() if data.pin else "1234",
-            address=data.address.strip() if data.address else None,
-            language_preference=data.language_preference or "en-IN",
-            is_active=True,
-        )
-        db.add(owner)
-
+    await db.execute(update(StoreOwner).values(is_active=False))
+    owner = StoreOwner(
+        store_name=data.store_name.strip(),
+        owner_name=data.owner_name.strip(),
+        phone=data.phone.strip() if data.phone else None,
+        pin=data.pin.strip() if data.pin else "1234",
+        address=data.address.strip() if data.address else None,
+        language_preference=data.language_preference or "en-IN",
+        is_active=True,
+    )
+    db.add(owner)
     await db.commit()
     await db.refresh(owner)
 

@@ -407,8 +407,8 @@
 
     <!-- First Gesture Click Banner (Ensures Chrome audio autoplay permission) -->
     <div id="clickToStartBanner" onclick="startHandsFreeDirect()" class="fixed top-20 inset-x-0 z-40 mx-auto max-w-lg bg-gradient-to-r from-violet-950/90 via-black to-cyan-950/90 text-neutral-200 text-xs py-2 px-4 rounded-full border border-violet-500/40 text-center cursor-pointer shadow-2xl flex items-center justify-center space-x-2">
-        <i class="fa-solid fa-hand-pointer text-cyan-400 animate-bounce"></i>
-        <span>Welcome to BolKhata. Click anywhere to activate hands-free Kirana counter audio.</span>
+        <i class="fa-solid fa-volume-high text-cyan-400 animate-pulse"></i>
+        <span>Namaste! Welcome to BolKhata. Click here to listen to welcome intro or speak anytime!</span>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════
@@ -1084,7 +1084,7 @@
         }
 
         // ── Voice, State Machine & Backend Integration ─────────────
-        let currentLanguage = 'en-IN';
+        let currentLanguage = 'hi-IN';
         let handsFreeActive = true;
         let micLocked = false;
         let isIntroPlaying = false;
@@ -1094,11 +1094,28 @@
         let speechSilenceTimer = null;
         let lastHeardTranscript = '';
         let recognition = null;
+        let currentAudioElement = null;
         let lastSpokenText = "";
         let audioContext = null;
         let analyser = null;
         let micStream = null;
         let storeOwner = null;
+
+        function stopAllAudio() {
+            if (currentAudioElement) {
+                try {
+                    currentAudioElement.pause();
+                    currentAudioElement.currentTime = 0;
+                } catch(_) {}
+                currentAudioElement = null;
+            }
+            if (window.speechSynthesis) {
+                try { window.speechSynthesis.cancel(); } catch(_) {}
+            }
+            isSpeaking = false;
+            isIntroPlaying = false;
+            micLocked = false;
+        }
 
         const WELCOME_TRUST_MESSAGES = {
             'en-IN': "Namaste! Welcome to BolKhata. You are experiencing a safe and trusted AI ledger system built specifically for your store. All your records are 100% encrypted, secure, and DPDP compliant. I am your hands-free assistant — you can talk naturally across the counter without touching the screen.",
@@ -1146,13 +1163,8 @@
                 `;
             }
 
-            if (recognition) {
-                const targetModel = langCode === 'auto' ? 'en-IN' : langCode;
-                recognition.lang = targetModel;
-                if (handsFreeActive && !micLocked && !isSpeaking && !isProcessing) {
-                    try { recognition.stop(); } catch(e){}
-                    setTimeout(restartRecognition, 200);
-                }
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                initContinuousSpeechRecognition();
             }
         }
 
@@ -1214,72 +1226,64 @@
             }
         }
 
-        function playWelcomeTrustMessage() {
-            micLocked = true;
+        async function playWelcomeTrustMessage() {
             isIntroPlaying = true;
-            handsFreeActive = false;
+            updateMicUIState('locked', 'BolKhata: Speaking welcome intro...');
+            document.getElementById('liveTranscriptDisplay').innerText = "(Speaking welcome intro... Speak anytime or tap mic to start)";
 
-            if (recognition) {
-                try { recognition.abort(); } catch(e){}
-            }
+            const banner = document.getElementById('clickToStartBanner');
+            if (banner) banner.style.display = 'none';
 
-            updateMicUIState('locked', 'Intro playing... Mic locked');
-            document.getElementById('liveTranscriptDisplay').innerText = "(Microphone locked while welcome intro is playing...)";
+            const langKey = currentLanguage === 'auto' ? 'hi-IN' : currentLanguage;
+            const ownerId = storeOwner ? storeOwner.id : 1;
 
-            const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
-            let welcomeText;
-            if (storeOwner && storeOwner.owner_name) {
-                if (langKey.startsWith('kn')) {
-                    welcomeText = `ನಮಸ್ಕಾರ ${storeOwner.owner_name} ಅವರೇ! ${storeOwner.store_name} ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಲೆಡ್ಜರ್ 100% ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದೆ. ನಾನು ನಿಮ್ಮ ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ ಸಹಾಯಕ — ಪರದೆ ಮುಟ್ಟದೆಯೇ ಸಹಜವಾಗಿ ಮಾತನಾಡಿ.`;
-                } else if (langKey.startsWith('te')) {
-                    welcomeText = `నమస్కారం ${storeOwner.owner_name} గారు! ${storeOwner.store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురక్షితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి.`;
-                } else if (langKey.startsWith('hi')) {
-                    welcomeText = `Namaste ${storeOwner.owner_name} ji! ${storeOwner.store_name} ke BolKhata mein aapka swagat hai. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — bina screen ko chhue aam bolchaal mein baat kijiye.`;
-                } else {
-                    welcomeText = `Namaste ${storeOwner.owner_name} ji! Welcome to ${storeOwner.store_name}'s BolKhata. You are experiencing a safe and trusted AI ledger system. All your records are 100% encrypted and DPDP compliant. I am listening hands-free across the counter.`;
+            try {
+                const res = await fetch(`/api/voice/welcome-intro?language=${langKey}&owner_id=${ownerId}`);
+                const data = await res.json();
+                const introText = data.message;
+                const audioBase64 = data.audio_base64;
+
+                const aiBox = document.getElementById('aiResponseBox');
+                if (aiBox) {
+                    aiBox.innerHTML = `
+                        <div class="flex items-start space-x-2.5">
+                            <i class="fa-solid fa-volume-high text-cyan-400 mt-1 animate-pulse"></i>
+                            <p class="font-sans text-neutral-200 font-medium leading-relaxed">${introText}</p>
+                        </div>
+                    `;
                 }
-            } else {
-                welcomeText = WELCOME_TRUST_MESSAGES[langKey] || WELCOME_TRUST_MESSAGES['en-IN'];
-            }
 
-            const aiBox = document.getElementById('aiResponseBox');
-            if (aiBox) {
-                aiBox.innerHTML = `
-                    <div class="flex items-start space-x-2.5">
-                        <i class="fa-solid fa-volume-high text-cyan-400 mt-1 animate-pulse"></i>
-                        <p class="font-sans text-neutral-200 font-medium leading-relaxed">${welcomeText}</p>
-                    </div>
-                `;
+                speakText(introText, langKey, audioBase64, () => {
+                    finishIntroAndUnlockMic();
+                });
+            } catch (err) {
+                console.warn("Failed to fetch neural intro, fallback:", err);
+                const fallbackMsg = WELCOME_TRUST_MESSAGES[langKey] || WELCOME_TRUST_MESSAGES['hi-IN'];
+                speakText(fallbackMsg, langKey, null, () => {
+                    finishIntroAndUnlockMic();
+                });
             }
-
-            speakText(welcomeText, langKey, null, () => {
-                finishIntroAndUnlockMic();
-            });
         }
 
         function finishIntroAndUnlockMic() {
-            micLocked = false;
             isIntroPlaying = false;
+            micLocked = false;
+            isSpeaking = false;
             handsFreeActive = true;
 
             const banner = document.getElementById('clickToStartBanner');
             if (banner) banner.style.display = 'none';
 
-            updateMicUIState('active', 'Listening continuously across counter...');
-            document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "BolKhata" or record any entry)';
+            updateMicUIState(isStandby ? 'standby' : 'active', isStandby ? 'Standby (Say "BolKhata")' : 'Listening continuously across counter...');
+            document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "BolKhata" or speak any entry)';
 
             initAudioOscilloscope();
-            initContinuousSpeechRecognition();
+            restartRecognition();
         }
 
         function startHandsFreeDirect() {
-            const banner = document.getElementById('clickToStartBanner');
-            if (banner) banner.style.display = 'none';
-            if (isIntroPlaying) {
-                playWelcomeTrustMessage();
-            } else {
-                finishIntroAndUnlockMic();
-            }
+            stopAllAudio();
+            playWelcomeTrustMessage();
         }
 
         function normalizeKiranaTranscript(raw) {
@@ -1291,77 +1295,107 @@
         }
 
         function initContinuousSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                if (!recognition) {
-                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                    recognition = new SpeechRec();
-                    recognition.continuous = true;
-                    recognition.interimResults = true;
-                    recognition.lang = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
-
-                    recognition.onstart = () => {
-                        updateMicUIState(isStandby ? 'standby' : 'active');
-                    };
-
-                    recognition.onresult = (event) => {
-                        if (isSpeaking) return;
-
-                        let rawFinal = '';
-                        let rawInterim = '';
-                        for (let i = event.resultIndex; i < event.results.length; ++i) {
-                            if (event.results[i].isFinal) {
-                                rawFinal += event.results[i][0].transcript;
-                            } else {
-                                rawInterim += event.results[i][0].transcript;
-                            }
-                        }
-
-                        const interimTranscript = normalizeKiranaTranscript(rawInterim);
-                        const finalTranscript = normalizeKiranaTranscript(rawFinal);
-                        const currentTranscript = (finalTranscript || interimTranscript).trim();
-
-                        if (currentTranscript) {
-                            lastHeardTranscript = currentTranscript;
-                            document.getElementById('liveTranscriptDisplay').innerText = `"${currentTranscript}"`;
-                            document.getElementById('voiceTextInput').value = currentTranscript;
-                        }
-
-                        // Immediate execution if Chrome marks isFinal = true
-                        if (finalTranscript && !isProcessing && !isSpeaking) {
-                            if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
-                            handleSpokenUtterance(finalTranscript);
-                        } else if (interimTranscript && !isProcessing && !isSpeaking) {
-                            // Silence Debounce: If user speaks and then pauses for 1200ms, auto-commit the speech!
-                            if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
-                            speechSilenceTimer = setTimeout(() => {
-                                if (lastHeardTranscript && !isProcessing && !isSpeaking) {
-                                    const toSend = lastHeardTranscript;
-                                    lastHeardTranscript = '';
-                                    handleSpokenUtterance(toSend);
-                                }
-                            }, 1200);
-                        }
-                    };
-
-                    recognition.onerror = (event) => {
-                        console.warn("Speech error:", event.error);
-                        if (event.error !== 'not-allowed') {
-                            setTimeout(restartRecognition, 300);
-                        }
-                    };
-
-                    recognition.onend = () => {
-                        if (!isSpeaking && !isProcessing) {
-                            setTimeout(restartRecognition, 250);
-                        }
-                    };
-                }
-
-                restartRecognition();
-            } else {
+            if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
                 console.warn("Web Speech API not supported in this browser.");
                 document.getElementById('liveTranscriptDisplay').innerText = "(Browser doesn't support Web Speech. Please use Chrome or type below.)";
+                return;
             }
+
+            if (recognition) {
+                try {
+                    recognition.onstart = null;
+                    recognition.onresult = null;
+                    recognition.onerror = null;
+                    recognition.onend = null;
+                    recognition.onspeechstart = null;
+                    recognition.abort();
+                } catch(e) {}
+                recognition = null;
+            }
+
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = currentLanguage === 'auto' ? 'hi-IN' : currentLanguage;
+
+            recognition.onstart = () => {
+                if (!isIntroPlaying && !isSpeaking) {
+                    updateMicUIState(isStandby ? 'standby' : 'active');
+                }
+            };
+
+            // Barge-in: if user starts speaking while audio is playing, cut off audio immediately!
+            recognition.onspeechstart = () => {
+                if (isIntroPlaying || isSpeaking) {
+                    stopAllAudio();
+                    updateMicUIState('active', 'Listening to you...');
+                }
+            };
+
+            recognition.onresult = (event) => {
+                // If audio was playing, barge-in cuts it off immediately!
+                if (isSpeaking || isIntroPlaying) {
+                    stopAllAudio();
+                }
+
+                let rawFinal = '';
+                let rawInterim = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        rawFinal += event.results[i][0].transcript;
+                    } else {
+                        rawInterim += event.results[i][0].transcript;
+                    }
+                }
+
+                const interimTranscript = normalizeKiranaTranscript(rawInterim);
+                const finalTranscript = normalizeKiranaTranscript(rawFinal);
+                const currentTranscript = (finalTranscript || interimTranscript).trim();
+
+                if (currentTranscript) {
+                    lastHeardTranscript = currentTranscript;
+                    document.getElementById('liveTranscriptDisplay').innerText = `"${currentTranscript}"`;
+                    document.getElementById('voiceTextInput').value = currentTranscript;
+                }
+
+                // Immediate execution if Chrome marks isFinal = true
+                if (finalTranscript && !isProcessing) {
+                    if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+                    handleSpokenUtterance(finalTranscript);
+                } else if (interimTranscript && !isProcessing) {
+                    // Silence Debounce: If user speaks and then pauses for 900ms, auto-commit the speech!
+                    if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+                    speechSilenceTimer = setTimeout(() => {
+                        if (lastHeardTranscript && !isProcessing) {
+                            const toSend = lastHeardTranscript;
+                            lastHeardTranscript = '';
+                            handleSpokenUtterance(toSend);
+                        }
+                    }, 900);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.warn("Speech recognition error:", event.error);
+                if (event.error === 'not-allowed') {
+                    document.getElementById('liveTranscriptDisplay').innerText = "(⚠️ Mic blocked. Click the lock icon in the address bar to allow microphone.)";
+                    updateMicUIState('locked', 'Microphone blocked by browser');
+                } else if (event.error === 'network') {
+                    document.getElementById('liveTranscriptDisplay').innerText = "(Network reconnecting...)";
+                    setTimeout(restartRecognition, 1000);
+                } else if (event.error !== 'no-speech') {
+                    setTimeout(restartRecognition, 300);
+                }
+            };
+
+            recognition.onend = () => {
+                if (!isSpeaking && !isProcessing) {
+                    setTimeout(restartRecognition, 200);
+                }
+            };
+
+            restartRecognition();
         }
 
         function handleSpokenUtterance(rawText) {
@@ -1393,19 +1427,17 @@
         }
 
         function restartRecognition() {
-            if (!recognition || isSpeaking || isProcessing) return;
+            if (isSpeaking || isProcessing) return;
+            if (!recognition) {
+                initContinuousSpeechRecognition();
+                return;
+            }
             try {
                 recognition.start();
             } catch (e) {
                 if (e.name !== 'InvalidStateError') {
-                    try { recognition.abort(); } catch(_) {}
-                    setTimeout(() => {
-                        try {
-                            if (!isSpeaking && !isProcessing) {
-                                recognition.start();
-                            }
-                        } catch(_) {}
-                    }, 100);
+                    console.warn("Restart recognition recreating on error:", e);
+                    initContinuousSpeechRecognition();
                 }
             }
         }
@@ -1468,21 +1500,19 @@
         }
 
         function manualMicToggle() {
+            stopAllAudio();
             if (isStandby) {
                 wakeUpAssistant();
                 return;
             }
+            updateMicUIState('active', 'Listening now! Speak your entry...');
+            document.getElementById('liveTranscriptDisplay').innerText = '(Listening... speak now)';
             restartRecognition();
         }
 
         async function sendVoiceCommand(text, isManual = false) {
             if (!text || !text.trim()) return;
-            if (!isManual && (micLocked || isSpeaking)) return;
-
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            isSpeaking = false;
-            micLocked = false;
-            isIntroPlaying = false;
+            stopAllAudio();
             isProcessing = true;
 
             const normalizedText = normalizeKiranaTranscript(text);
@@ -1716,6 +1746,7 @@
         }
 
         function speakText(text, lang, audioBase64, onDone) {
+            stopAllAudio();
             isSpeaking = true;
             if (recognition) {
                 try { recognition.abort(); } catch(e){}
@@ -1728,31 +1759,34 @@
                 if (doneCalled) return;
                 doneCalled = true;
                 if (watchdogTimer) clearTimeout(watchdogTimer);
+                currentAudioElement = null;
                 isSpeaking = false;
                 if (onDone) onDone();
             };
 
             // Watchdog: ensures isSpeaking never permanently locks continuous recognition
-            const maxDuration = Math.min(9000, Math.max(3000, (text || '').length * 80));
-            watchdogTimer = setTimeout(() => {
-                handleDone();
-            }, maxDuration);
+            const maxDuration = Math.min(14000, Math.max(3000, (text || '').length * 90));
+            watchdogTimer = setTimeout(handleDone, maxDuration);
 
             if (audioBase64) {
                 try {
                     const audio = new Audio("data:audio/wav;base64," + audioBase64);
+                    currentAudioElement = audio;
                     audio.onended = handleDone;
                     audio.onerror = () => {
+                        currentAudioElement = null;
                         fallbackSpeechSynthesis(text, lang, handleDone);
                     };
                     const p = audio.play();
                     if (p && p.catch) {
                         p.catch(e => {
                             console.warn("Audio play blocked, fallback:", e);
+                            currentAudioElement = null;
                             fallbackSpeechSynthesis(text, lang, handleDone);
                         });
                     }
                 } catch(e) {
+                    currentAudioElement = null;
                     fallbackSpeechSynthesis(text, lang, handleDone);
                 }
             } else {
@@ -2163,6 +2197,10 @@
                     if (ticker) ticker.innerText = storeOwner.store_name;
                     const ticker2 = document.getElementById('tickerStoreName2');
                     if (ticker2) ticker2.innerText = storeOwner.store_name;
+
+                    if (storeOwner.language_preference) {
+                        setVoiceLanguage(storeOwner.language_preference);
+                    }
                 }
             } catch (e) {
                 console.warn(e);
@@ -2187,11 +2225,13 @@
             isSpeaking = false;
             isProcessing = false;
 
-            const clickBanner = document.getElementById('clickToStartBanner');
-            if (clickBanner) clickBanner.style.display = 'none';
-
             initAudioOscilloscope();
             initContinuousSpeechRecognition();
+
+            // Play the welcome trust message with Gnani Neural TTS
+            setTimeout(() => {
+                playWelcomeTrustMessage();
+            }, 500);
 
             const handleFirstGesture = () => {
                 document.removeEventListener('click', handleFirstGesture);
