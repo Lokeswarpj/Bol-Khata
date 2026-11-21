@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -99,20 +99,11 @@ app.include_router(owner.router)
 
 # ── UI & Health Endpoints ─────────────────────────────────────
 
-# Mount React PWA build if available
-frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
-if os.path.exists(os.path.join(frontend_dist, "assets")):
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="frontend-assets")
-
 @app.get("/app", tags=["UI"])
 @app.get("/pwa", tags=["UI"])
 async def serve_pwa():
-    """Serves the Cyber-Serif React PWA interface."""
-    pwa_index = os.path.join(frontend_dist, "index.html")
-    if os.path.exists(pwa_index):
-        with open(pwa_index, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse("<h1>PWA build in progress. Please use the Counter UI at /</h1>")
+    """Redirect to the unified master BolKhata Counter Web App."""
+    return RedirectResponse(url="/", status_code=302)
 
 
 @app.get("/", tags=["UI"])
