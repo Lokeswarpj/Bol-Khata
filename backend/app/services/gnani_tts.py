@@ -25,6 +25,14 @@ AI_DISCLOSURE = {
     "te-IN": "Namaskaram! Nenu BolKhata, oka AI sahayakudu. Mee shop lekkalalo sahayam chestanu.",
 }
 
+# Optimal language-specific native voices in Gnani timbre-v2.5
+LANGUAGE_VOICES = {
+    "hi-IN": "Madhuri",   # Native crystal clear Hindi
+    "en-IN": "Vidya",     # Clean Indian English
+    "kn-IN": "Nayana",    # Native Kannada
+    "te-IN": "Lalita",    # Native Telugu
+}
+
 # Local disk cache directory for audio files
 CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".audio_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -55,7 +63,16 @@ class GnaniTTSService:
         session_id: Optional[str] = None,
     ) -> dict:
         lang = language or self.language
-        voice_name = voice or self.voice
+        if lang.startswith("hi"):
+            lang = "hi-IN"
+        elif lang.startswith("kn"):
+            lang = "kn-IN"
+        elif lang.startswith("te"):
+            lang = "te-IN"
+        elif lang.startswith("en"):
+            lang = "en-IN"
+
+        voice_name = voice or LANGUAGE_VOICES.get(lang, self.voice)
 
         # Check local cache first (Saves 100% of Gnani tokens for cached sentences!)
         cache_file = self._get_cache_path(text, lang, voice_name)

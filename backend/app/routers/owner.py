@@ -162,7 +162,7 @@ async def signup_store_owner(
         owner = StoreOwner(
             store_name=data.store_name.strip(),
             owner_name=data.owner_name.strip(),
-            pin=data.pin.strip() if data.pin else "1234",
+            pin=hash_pin(data.pin.strip() if data.pin else "1234"),
             address=data.address.strip() if data.address else None,
             language_preference=data.language_preference or "en-IN",
             is_active=True,
@@ -372,32 +372,17 @@ async def register_store_owner(
     if not data.store_name.strip() or not data.owner_name.strip():
         raise HTTPException(status_code=400, detail="Store name and Owner name are required.")
 
-    result = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
-    owner = result.scalars().first()
-
-    if owner:
-        owner.store_name = data.store_name.strip()
-        owner.owner_name = data.owner_name.strip()
-        if data.phone:
-            owner.phone = data.phone.strip()
-        if data.pin:
-            owner.pin = data.pin.strip()
-        if data.address:
-            owner.address = data.address.strip()
-        if data.language_preference:
-            owner.language_preference = data.language_preference
-    else:
-        owner = StoreOwner(
-            store_name=data.store_name.strip(),
-            owner_name=data.owner_name.strip(),
-            phone=data.phone.strip() if data.phone else None,
-            pin=data.pin.strip() if data.pin else "1234",
-            address=data.address.strip() if data.address else None,
-            language_preference=data.language_preference or "en-IN",
-            is_active=True,
-        )
-        db.add(owner)
-
+    await db.execute(update(StoreOwner).values(is_active=False))
+    owner = StoreOwner(
+        store_name=data.store_name.strip(),
+        owner_name=data.owner_name.strip(),
+        phone=data.phone.strip() if data.phone else None,
+        pin=data.pin.strip() if data.pin else "1234",
+        address=data.address.strip() if data.address else None,
+        language_preference=data.language_preference or "en-IN",
+        is_active=True,
+    )
+    db.add(owner)
     await db.commit()
     await db.refresh(owner)
 

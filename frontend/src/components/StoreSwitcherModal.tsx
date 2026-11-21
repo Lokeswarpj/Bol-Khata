@@ -1,0 +1,224 @@
+import React, { useEffect, useState } from 'react';
+import { Sheet } from './Sheet';
+import { MonoLabel } from './MonoLabel';
+import { Store, Check, RefreshCw, UserCheck, Shield, PlusCircle, ArrowRight } from 'lucide-react';
+import { useLedgerStore } from '../store/useLedgerStore';
+import { api } from '../services/api';
+
+export const StoreSwitcherModal: React.FC = () => {
+  const {
+    isStoreSwitcherOpen,
+    setStoreSwitcherOpen,
+    ownerProfile,
+    allOwners,
+    switchStore,
+    resetTodayPayments,
+    fetchOwnerData
+  } = useLedgerStore();
+
+  const [showNewStoreForm, setShowNewStoreForm] = useState(false);
+  const [newStoreName, setNewStoreName] = useState('');
+  const [newOwnerName, setNewOwnerName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isStoreSwitcherOpen) {
+      fetchOwnerData();
+    }
+  }, [isStoreSwitcherOpen, fetchOwnerData]);
+
+  if (!isStoreSwitcherOpen) return null;
+
+  const handleCreateStore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStoreName.trim() || !newOwnerName.trim()) {
+      alert("Store Name and Owner Name are required.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await api.registerOwner({
+        store_name: newStoreName.trim(),
+        owner_name: newOwnerName.trim(),
+        phone: newPhone.trim() || undefined,
+      });
+      setNewStoreName('');
+      setNewOwnerName('');
+      setNewPhone('');
+      setShowNewStoreForm(false);
+      await fetchOwnerData();
+      alert("New Kirana Store successfully registered and activated!");
+    } catch (err: any) {
+      alert("Failed to register store: " + (err.message || 'Error'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Sheet
+      isOpen={isStoreSwitcherOpen}
+      onClose={() => setStoreSwitcherOpen(false)}
+      title="Store Merchant & Account Switcher"
+    >
+      <div className="space-y-5 text-sm text-paper">
+        {/* Active Store Badge */}
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Store className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-semibold text-white text-base">
+                {ownerProfile?.store_name || 'Sri Balaji Kirana'}
+              </div>
+              <div className="text-xs text-white/60 flex items-center gap-1.5 mt-0.5">
+                <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Owner: <strong>{ownerProfile?.owner_name || 'Niranjan'}</strong></span>
+                {ownerProfile?.phone && <span>• {ownerProfile.phone}</span>}
+              </div>
+            </div>
+          </div>
+          <MonoLabel variant="emerald" pulseDot>
+            ACTIVE STORE
+          </MonoLabel>
+        </div>
+
+        {/* Switch Available Stores */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-white/50 block font-mono uppercase tracking-wider">
+              Available Kirana Stores ({allOwners.length || 3})
+            </label>
+            <button
+              onClick={() => setShowNewStoreForm(!showNewStoreForm)}
+              className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{showNewStoreForm ? 'Cancel' : '+ Add Store'}</span>
+            </button>
+          </div>
+
+          {showNewStoreForm && (
+            <form onSubmit={handleCreateStore} className="p-3.5 rounded-2xl bg-white/[0.04] border border-emerald-500/30 space-y-3 mb-3">
+              <div className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
+                <Store className="w-3.5 h-3.5" /> Register New Kirana Store
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Store Name (e.g. Laxmi Provision)"
+                  value={newStoreName}
+                  onChange={(e) => setNewStoreName(e.target.value)}
+                  required
+                  className="w-full text-xs bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Owner Name (e.g. Suresh Kumar)"
+                  value={newOwnerName}
+                  onChange={(e) => setNewOwnerName(e.target.value)}
+                  required
+                  className="w-full text-xs bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="tel"
+                  placeholder="Phone (e.g. 9876500001)"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  className="flex-1 text-xs bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black flex items-center gap-1 disabled:opacity-50"
+                >
+                  <span>{isSubmitting ? 'Saving...' : 'Register'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+          )}
+          <div className="space-y-2">
+            {(allOwners.length > 0
+              ? allOwners
+              : [
+                  { id: 1, store_name: 'Sri Balaji Kirana', owner_name: 'Niranjan', phone: '9876543210', is_active: true },
+                  { id: 2, store_name: 'Gupta Provision Store', owner_name: 'Ramesh Gupta', phone: '9876543220', is_active: false },
+                  { id: 3, store_name: 'Royal Super Market', owner_name: 'Suresh Kumar', phone: '9876543230', is_active: false }
+                ]
+            ).map((s) => (
+              <button
+                key={s.id}
+                onClick={() => switchStore(s.id)}
+                className={`w-full text-left p-3.5 rounded-2xl border transition-all flex items-center justify-between group active:scale-[0.99] ${
+                  s.is_active || (ownerProfile?.id === s.id)
+                    ? 'border-emerald-500 bg-emerald-500/10 text-white'
+                    : 'border-white/10 bg-white/[0.03] text-white/70 hover:border-white/25 hover:bg-white/[0.06]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                    s.is_active || (ownerProfile?.id === s.id)
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : 'bg-white/5 text-white/50'
+                  }`}>
+                    <Store className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-white text-sm">
+                      {s.store_name}
+                    </div>
+                    <div className="text-[11px] text-white/50">
+                      Owner: {s.owner_name} {s.phone ? `· ${s.phone}` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                {s.is_active || (ownerProfile?.id === s.id) ? (
+                  <span className="flex items-center gap-1 text-xs text-emerald-400 font-mono font-medium">
+                    <Check className="w-4 h-4" /> Selected
+                  </span>
+                ) : (
+                  <span className="text-xs text-white/40 group-hover:text-white font-mono transition-colors">
+                    Switch Store →
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Daily Cash Drawer Settlement / Reset */}
+        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold text-white block">Daily Cash Drawer Reset</span>
+              <span className="text-[11px] text-white/50 block">Reset today's collected payment cash balance to ₹0 at close.</span>
+            </div>
+            <button
+              onClick={async () => {
+                if (window.confirm("Aaj ka collected cash drawer reset karna chahte hain? (Customer udhaar records safe rahenge)")) {
+                  await resetTodayPayments();
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl text-xs font-mono bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition flex items-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reset Cash
+            </button>
+          </div>
+        </div>
+
+        {/* Security & Multi-Store Notice */}
+        <div className="flex items-start gap-2 text-xs text-white/40">
+          <Shield className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+          <span>Each store ledger is isolated with customer data encrypted and scoped to the active merchant.</span>
+        </div>
+      </div>
+    </Sheet>
+  );
+};

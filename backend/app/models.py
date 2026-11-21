@@ -278,6 +278,7 @@ class VoiceResponse(BaseModel):
     disambiguation_options: List[str] = []
     language: str = "hi-IN"
     correction_event: Optional[dict] = None  # UI strike-through: {old_amount, new_amount, customer}
+    calculation_event: Optional[dict] = None  # Live table math: {customer, old_balance, change, new_balance, action, equation}
     counter_announcement: Optional[str] = None  # Two-Way Counter Audio Text for customer speaker
     counter_audio_base64: Optional[str] = None  # Synthesized audio for counter speaker
     whatsapp_receipt: Optional[dict] = None     # 1-click WhatsApp link and receipt text

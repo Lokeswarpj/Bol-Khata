@@ -24,8 +24,8 @@ from app.services.date_parser import extract_date_from_text
 # Comprehensive Multilingual Intent Vocabularies
 # ═══════════════════════════════════════════════════════════════
 
-# Wake-word patterns
-WAKE_WORD_PATTERN = r'^(?:hey\s+|suno\s+|hello\s+|hi\s+|namaste\s+|oye\s+)?(?:bolkhata|bol\s*khata|बोल\s*खाता|ಬೋಲ್\s*ಖಾತಾ|బోల్\s*ఖాతా)(?:[\,\:\s]+|$)'
+# Wake-word patterns (includes common STT misrecognitions like 'kolkata', 'bolkatha', etc.)
+WAKE_WORD_PATTERN = r'^(?:hey\s+|suno\s+|hello\s+|hi\s+|namaste\s+|oye\s+)?(?:bolkhata|bol\s*khata|bolkatha|bol\s*katha|kolkata|kolkatha|calcutta|gol\s*khata|call\s*khata|pol\s*khata|bhole\s*khata|बोल\s*खाता|ಬೋಲ್\s*ಖಾತಾ|బోల్\s*ఖాతా)(?:[\,\:\s]+|$)'
 
 # Stop / Sleep patterns
 STOP_COMMAND_PATTERN = r'\b(?:stop|ruko|ruk\s+ja|ruk\s+jao|bas|chup|chup\s+raho|shant|shant\s+raho|sleep|standby|band\s+karo|stop\s+listening|quiet|nillu|nillisi|saaku|aagu|aapu|chalu)\b|(?:रुको|बस|चुप|शांत|बंद\s*करो)|(?:ನಿಲ್ಲು|ಸಾಕು|ಶಾಂತವಾಗಿರು|ನಿಲ್ಲಿಸಿ)|(?:ఆగు|ఆపు|శాంతంగా\s*ఉండు|చాలు)'
@@ -138,7 +138,7 @@ SKIP_WORDS = {
     "sabse", "kiska", "kisne", "kisko", "kaun", "highest", "most", "who", "kitna", "kitne",
     "yaru", "yarige", "evaru", "evariki", "collection", "cash", "message", "reminder",
     "bhejo", "send", "karo", "maadu", "cheyyi", "kaluhisi", "pampandi",
-    "bolkhata", "bol", "khata", "stop", "ruko", "bas", "sleep", "reset", "payments",
+    "bolkhata", "bol", "khata", "katha", "kolkata", "kolkatha", "calcutta", "stop", "ruko", "bas", "sleep", "reset", "payments",
     # Financial terms and common words that should never be customer names
     "udar", "udhar", "udhaar", "hisaab", "hisab", "jama", "baaki", "baki",
     "credit", "debit", "loan", "saala", "saal", "appu", "vyapar", "vyapara",
@@ -694,13 +694,18 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
 
 
 def parse_voice_utterance(text: str) -> List[ParsedIntent]:
+    # Normalize common phonetic STT errors like 'kolkata' -> 'BolKhata'
+    clean_text = re.sub(r'\b(?:kolkata|kolkatha|calcutta|bolkatha|bol\s*katha|gol\s*khata|call\s*khata|pol\s*khata|bhole\s*khata)\b', 'BolKhata', text.strip(), flags=re.IGNORECASE)
+
     # Check if prefixed with wake-word: e.g. "BolKhata, Ramesh ka 340 udhaar"
-    is_wake, remainder = _is_wake_command(text)
+    is_wake, remainder = _is_wake_command(clean_text)
     if is_wake:
         if not remainder:
             return [ParsedIntent(intent=IntentType.WAKE_UP, raw_text=text, confidence=1.0)]
         else:
             text = remainder
+    else:
+        text = clean_text
 
     # Check for direct stop command
     if _is_stop_command(text):
