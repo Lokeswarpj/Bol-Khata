@@ -18,7 +18,6 @@ from app.database import get_db
 from app.services.gnani_stt import stt_service
 from app.services.gnani_tts import tts_service
 from app.services.ledger_engine import LedgerEngine
-from app.services.nlu_parser import detect_language
 from app.models import VoiceInput, VoiceResponse
 
 logger = logging.getLogger("bolkhata.voice")
@@ -121,23 +120,24 @@ async def process_text(
             message="Koi text nahi mila. (No text received.)",
         )
     
-    session_id = str(uuid.uuid4())
-    ledger = LedgerEngine(db)
+    session_id = input_data.session_id or "default_counter"
+    ledger = LedgerEngine(db, owner_id=input_data.owner_id)
     response = await ledger.process_voice_command(
         input_data.text,
         session_id=session_id,
         language=input_data.language,
     )
     
-    # Optionally generate TTS
-    if input_data.audio_base64 is not None and response.message:
+    # Automatically generate Gnani Neural TTS (Cached on disk for 0 token reuse!)
+    if input_data.generate_audio and response.message:
+        target_lang = response.language or input_data.language or "hi-IN"
         tts_result = await tts_service.synthesize(
             text=response.message,
-            language=input_data.language,
+            language=target_lang,
             session_id=session_id,
         )
-        if tts_result["success"]:
-            response.audio_base64 = tts_result["audio_base64"]
+        if tts_result.get("success"):
+            response.audio_base64 = tts_result.get("audio_base64")
     
     return response
 
@@ -176,7 +176,7 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
     }
     """
     await websocket.accept()
-    session_id = str(uuid.uuid4())
+    session_id = "ws_" + str(uuid.uuid4())[:8]
     ledger = LedgerEngine(db)
     
     logger.info(f"WebSocket connected: session={session_id}")
@@ -251,21 +251,13 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
             if not transcript:
                 continue
             
-            stt_language = language
-            if not stt_language or stt_language == "auto":
-                stt_language = "indic-auto"
-
-            # Detect language if auto/indic-auto, then route to ledger
-            detected_lang = detect_language(transcript)
-            effective_lang = detected_lang if stt_language == "indic-auto" else stt_language
-
-            # Process the command through ledger engine with effective language
-            response = await ledger.process_voice_command(transcript, session_id=session_id, language=effective_lang)
+            # Process the command through ledger engine with selected language
+            response = await ledger.process_voice_command(transcript, session_id=session_id, language=language)
             
-            # Generate TTS response in effective language
+            # Generate TTS response with Gnani Neural Voice
             audio_b64 = None
             if response.message:
-                target_lang = response.language or effective_lang or "hi-IN"
+                target_lang = response.language or language or "hi-IN"
                 tts_result = await tts_service.synthesize(
                     text=response.message,
                     language=target_lang,
@@ -283,6 +275,8 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
                 "transcript": transcript,
                 "needs_disambiguation": response.needs_disambiguation,
                 "disambiguation_options": response.disambiguation_options,
+                "correction_event": response.correction_event,
+                "language": response.language or language,
             }
             
             if response.intent:
