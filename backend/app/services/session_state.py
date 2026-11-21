@@ -67,10 +67,17 @@ class SessionManager:
         self._sessions: Dict[str, SessionState] = {}
 
     def get_or_create(self, session_id: str) -> SessionState:
+        now = time.time()
+        # Clean up stale sessions older than 2 hours if dictionary grows
+        if len(self._sessions) > 200:
+            stale_keys = [k for k, v in self._sessions.items() if now - v.last_activity_time > 7200]
+            for k in stale_keys:
+                del self._sessions[k]
+
         if session_id not in self._sessions:
             self._sessions[session_id] = SessionState(session_id)
         session = self._sessions[session_id]
-        session.last_activity_time = time.time()
+        session.last_activity_time = now
         return session
 
     def reset_session(self, session_id: str):

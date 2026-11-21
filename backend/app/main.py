@@ -32,14 +32,9 @@ async def lifespan(app: FastAPI):
     logger.info("🎙️   BolKhata - Hands-Free AI Voice Ledger Initializing...")
     logger.info("=" * 65)
     
-    # Initialize SQLite schema
+    # Initialize database schema
     await init_db()
-    logger.info("✅ Database schema initialized & ready")
-
-    # Pre-seed hackathon demo customers (Ramesh - Kirana Lane & Ramesh - Milk Dairy)
-    async with async_session() as session:
-        await seed_demo_data(session)
-    logger.info("✅ Demo customer seeds verified")
+    logger.info("✅ Database schema initialized & ready (Real data mode)")
     
     # Check Gnani.ai credentials
     if settings.gnani_api_key and settings.gnani_api_key != "your_gnani_api_key_here":
@@ -97,22 +92,29 @@ app.include_router(compliance.router)
 app.include_router(owner.router)
 
 
-# ── UI & Health Endpoints ─────────────────────────────────────
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from app.services.supabase_service import supabase_service
 
-# Mount React PWA build if available
-frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
-if os.path.exists(os.path.join(frontend_dist, "assets")):
-    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="frontend-assets")
+# ── UI & Health Endpoints ─────────────────────────────────────
 
 @app.get("/app", tags=["UI"])
 @app.get("/pwa", tags=["UI"])
-async def serve_pwa():
-    """Serves the Cyber-Serif React PWA interface."""
-    pwa_index = os.path.join(frontend_dist, "index.html")
-    if os.path.exists(pwa_index):
-        with open(pwa_index, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse("<h1>PWA build in progress. Please use the Counter UI at /</h1>")
+async def redirect_to_counter():
+    """Redirects legacy PWA paths directly to the unified Counter Web App."""
+    return RedirectResponse(url="/", status_code=302)
+
+
+@app.get("/api/supabase/status", tags=["Cloud Database"])
+async def get_supabase_status():
+    """Returns real-time status of Supabase Cloud Database connection."""
+    return await supabase_service.get_cloud_status()
+
+
+@app.post("/api/supabase/sync", tags=["Cloud Database"])
+async def trigger_supabase_sync():
+    """Triggers full sync of all store owners, customers, and transactions to Supabase Cloud."""
+    async with async_session() as session:
+        return await supabase_service.sync_all_database(session)
 
 
 @app.get("/", tags=["UI"])

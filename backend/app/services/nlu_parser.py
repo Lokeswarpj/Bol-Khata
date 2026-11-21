@@ -139,6 +139,11 @@ SKIP_WORDS = {
     "yaru", "yarige", "evaru", "evariki", "collection", "cash", "message", "reminder",
     "bhejo", "send", "karo", "maadu", "cheyyi", "kaluhisi", "pampandi",
     "bolkhata", "bol", "khata", "stop", "ruko", "bas", "sleep", "reset", "payments",
+    # Financial terms and common words that should never be customer names
+    "udar", "udhar", "udhaar", "hisaab", "hisab", "jama", "baaki", "baki",
+    "credit", "debit", "loan", "saala", "saal", "appu", "vyapar", "vyapara",
+    "payment", "payments", "khata", "dukaan", "store", "shop",
+    "kaa", "kya", "batao", "dikhao", "dekho", "chupinchu", "entha", "eshtu", "total", "summary", "overall",
     # Indic script greetings & polite words
     "ನಮಸ್ಕಾರ", "ನಮಸ್ಕಾರಗಳು", "ಹೇಗಿದ್ದೀರಾ", "ಹೇಗಿದ್ದೀರಿ", "ಧನ್ಯವಾದ", "ಧನ್ಯವಾದಗಳು",
     "నమస్కారం", "నమస్కారాలు", "ఎలా", "ఉన్నారు", "బాగున్నారా", "ధన్యవాదాలు",
@@ -446,6 +451,75 @@ def _is_collections_today_query(text: str) -> bool:
     return any(re.search(p, text_lower) for p in patterns)
 
 
+def _is_voice_to_upi(text: str) -> Tuple[bool, Optional[str]]:
+    """Detects voice-to-UPI payment QR requests in Telugu, Kannada, Hindi, and English."""
+    text_lower = text.lower()
+    # 1. Customer first with collection / payment request:
+    # e.g. "Suresh nunchi collection teesuko", "Suresh daggara payment teesuko", "Suresh se collection lo", "సురేష్ దగ్గర కలెక్షన్ తీసుకో"
+    m_cust_coll = re.search(
+        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:nunchi|nundi|daggara|ki|ge|se|ka|నుండి|దగ్గర|కి)?\s*(?:collection|payment|upi|hisaab|vasooli|కలెక్షన్|పేమెంట్|క్యూఆర్|చెల్లింపు)\s*(?:teesuko|thago|lo|karo|తీసుకో|చూపించు)?',
+        text_lower
+    )
+    if m_cust_coll:
+        cust = m_cust_coll.group(1).strip().title()
+        if cust.lower() not in ("upi", "qr", "payment", "collection", "hisaab", "hisab", "show", "me", "to", "for", "aaj", "today", "eeroju", "ivattu", "dukaan", "store", "shop", "khata", "total"):
+            return True, cust
+
+    # 2. Customer first with QR / UPI requests:
+    # e.g. "Suresh ki upi qr", "Suresh qr code", "Suresh qr chupinchu", "Suresh upi qr dikhao"
+    m_cust_qr = re.search(
+        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:ka|ki|ke|se|ge|కి|యొక్క)?\s*(?:upi\s*qr|qr\s*code|qr\s*chupinchu|qr\s*dikhao|upi\s*dikhao|క్యూఆర్|qr)',
+        text_lower
+    )
+    if m_cust_qr:
+        cust = m_cust_qr.group(1).strip().title()
+        if cust.lower() not in ("show", "generate", "display", "get", "dikhao", "chupinchu", "qr", "upi", "aaj", "today", "eeroju", "ivattu", "dukaan", "store", "shop", "khata"):
+            return True, cust
+
+    # 3. Action first: e.g. "show QR for Suresh", "collect from Suresh"
+    m_act_first = re.search(
+        r'(?:show|generate|display)?\s*(?:upi\s*qr|qr\s*code|qr|collection|payment)\s*(?:for|of|from|ki|ge)?\s+([a-zA-Z\u0900-\u0D7F]+)',
+        text_lower
+    )
+    if m_act_first:
+        cust = m_act_first.group(1).strip().title()
+        if cust.lower() not in ("upi", "qr", "payment", "collection", "hisaab", "show", "me", "to", "for", "dikhao", "chupinchu"):
+            return True, cust
+
+    if "collection" in text_lower or "qr" in text_lower or "upi" in text_lower or "కలెక్షన్" in text_lower or "క్యూఆర్" in text_lower:
+        words = [w.strip().title() for w in re.findall(r'[a-zA-Z\u0900-\u0D7F]+', text) if w.lower() not in ("collection", "payment", "teesuko", "lo", "karo", "show", "qr", "code", "upi", "for", "of", "from", "se", "ka", "ki", "nunchi", "daggara", "dikhao", "chupinchu", "తీసుకో", "చూపించు")]
+        if words:
+            return True, words[0]
+
+    return False, None
+
+
+def _is_check_risk(text: str) -> Tuple[bool, Optional[str]]:
+    """Detects Khata Risk AI queries, e.g. 'Ramesh ka risk check karo', 'Check risk for Suresh'."""
+    text_lower = text.lower()
+    # 1. Customer name first: e.g. "Suresh ka risk check karo", "Ramesh ka risk kya hai", "Suresh credit risk"
+    m_cust_first = re.search(r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:ka|ki|ke|ge|ni|se)?\s*(?:risk|risk\s*check|credit\s*risk|risk\s*score|risk\s*status)', text_lower)
+    if m_cust_first:
+        cust = m_cust_first.group(1).strip().title()
+        if cust.lower() not in ("check", "kya", "dekho", "batao", "show", "get", "credit", "risk"):
+            return True, cust
+
+    # 2. Action first: e.g. "check risk for Suresh", "risk of Ramesh", "risk check Suresh"
+    m_act_first = re.search(r'(?:check\s+risk|risk\s+check|credit\s+limit|risk\s+score|risk\s+status|risk)\s*(?:for|of)?\s+([a-zA-Z\u0900-\u0D7F]+)', text_lower)
+    if m_act_first:
+        cust = m_act_first.group(1).strip().title()
+        if cust.lower() not in ("risk", "check", "credit", "score", "limit", "karo", "dekho", "batao", "hai", "kaisa"):
+            return True, cust
+
+    if "risk" in text_lower:
+        words = [w.strip().title() for w in re.findall(r'[a-zA-Z\u0900-\u0D7F]+', text) if w.lower() not in ("check", "risk", "ka", "ki", "ke", "karo", "dekho", "batao", "hai", "kaisa", "score", "for", "of", "the", "ge", "ni")]
+        if words:
+            return True, words[0]
+        return True, None
+
+    return False, None
+
+
 def _is_reminder_trigger(text: str) -> Tuple[bool, Optional[str]]:
     """Detects request to trigger polite payment reminder."""
     text_lower = text.lower()
@@ -505,6 +579,16 @@ def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]
     if is_rem:
         return IntentType.TRIGGER_REMINDER, rem_cust
 
+    # 0j. Voice-to-UPI Collection ("Ramesh se collection lo" / "Show QR for Suresh")
+    is_upi, upi_cust = _is_voice_to_upi(clause_text)
+    if is_upi:
+        return IntentType.VOICE_TO_UPI, upi_cust
+
+    # 0k. Khata Risk AI Query ("Ramesh ka risk check karo")
+    is_risk, risk_cust = _is_check_risk(clause_text)
+    if is_risk:
+        return IntentType.CHECK_RISK, risk_cust
+
     # 1. Spoken Correction ("nahi, 430")
     if tokens & CORRECTION_KEYWORDS:
         return IntentType.CORRECTION, None
@@ -521,6 +605,13 @@ def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]
     # 4. Queries (English & Indic)
     has_query_kw = bool(tokens & QUERY_KEYWORDS)
     is_question = bool(re.search(r'\b(?:how\s+much|what\s+is|what\'s|show|tell|check|balance|total|kitna|eshtu|entha|dues|account)\b', clause_text, re.IGNORECASE))
+
+    # Explicitly detect Today Summary Query: e.g. "aaj kaa udar kitna hai", "aaj ka hisaab", "aaj kitna hua"
+    has_today_kw = bool(tokens & TODAY_QUERY_KEYWORDS) or bool(re.search(r'\b(?:aaj|today|ivattu|eeroju|abhi\s+tak)\b', clause_text, re.IGNORECASE))
+    if has_today_kw and extract_first_amount(clause_text) is None:
+        extracted_c = _extract_customer_name(clause_text)
+        if not extracted_c or extracted_c.lower() in SKIP_WORDS:
+            return IntentType.QUERY_TODAY, None
 
     if has_query_kw or is_question:
         if (tokens & TODAY_QUERY_KEYWORDS) and not _extract_customer_name(clause_text):
@@ -566,11 +657,11 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
     amount = extract_first_amount(clause)
     txn_date = extract_date_from_text(clause)
 
-    # In chitchat, don't accidentally capture words as customer names
-    if intent in (IntentType.CHITCHAT, IntentType.STOP_LISTENING, IntentType.WAKE_UP, IntentType.RESET_TODAYS_PAYMENTS):
+    # In chitchat and global queries, don't accidentally capture words as customer names
+    if intent in (IntentType.CHITCHAT, IntentType.STOP_LISTENING, IntentType.WAKE_UP, IntentType.RESET_TODAYS_PAYMENTS, IntentType.QUERY_TODAY, IntentType.LIST_DUES):
         cust_name = None
         amount = None
-    elif intent == IntentType.TRIGGER_REMINDER:
+    elif intent in (IntentType.TRIGGER_REMINDER, IntentType.VOICE_TO_UPI, IntentType.CHECK_RISK):
         cust_name = chitchat_topic or cust_name
     elif intent in (IntentType.QUERY_TOP_DEBTOR, IntentType.QUERY_CUSTOMERS_COUNT, IntentType.QUERY_COLLECTIONS_TODAY, IntentType.QUERY_OWNER):
         cust_name = None

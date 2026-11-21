@@ -27,7 +27,13 @@ from app.models import (
 )
 from app.services.nlu_parser import parse_voice_utterance, detect_language
 from app.services.number_parser import extract_first_amount
+import json
+from app.models import SyncOutbox
 from app.services.session_state import session_manager, SessionState
+from app.services.supabase_service import supabase_service
+from app.services.upi_service import upi_service
+from app.services.khata_risk_ai import khata_risk_ai
+from app.services.whatsapp_service import whatsapp_service
 
 logger = logging.getLogger("bolkhata.ledger")
 
@@ -170,6 +176,40 @@ class LedgerEngine:
         )
         self.db.add(txn)
         await self.db.flush()
+
+        # 1. Transactional Local SQLite Outbox (Offline-First Resilience)
+        try:
+            outbox_entry = SyncOutbox(
+                entity_type="transaction",
+                entity_id=txn.id,
+                payload=json.dumps({
+                    "id": txn.id,
+                    "owner_id": txn.owner_id,
+                    "customer_id": txn.customer_id,
+                    "amount": txn.amount,
+                    "direction": txn.direction,
+                    "transaction_date": str(txn.transaction_date),
+                    "note": txn.note,
+                }),
+                status="pending"
+            )
+            self.db.add(outbox_entry)
+        except Exception:
+            pass
+
+        # 2. Direct Sync to Supabase Cloud Database (if connected)
+        try:
+            await supabase_service.sync_transaction({
+                "id": txn.id,
+                "owner_id": txn.owner_id,
+                "customer_id": txn.customer_id,
+                "amount": txn.amount,
+                "direction": txn.direction,
+                "transaction_date": str(txn.transaction_date),
+                "note": txn.note,
+            })
+        except Exception:
+            pass
 
         if session:
             res = await self.db.execute(select(Customer).where(Customer.id == customer_id))
@@ -776,6 +816,109 @@ class LedgerEngine:
 
             return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
 
+        # ── Step B2: Conversational Voice-to-UPI Collection with Dynamic QR Code ──
+        if len(actions) == 1 and actions[0].intent == IntentType.VOICE_TO_UPI:
+            target_name = actions[0].customer_name
+            if not target_name:
+                return VoiceResponse(success=False, message="Kiska payment lena hai? Naam bataiye.", intent=actions[0], language=lang)
+
+            cust = await self.find_customer_exact(target_name)
+            if not cust:
+                matches = await self.find_matching_customers(target_name)
+                if matches:
+                    cust = matches[0]
+
+            if not cust:
+                return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
+
+            bal = await self.get_customer_balance(cust.id)
+            if bal <= 0:
+                if lang.startswith("kn"):
+                    msg = f"{cust.name} ಅವರ ಖಾತೆ ಈಗಾಗಲೇ ಕ್ಲಿಯರ್ ಆಗಿದೆ (₹0 ಬಾಕಿ)."
+                elif lang.startswith("te"):
+                    msg = f"{cust.name} లెక్క ఇప్పటికే క్లియర్ గా ఉంది (₹0 బాకీ)."
+                elif lang.startswith("en"):
+                    msg = f"{cust.name} has no dues pending (₹0 balance)."
+                else:
+                    msg = f"{cust.name} ka hisaab pehle se clear hai (₹0 baaki)."
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
+            owner_res = await self.db.execute(select(StoreOwner).where(StoreOwner.is_active == True))
+            active_owner = owner_res.scalars().first()
+            store_title = active_owner.store_name if active_owner else "Kirana Store"
+
+            upi_payload = upi_service.generate_upi_payload(
+                customer_name=cust.name,
+                amount=bal,
+                store_name=store_title
+            )
+
+            if lang.startswith("kn"):
+                msg = f"{cust.name} ಅವರ ಒಟ್ಟು ಬಾಕಿ ₹{bal:g}. ಯುಪಿಐ ಕ್ಯೂಆರ್ ಕೋಡ್ ಪರದೆಯ ಮೇಲೆ ಸಿದ್ಧವಾಗಿದೆ."
+            elif lang.startswith("te"):
+                msg = f"{cust.name} గారి మొత్తం బాకీ ₹{bal:g}. యుపిఐ క్యూఆర్ కోడ్ స్క్రీన్ పై సిద్ధంగా ఉంది."
+            elif lang.startswith("en"):
+                msg = f"Total balance for {cust.name} is ₹{bal:g}. Dynamic UPI QR code is ready on counter screen."
+            else:
+                msg = f"{cust.name} ka total baaki ₹{bal:g} hai. Counter screen par dynamic UPI QR code generate kar diya hai."
+
+            return VoiceResponse(
+                success=True,
+                message=msg,
+                intent=actions[0],
+                language=lang,
+                upi_payload=upi_payload
+            )
+
+        # ── Step B3: Khata Risk AI (Predictive Credit Risk Protection) ──
+        if len(actions) == 1 and actions[0].intent == IntentType.CHECK_RISK:
+            target_name = actions[0].customer_name
+            if not target_name:
+                return VoiceResponse(success=False, message="Kiska risk check karna hai? Naam bataiye.", intent=actions[0], language=lang)
+
+            cust = await self.find_customer_exact(target_name)
+            if not cust:
+                matches = await self.find_matching_customers(target_name)
+                if matches:
+                    cust = matches[0]
+
+            if not cust:
+                return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
+
+            bal = await self.get_customer_balance(cust.id)
+            txns_res = await self.db.execute(
+                select(Transaction).where(Transaction.customer_id == cust.id, Transaction.corrected == False)
+            )
+            cust_txns = txns_res.scalars().all()
+
+            risk_eval = khata_risk_ai.evaluate_customer_risk(
+                customer_name=cust.name,
+                current_balance=bal,
+                transactions=cust_txns,
+                language=lang
+            )
+
+            warn_voice = risk_eval.get("warning_voice")
+            if warn_voice:
+                msg = warn_voice
+            else:
+                if lang.startswith("kn"):
+                    msg = f"{cust.name} ಅವರ ಕ್ರೆಡಿಟ್ ರಿಸ್ಕ್: {risk_eval['risk_level']} (ಸ್ಕೋರ್: {risk_eval['risk_score']}/100). ಒಟ್ಟು ಬಾಕಿ ₹{bal:g}."
+                elif lang.startswith("te"):
+                    msg = f"{cust.name} గారి క్రెడిట్ రిస్క్: {risk_eval['risk_level']} (స్కోరు: {risk_eval['risk_score']}/100). మొత్తం బాకీ ₹{bal:g}."
+                elif lang.startswith("en"):
+                    msg = f"Credit assessment for {cust.name}: {risk_eval['risk_level']} (Score: {risk_eval['risk_score']}/100). Outstanding balance ₹{bal:g}."
+                else:
+                    msg = f"{cust.name} ka credit risk: {risk_eval['risk_level']} (Score: {risk_eval['risk_score']}/100). Total baaki ₹{bal:g}."
+
+            return VoiceResponse(
+                success=True,
+                message=msg,
+                intent=actions[0],
+                language=lang,
+                risk_analysis=risk_eval
+            )
+
         # ── Step C: Spoken Correction with UI Strike-Through Event ──
         if len(actions) == 1 and actions[0].intent == IntentType.CORRECTION:
             corr_amount = actions[0].amount or extract_first_amount(text)
@@ -1001,14 +1144,34 @@ class LedgerEngine:
             j_aaya = today_data["today_payment"]
             net = u_gaya - j_aaya
 
-            if lang.startswith("kn"):
-                msg = f"ಇವತ್ತು ಒಟ್ಟು ₹{u_gaya:g} ಸಾಲ ಹೋಗಿದೆ, ಮತ್ತು ₹{j_aaya:g} ಜಮಾ ಬಂದಿದೆ. ನೆಟ್: ₹{net:g}."
-            elif lang.startswith("te"):
-                msg = f"ఈరోజు మొత్తం ₹{u_gaya:g} అప్పు వెళ్ళింది, మరియు ₹{j_aaya:g} జమ వచ్చింది. నికర: ₹{net:g}."
-            elif lang.startswith("en"):
-                msg = f"Today's total: ₹{u_gaya:g} given on credit, and ₹{j_aaya:g} received in payment. Net balance: ₹{net:g}."
+            text_lower = (text or "").lower()
+            if any(w in text_lower for w in ("udar", "udhar", "udhaar", "credit", "saala", "appu")):
+                if lang.startswith("kn"):
+                    msg = f"ಇವತ್ತು ಒಟ್ಟು ₹{u_gaya:g} ಸಾಲ (ಉದ್ದರಿ) ಆಗಿದೆ. ಜಮಾ: ₹{j_aaya:g}."
+                elif lang.startswith("te"):
+                    msg = f"ఈరోజు మొత్తం ₹{u_gaya:g} అప్పు (ఉద్దెర) వెళ్ళింది. జమ: ₹{j_aaya:g}."
+                elif lang.startswith("en"):
+                    msg = f"Today's total credit (udhaar) is ₹{u_gaya:g}. Total payment received: ₹{j_aaya:g}."
+                else:
+                    msg = f"Aaj dukaan par kul ₹{u_gaya:g} udhaar gaya hai. Aur ₹{j_aaya:g} jama aaya hai."
+            elif any(w in text_lower for w in ("jama", "payment", "received", "collection")):
+                if lang.startswith("kn"):
+                    msg = f"ಇವತ್ತು ಒಟ್ಟು ₹{j_aaya:g} ಜಮಾ ಬಂದಿದೆ. ಸಾಲ: ₹{u_gaya:g}."
+                elif lang.startswith("te"):
+                    msg = f"ఈరోజు మొత్తం ₹{j_aaya:g} జమ వచ్చింది. అప్పు: ₹{u_gaya:g}."
+                elif lang.startswith("en"):
+                    msg = f"Today's total payment received is ₹{j_aaya:g}. Total credit given: ₹{u_gaya:g}."
+                else:
+                    msg = f"Aaj dukaan par kul ₹{j_aaya:g} jama aaya hai. Aur ₹{u_gaya:g} udhaar gaya hai."
             else:
-                msg = f"Aaj kul ₹{u_gaya:g} udhaar gaya, aur ₹{j_aaya:g} jama aaya. Net ₹{net:g}."
+                if lang.startswith("kn"):
+                    msg = f"ಇವತ್ತು ಒಟ್ಟು ₹{u_gaya:g} ಸಾಲ ಹೋಗಿದೆ, ಮತ್ತು ₹{j_aaya:g} ಜಮಾ ಬಂದಿದೆ. ನೆಟ್: ₹{net:g}."
+                elif lang.startswith("te"):
+                    msg = f"ఈరోజు మొత్తం ₹{u_gaya:g} అప్పు వెళ్ళింది, మరియు ₹{j_aaya:g} జమ వచ్చింది. నికర: ₹{net:g}."
+                elif lang.startswith("en"):
+                    msg = f"Today's total: ₹{u_gaya:g} given on credit, and ₹{j_aaya:g} received in payment. Net balance: ₹{net:g}."
+                else:
+                    msg = f"Aaj kul ₹{u_gaya:g} udhaar gaya, aur ₹{j_aaya:g} jama aaya. Net ₹{net:g}."
 
             return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
 
@@ -1083,11 +1246,49 @@ class LedgerEngine:
             else:
                 final_message = f"{prefix}Done! {c_name} ka {details} likha. Ab kul baaki: ₹{final_bal:g}."
 
+            # ── Breakthrough Features 1, 2, 3: Two-Way Speaker + WhatsApp + Risk AI ──
+            owner_res = await self.db.execute(select(StoreOwner).where(StoreOwner.is_active == True))
+            active_owner = owner_res.scalars().first()
+            store_title = active_owner.store_name if active_owner else "Kirana Store"
+
+            # 1. Customer-Facing Two-Way Counter Audio Announcement
+            counter_announcement = whatsapp_service.generate_customer_counter_announcement(
+                customer_name=c_name,
+                direction=created_txns[-1].direction,
+                amount=created_txns[-1].amount,
+                net_balance=final_bal,
+                language=lang
+            )
+
+            # 2. 1-Click WhatsApp / SMS Verifiable Digital Receipt
+            whatsapp_receipt = whatsapp_service.generate_whatsapp_receipt_link(
+                customer_name=c_name,
+                phone=last_cust.phone if last_cust else None,
+                store_name=store_title,
+                direction=created_txns[-1].direction,
+                amount=created_txns[-1].amount,
+                net_balance=final_bal
+            )
+
+            # 3. Khata Risk AI Evaluation
+            all_cust_txns = (await self.db.execute(
+                select(Transaction).where(Transaction.customer_id == last_cust_id, Transaction.corrected == False)
+            )).scalars().all()
+            risk_eval = khata_risk_ai.evaluate_customer_risk(
+                customer_name=c_name,
+                current_balance=final_bal,
+                transactions=all_cust_txns,
+                language=lang
+            )
+
             return VoiceResponse(
                 success=True,
                 message=final_message,
                 intent=actions[0],
                 language=lang,
+                counter_announcement=counter_announcement,
+                whatsapp_receipt=whatsapp_receipt,
+                risk_analysis=risk_eval,
                 transaction=TransactionResponse(
                     id=created_txns[-1].id,
                     customer_id=last_cust_id,

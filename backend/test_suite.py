@@ -22,7 +22,12 @@ from app.services.nlu_parser import parse_voice_utterance, detect_language
 from app.services.ledger_engine import LedgerEngine
 from app.services.seed import seed_demo_data
 from app.services.reminder_service import reminder_service
-from app.services.session_state import session_manager
+from app.services.security import hash_pin, verify_pin, create_access_token, decode_access_token
+from app.services.upi_service import generate_upi_payload
+from app.services.khata_risk_ai import evaluate_customer_risk
+from app.services.whatsapp_service import generate_customer_counter_announcement, generate_whatsapp_receipt_link
+from sqlalchemy.future import select
+from app.models import SyncOutbox
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 
@@ -134,7 +139,8 @@ async def run_all_tests():
         clear_resp = await ledger.process_voice_command("Suresh cleared his debt", session_id="live_demo_session")
         assert clear_resp.success is True
         print(f"  ✓ Debt Clearing Response: \"{clear_resp.message}\"")
-        suresh_cust = await ledger.find_customer_exact("Suresh General Store")
+        suresh_cust = await ledger.find_customer_exact("Suresh")
+        assert suresh_cust is not None, "Could not find customer Suresh"
         suresh_bal = await ledger.get_customer_balance(suresh_cust.id)
         assert suresh_bal == 0.0, f"Expected Suresh balance to be 0.0, got {suresh_bal}"
         print(f"  ✓ Confirmed Suresh balance is ₹{suresh_bal} (Debt completely cleared!)")
@@ -183,9 +189,77 @@ async def run_all_tests():
         assert te_chat.language.startswith("te")
         print(f"  ✓ Telugu Chitchat: \"{te_chat.message}\"")
 
+        # ──────────────────────────────────────────────────────────
+        # 10. Breakthrough Feature 1: Dynamic Conversational Voice-to-UPI
+        # ──────────────────────────────────────────────────────────
+        print("\n[TEST 10] Conversational Voice-to-UPI Dynamic QR Generation:")
+        upi_resp = await ledger.process_voice_command("Suresh se collection lo", session_id="live_demo_session")
+        assert upi_resp.success is True
+        assert upi_resp.upi_payload is not None
+        assert "upi://pay" in upi_resp.upi_payload["upi_uri"]
+        assert upi_resp.upi_payload["amount"] == 250.0  # Suresh's previous balance
+        assert upi_resp.upi_payload["qr_image_url"].startswith("http") or upi_resp.upi_payload["qr_image_url"].startswith("data:image")
+        print(f"  ✓ Dynamic UPI URI: {upi_resp.upi_payload['upi_uri']}")
+        print(f"  ✓ Dynamic QR Code Generated ({upi_resp.upi_payload['qr_image_url'][:50]}...)")
+
+        # ──────────────────────────────────────────────────────────
+        # 11. Breakthrough Feature 2: Khata Risk AI (Bad-Debt Protection Engine)
+        # ──────────────────────────────────────────────────────────
+        print("\n[TEST 11] Khata Risk AI Bad-Debt Protection Engine:")
+        risk_resp = await ledger.process_voice_command("Suresh ka risk check karo", session_id="live_demo_session")
+        assert risk_resp.success is True
+        assert risk_resp.risk_analysis is not None
+        assert "risk_score" in risk_resp.risk_analysis
+        assert "risk_level" in risk_resp.risk_analysis
+        assert risk_resp.risk_analysis["risk_level"] in ["LOW RISK", "MODERATE", "HIGH RISK"]
+        print(f"  ✓ Customer Risk Score: {risk_resp.risk_analysis['risk_score']}/100")
+        print(f"  ✓ Risk Category: {risk_resp.risk_analysis['risk_level']} (Badge: {risk_resp.risk_analysis['badge_color']})")
+        print(f"  ✓ Advisory: \"{risk_resp.message}\"")
+
+        # ──────────────────────────────────────────────────────────
+        # 12. Breakthrough Feature 3: Two-Way Speaker & WhatsApp Verifiable Receipt
+        # ──────────────────────────────────────────────────────────
+        print("\n[TEST 12] Two-Way Counter Audio & 1-Click WhatsApp Receipt:")
+        tx_resp = await ledger.process_voice_command("Suresh ka 100 udhaar", session_id="live_demo_session")
+        assert tx_resp.success is True
+        assert tx_resp.counter_announcement is not None
+        assert "Suresh" in tx_resp.counter_announcement
+        assert tx_resp.whatsapp_receipt is not None
+        assert "Sri Balaji Kirana" in tx_resp.whatsapp_receipt["receipt_text"]
+        assert "https://wa.me/" in tx_resp.whatsapp_receipt["whatsapp_url"]
+        print(f"  ✓ Two-Way Speaker Counter Announcement: \"{tx_resp.counter_announcement}\"")
+        print(f"  ✓ Verifiable WhatsApp Digital Receipt Link: {tx_resp.whatsapp_receipt['whatsapp_url'][:60]}...")
+
+        # ──────────────────────────────────────────────────────────
+        # 13. Zero-Loss Offline Outbox Synchronization
+        # ──────────────────────────────────────────────────────────
+        print("\n[TEST 13] Zero-Loss Offline Sync Outbox Queue:")
+        outbox_items = (await session.execute(select(SyncOutbox))).scalars().all()
+        assert len(outbox_items) > 0, "Expected transactions to be queued in SyncOutbox"
+        print(f"  ✓ Queued Outbox Transactions: {len(outbox_items)} pending records ready for cloud sync")
+        assert outbox_items[0].status == "pending"
+
     await engine.dispose()
+
+    # ──────────────────────────────────────────────────────────
+    # 14. Enterprise Cryptographic Security & JWT Verification
+    # ──────────────────────────────────────────────────────────
+    print("\n[TEST 14] Salted PIN Hashing & HMAC-SHA256 JWT Authentication:")
+    test_pin = "1234"
+    hashed_pin = hash_pin(test_pin)
+    assert hashed_pin != test_pin, "PIN must be hashed with salt"
+    assert verify_pin(test_pin, hashed_pin) is True, "Valid PIN must verify"
+    assert verify_pin("9999", hashed_pin) is False, "Invalid PIN must fail"
+    print("  ✓ PBKDF2-HMAC-SHA256 PIN Salting and Verification passed")
+
+    token = create_access_token({"sub": "9876543210", "store": "Sri Balaji Kirana"})
+    decoded = decode_access_token(token)
+    assert decoded is not None
+    assert decoded["sub"] == "9876543210"
+    print("  ✓ Cryptographic JWT Access Token generated and verified")
+
     print("\n" + "=" * 75)
-    print("🎉 ALL 9 UNFAIR ADVANTAGE SCENARIOS PASSED WITH 100% SUCCESS!")
+    print("🏆 ALL 14 UNFAIR ADVANTAGE & ZERO-FAIL SCENARIOS PASSED WITH 100% SUCCESS!")
     print("=" * 75)
 
 

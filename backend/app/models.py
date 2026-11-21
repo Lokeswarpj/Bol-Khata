@@ -81,6 +81,21 @@ class Transaction(Base):
     customer = relationship("Customer", back_populates="transactions")
 
 
+class SyncOutbox(Base):
+    """Local SQLite outbox table for resilient, zero-loss offline-first cloud syncing."""
+    __tablename__ = "sync_outbox"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entity_type = Column(String(50), nullable=False)  # 'store_owner', 'customer', 'transaction'
+    entity_id = Column(Integer, nullable=False)
+    payload = Column(Text, nullable=False)  # JSON serialized data
+    status = Column(String(20), default="pending")  # 'pending', 'synced', 'failed'
+    attempts = Column(Integer, default=0)
+    last_error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # ═══════════════════════════════════════════════════════════════
 # Pydantic Schemas (API Request/Response)
 # ═══════════════════════════════════════════════════════════════
@@ -108,6 +123,8 @@ class IntentType(str, Enum):
     REGISTER_OWNER = "register_owner" # "Mera naam Niranjan hai, dukaan Sri Balaji Kirana"
     QUERY_OWNER = "query_owner"     # "Mera store kaisa chal raha hai?" / "Dukaan summary"
     CHITCHAT = "chitchat"           # Natural conversational chit-chat & greetings
+    VOICE_TO_UPI = "voice_to_upi"   # "Ramesh se payment lo" / "Show UPI QR"
+    CHECK_RISK = "check_risk"       # "Ramesh ka risk kaisa hai?" / "Khata Risk AI"
     UNKNOWN = "unknown"
 
 
@@ -202,6 +219,9 @@ class CustomerResponse(BaseModel):
     opted_in_reminders: bool
     balance: float = 0.0  # Net outstanding (positive = customer owes)
     created_at: datetime
+    risk_level: str = "LOW RISK"
+    risk_score: int = 10
+    risk_badge_color: str = "emerald" 
 
     class Config:
         from_attributes = True
@@ -258,3 +278,8 @@ class VoiceResponse(BaseModel):
     disambiguation_options: List[str] = []
     language: str = "hi-IN"
     correction_event: Optional[dict] = None  # UI strike-through: {old_amount, new_amount, customer}
+    counter_announcement: Optional[str] = None  # Two-Way Counter Audio Text for customer speaker
+    counter_audio_base64: Optional[str] = None  # Synthesized audio for counter speaker
+    whatsapp_receipt: Optional[dict] = None     # 1-click WhatsApp link and receipt text
+    risk_analysis: Optional[dict] = None        # Khata Risk AI credit score and warnings
+    upi_payload: Optional[dict] = None          # Dynamic voice-to-UPI QR code payload

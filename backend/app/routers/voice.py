@@ -138,6 +138,16 @@ async def process_text(
         )
         if tts_result.get("success"):
             response.audio_base64 = tts_result.get("audio_base64")
+
+        # Synthesize customer-facing two-way counter announcement
+        if response.counter_announcement:
+            c_tts = await tts_service.synthesize(
+                text=response.counter_announcement,
+                language=target_lang,
+                session_id=f"{session_id}_counter",
+            )
+            if c_tts.get("success"):
+                response.counter_audio_base64 = c_tts.get("audio_base64")
     
     return response
 
