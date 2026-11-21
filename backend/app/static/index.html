@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BolKhata - Hands-Free AI Voice Ledger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .recording-pulse {
+            animation: pulse-ring 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+    <!-- Top Navigation -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-microphone-lines text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400">
+                        BolKhata <span class="text-xs uppercase px-2 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-full font-mono ml-2">Team Drona</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Hands-Free AI Voice Ledger for Kirana Stores</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="aiDisclosureBadge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+                    Responsible AI Disclosed
+                </span>
+                <a href="/docs" target="_blank" class="px-3 py-1.5 text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition border border-slate-600 flex items-center">
+                    <i class="fa-solid fa-book-open mr-1.5"></i> Swagger Docs
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Voice Console & Quick Prompts (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+
+            <!-- Hands-Free Voice Controller Card -->
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-6 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-semibold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-tower-broadcast text-cyan-400 mr-2"></i> Voice Counter
+                    </h2>
+                    <span id="sttStatus" class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">Idle</span>
+                </div>
+
+                <!-- Big Push-To-Talk Button -->
+                <div class="flex flex-col items-center justify-center py-6">
+                    <button id="micBtn" onclick="toggleRecording()" class="w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/40 hover:scale-105 active:scale-95 transition cursor-pointer relative group">
+                        <div id="micRing" class="absolute inset-0 rounded-full border-4 border-cyan-400/50 hidden recording-pulse"></div>
+                        <i id="micIcon" class="fa-solid fa-microphone text-4xl"></i>
+                    </button>
+                    <p id="micHint" class="mt-4 text-xs font-medium text-slate-400 text-center">
+                        Tap microphone to speak or choose a quick prompt below
+                    </p>
+                </div>
+
+                <!-- Direct Text Input Fallback -->
+                <div class="mt-4 pt-4 border-t border-slate-700/60">
+                    <form onsubmit="handleTextSubmit(event)" class="flex gap-2">
+                        <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh ka 340 udhaar, kal 200 diya tha..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+                        <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-md shadow-cyan-600/30">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Spoken Response Feed -->
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-5 shadow-xl space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                    <span><i class="fa-solid fa-volume-high text-cyan-400 mr-1.5"></i> Spoken Response (AI Audio)</span>
+                    <button onclick="replayAudio()" id="replayBtn" class="text-cyan-400 hover:text-cyan-300 text-xs hidden">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Replay
+                    </button>
+                </h3>
+                <div id="aiResponseBox" class="p-3.5 bg-slate-900/90 rounded-xl border border-slate-800 text-sm text-slate-200 min-h-[70px] flex items-center">
+                    <span class="text-slate-500 italic">"Namaste! Main BolKhata hoon. Dukaan ka koi bhi hisaab boliye..."</span>
+                </div>
+            </div>
+
+            <!-- Hackathon Evaluation Test Cases Prompts -->
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-5 shadow-xl space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <i class="fa-solid fa-flask text-amber-400 mr-1.5"></i> Quick Judge Test Utterances
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <button onclick="sendPrompt('Ramesh ka 340 udhaar, kal 200 diya tha')" class="p-2.5 text-left bg-slate-900 hover:bg-slate-700/60 border border-slate-700/60 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                        <div class="font-medium text-cyan-400">Compound + Anaphora</div>
+                        "Ramesh ka 340 udhaar, kal 200 diya tha"
+                    </button>
+                    <button onclick="sendPrompt('teen sau chaalis udhaar likho Suresh ka')" class="p-2.5 text-left bg-slate-900 hover:bg-slate-700/60 border border-slate-700/60 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                        <div class="font-medium text-cyan-400">Hindi Words</div>
+                        "teen sau chaalis udhaar likho Suresh ka"
+                    </button>
+                    <button onclick="sendPrompt('nahi, 430')" class="p-2.5 text-left bg-slate-900 hover:bg-slate-700/60 border border-slate-700/60 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                        <div class="font-medium text-amber-400">Spoken Correction</div>
+                        "nahi, 430"
+                    </button>
+                    <button onclick="sendPrompt('Ramesh ka total?')" class="p-2.5 text-left bg-slate-900 hover:bg-slate-700/60 border border-slate-700/60 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                        <div class="font-medium text-emerald-400">Sub-2s Balance Query</div>
+                        "Ramesh ka total?"
+                    </button>
+                    <button onclick="sendPrompt('Aaj kitna udhaar gaya?')" class="p-2.5 text-left bg-slate-900 hover:bg-slate-700/60 border border-slate-700/60 rounded-xl transition text-slate-300 hover:text-cyan-300 sm:col-span-2">
+                        <div class="font-medium text-purple-400">Today Summary Query</div>
+                        "Aaj kitna udhaar gaya?"
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Live Ledger, Today's Summary & Customer Table (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- Today's Financial Metric Cards -->
+            <div class="grid grid-cols-3 gap-3 sm:gap-4">
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg">
+                    <div class="text-xs text-rose-400 font-medium">Today Udhaar (Credit)</div>
+                    <div id="statTodayCredit" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">₹0</div>
+                </div>
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg">
+                    <div class="text-xs text-emerald-400 font-medium">Today Jama (Payment)</div>
+                    <div id="statTodayPayment" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">₹0</div>
+                </div>
+                <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-4 shadow-lg">
+                    <div class="text-xs text-cyan-400 font-medium">Total Outstanding</div>
+                    <div id="statTotalNet" class="text-xl sm:text-2xl font-bold text-slate-100 mt-1">₹0</div>
+                </div>
+            </div>
+
+            <!-- Customer Accounts Card -->
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-users text-cyan-400 mr-2"></i> Khata Customers
+                    </h2>
+                    <button onclick="loadCustomers()" class="text-xs text-cyan-400 hover:text-cyan-300">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+                    </button>
+                </div>
+                <div class="overflow-x-auto max-h-56">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900/60 text-slate-400 border-b border-slate-700/50">
+                            <tr>
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Net Balance</th>
+                                <th class="p-3 text-center">DPDP Opt-In</th>
+                                <th class="p-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody" class="divide-y divide-slate-700/40 text-slate-200">
+                            <tr><td colspan="4" class="p-4 text-center text-slate-500">Loading customer ledgers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Ledger Transactions -->
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 shadow-xl overflow-hidden flex flex-col">
+                <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-200 flex items-center">
+                        <i class="fa-solid fa-book text-cyan-400 mr-2"></i> Live Ledger Transactions
+                    </h2>
+                    <span id="txnCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">0 entries</span>
+                </div>
+                <div class="overflow-x-auto max-h-64">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900/60 text-slate-400 border-b border-slate-700/50">
+                            <tr>
+                                <th class="p-3">Customer</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Amount</th>
+                                <th class="p-3">Date</th>
+                                <th class="p-3">Spoken Note</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody" class="divide-y divide-slate-700/40 text-slate-200">
+                            <tr><td colspan="5" class="p-4 text-center text-slate-500">No transactions recorded yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Responsible AI & DPDP Compliance Banner -->
+            <div class="bg-gradient-to-r from-slate-900 to-cyan-950/40 border border-cyan-800/60 rounded-2xl p-4 flex items-center justify-between shadow-lg">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-shield-halved text-2xl text-cyan-400"></i>
+                    <div>
+                        <div class="text-xs font-semibold text-cyan-300">DPDP Act & Responsible AI Compliant</div>
+                        <div class="text-[11px] text-slate-400">Transcripts encrypted at rest (AES-256) | Zero-pressure reminders | Consent opt-in guardrails</div>
+                    </div>
+                </div>
+                <button onclick="purgeTranscripts()" class="px-3 py-1.5 text-xs bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl transition">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Purge Demo Transcripts
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Client-Side Script -->
+    <script>
+        let isRecording = false;
+        let recognition = null;
+        let lastSpokenText = "";
+
+        // Web Speech API fallback for local browser recording
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'hi-IN'; // Default Hindi/Hinglish
+
+            recognition.onstart = () => {
+                isRecording = true;
+                updateMicUI(true);
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('voiceTextInput').value = transcript;
+                sendVoiceCommand(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                updateMicUI(false);
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                updateMicUI(false);
+            };
+        }
+
+        function toggleRecording() {
+            if (!recognition) {
+                alert("Speech recognition is not supported in this browser. Please use text input or Chrome/Edge!");
+                return;
+            }
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function updateMicUI(recording) {
+            const ring = document.getElementById('micRing');
+            const status = document.getElementById('sttStatus');
+            const icon = document.getElementById('micIcon');
+            if (recording) {
+                ring.classList.remove('hidden');
+                status.innerText = "Listening...";
+                status.className = "text-xs px-2 py-0.5 rounded-full bg-rose-950 text-rose-400 border border-rose-800 animate-pulse";
+                icon.className = "fa-solid fa-waveform text-4xl";
+            } else {
+                ring.classList.add('hidden');
+                status.innerText = "Idle";
+                status.className = "text-xs px-2 py-0.5 rounded-full bg-slate-700 text-slate-300";
+                icon.className = "fa-solid fa-microphone text-4xl";
+            }
+        }
+
+        async function sendVoiceCommand(text) {
+            if (!text || !text.trim()) return;
+
+            document.getElementById('aiResponseBox').innerHTML = `<span class="text-cyan-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
+
+            try {
+                const res = await fetch('/api/voice/process-text', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, language: 'hi-IN' })
+                });
+                const data = await res.json();
+
+                displayAIResponse(data.message, data.audio_base64);
+                refreshAllData();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('aiResponseBox').innerHTML = `<span class="text-rose-400">Error processing command: ${err.message}</span>`;
+            }
+        }
+
+        function displayAIResponse(message, audioBase64) {
+            lastSpokenText = message;
+            document.getElementById('aiResponseBox').innerHTML = `
+                <div class="flex items-start space-x-2">
+                    <i class="fa-solid fa-comment-dots text-cyan-400 mt-1"></i>
+                    <p class="font-medium text-slate-100">${message}</p>
+                </div>
+            `;
+            document.getElementById('replayBtn').classList.remove('hidden');
+
+            if (audioBase64) {
+                const audio = new Audio("data:audio/wav;base64," + audioBase64);
+                audio.play();
+            } else if ('speechSynthesis' in window) {
+                // Fallback to browser TTS
+                const utter = new SpeechSynthesisUtterance(message);
+                utter.lang = 'hi-IN';
+                window.speechSynthesis.speak(utter);
+            }
+        }
+
+        function replayAudio() {
+            if (lastSpokenText && 'speechSynthesis' in window) {
+                const utter = new SpeechSynthesisUtterance(lastSpokenText);
+                utter.lang = 'hi-IN';
+                window.speechSynthesis.speak(utter);
+            }
+        }
+
+        function sendPrompt(text) {
+            document.getElementById('voiceTextInput').value = text;
+            sendVoiceCommand(text);
+        }
+
+        function handleTextSubmit(e) {
+            e.preventDefault();
+            const input = document.getElementById('voiceTextInput');
+            sendVoiceCommand(input.value);
+            input.value = '';
+        }
+
+        async function loadSummary() {
+            try {
+                const res = await fetch('/api/ledger/summary');
+                const data = await res.json();
+                document.getElementById('statTodayCredit').innerText = `₹${Math.round(data.today_credit).toLocaleString('en-IN')}`;
+                document.getElementById('statTodayPayment').innerText = `₹${Math.round(data.today_payments).toLocaleString('en-IN')}`;
+                document.getElementById('statTotalNet').innerText = `₹${Math.round(data.net_outstanding).toLocaleString('en-IN')}`;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadCustomers() {
+            try {
+                const res = await fetch('/api/customers/');
+                const data = await res.json();
+                const tbody = document.getElementById('customersTableBody');
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">No customers registered yet.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.map(c => `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-3 font-medium text-slate-100">${c.name}</td>
+                        <td class="p-3 font-semibold ${c.balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">₹${Math.round(c.balance).toLocaleString('en-IN')}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="toggleConsent(${c.id}, ${!c.opted_in_reminders})" class="px-2 py-0.5 rounded-full text-[10px] font-medium border ${c.opted_in_reminders ? 'bg-emerald-950 text-emerald-400 border-emerald-800' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                                ${c.opted_in_reminders ? 'Opted In ✓' : 'Opted Out ✕'}
+                            </button>
+                        </td>
+                        <td class="p-3 text-right space-x-2">
+                            <button onclick="sendReminder(${c.id})" class="text-cyan-400 hover:text-cyan-300" title="Send Polite Reminder">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function loadTransactions() {
+            try {
+                const res = await fetch('/api/ledger/transactions?limit=20');
+                const data = await res.json();
+                const tbody = document.getElementById('transactionsTableBody');
+                document.getElementById('txnCountBadge').innerText = `${data.length} entries`;
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">No transactions recorded yet.</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = data.map(t => `
+                    <tr class="hover:bg-slate-700/30 transition">
+                        <td class="p-3 font-medium">${t.customer_name}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${t.direction === 'credit' ? 'bg-rose-950 text-rose-400 border border-rose-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+                                ${t.direction === 'credit' ? 'Udhaar' : 'Jama'}
+                            </span>
+                        </td>
+                        <td class="p-3 font-bold text-slate-100">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                        <td class="p-3 text-slate-400">${t.transaction_date}</td>
+                        <td class="p-3 text-slate-400 truncate max-w-xs">${t.note || '-'}</td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function toggleConsent(customerId, optIn) {
+            await fetch(`/api/compliance/consent/${customerId}?opt_in=${optIn}`, { method: 'POST' });
+            loadCustomers();
+        }
+
+        async function sendReminder(customerId) {
+            const res = await fetch(`/api/compliance/reminder/${customerId}`);
+            const data = await res.json();
+            if (data.success) {
+                alert(`Polite Reminder (Responsible AI Approved):\n\n${data.reminder_text}`);
+            } else {
+                alert(`Guardrail Notice:\n\n${data.message}`);
+            }
+        }
+
+        async function purgeTranscripts() {
+            if (confirm("DPDP Compliance: Delete all stored audio and raw transcripts?")) {
+                const res = await fetch('/api/compliance/purge-demo-transcripts', { method: 'DELETE' });
+                const data = await res.json();
+                alert(data.message);
+            }
+        }
+
+        function refreshAllData() {
+            loadSummary();
+            loadCustomers();
+            loadTransactions();
+        }
+
+        // Initial fetch
+        refreshAllData();
+    </script>
+</body>
+</html>
