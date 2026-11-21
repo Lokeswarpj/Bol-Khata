@@ -58,13 +58,19 @@
         </div>
     </header>
 
+    <!-- Click-To-Start Audio Fallback Banner (Shows if browser audio autoplay needs 1 gesture) -->
+    <div id="clickToStartBanner" onclick="startHandsFreeDirect()" class="bg-gradient-to-r from-amber-600 via-cyan-600 to-emerald-600 text-white py-2 px-4 text-center text-xs font-semibold cursor-pointer shadow-lg flex items-center justify-center space-x-2 border-b border-cyan-400/40">
+        <i class="fa-solid fa-hand-pointer animate-bounce mr-1"></i>
+        <span>👋 Welcome to BolKhata! Click anywhere once to start your safe hands-free counter session.</span>
+    </div>
+
     <!-- Owner Trust & Welcome Banner -->
     <div id="welcomeBanner" class="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 border-b border-cyan-900/40 px-4 py-2.5 transition">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
             <div class="flex items-center space-x-2 text-cyan-200">
-                <i class="fa-solid fa-lock text-cyan-400"></i>
-                <span class="font-semibold">Namaste Gupta ji! Welcome to your BolKhata Safe System.</span>
-                <span class="hidden lg:inline text-slate-400 text-[11px]">| 100% On-Device / Encrypted Ledger (DPDP Compliant) | Hands-free continuous listening active</span>
+                <i class="fa-solid fa-shield-halved text-cyan-400"></i>
+                <span class="font-semibold">Safe & Trusted AI Ledger: 100% Encrypted & DPDP Compliant</span>
+                <span class="hidden lg:inline text-slate-400 text-[11px]">| Hands-Free Auto-Listening activates once intro completes</span>
             </div>
             <button onclick="playWelcomeTrustMessage()" class="text-cyan-400 hover:text-cyan-200 font-medium underline flex items-center text-[11px]">
                 <i class="fa-solid fa-volume-high mr-1"></i> Re-play Welcome Trust Audio
@@ -82,7 +88,7 @@
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 shadow-2xl relative overflow-hidden backdrop-blur">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span id="micPingDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
                         <h2 class="text-sm font-semibold text-slate-200">Continuous Hands-Free Counter</h2>
                     </div>
                     <span id="detectedLangBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-cyan-300 border border-slate-700 font-mono">
@@ -92,13 +98,13 @@
 
                 <!-- Hands-Free Mic Pulsing Visualizer -->
                 <div class="flex flex-col items-center justify-center py-5">
-                    <div id="micBtn" class="w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/40 relative cursor-pointer" onclick="manualMicToggle()">
-                        <div id="micRing" class="absolute inset-0 rounded-full border-4 border-cyan-400/60 recording-pulse"></div>
-                        <i id="micIcon" class="fa-solid fa-headset text-4xl"></i>
+                    <div id="micBtn" class="w-28 h-28 rounded-full bg-gradient-to-tr from-amber-600 to-amber-700 text-white flex items-center justify-center shadow-2xl shadow-amber-500/30 relative cursor-pointer" onclick="manualMicToggle()">
+                        <div id="micRing" class="absolute inset-0 rounded-full border-4 border-amber-400/50"></div>
+                        <i id="micIcon" class="fa-solid fa-lock text-4xl"></i>
                     </div>
-                    <p id="micHint" class="mt-4 text-xs font-medium text-cyan-400 text-center flex items-center">
-                        <i class="fa-solid fa-ear-listen mr-1.5 animate-bounce"></i>
-                        <span id="listeningText">Listening continuously across the counter... Just speak!</span>
+                    <p id="micHint" class="mt-4 text-xs font-medium text-amber-300 text-center flex items-center">
+                        <i id="micStatusIcon" class="fa-solid fa-volume-high mr-1.5 animate-bounce"></i>
+                        <span id="listeningText">Playing Welcome Trust Message... Mic Locked</span>
                     </p>
 
                     <!-- Real-time Audio Energy Bar (VAD indicator) -->
@@ -125,16 +131,16 @@
                 <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 mb-2">
                     <div class="text-[10px] uppercase font-bold text-slate-500 flex items-center justify-between">
                         <span>Live Heard Transcript</span>
-                        <span id="speechStateBadge" class="text-emerald-400 font-normal">Active</span>
+                        <span id="speechStateBadge" class="text-amber-400 font-normal">🔒 Mic Locked (Intro Playing)</span>
                     </div>
                     <div id="liveTranscriptDisplay" class="text-xs text-slate-200 mt-1 min-h-[20px] italic">
-                        (Waiting for speech...)
+                        (Microphone locked during welcome introduction...)
                     </div>
                 </div>
 
                 <!-- Manual Text Input Fallback -->
                 <form onsubmit="handleTextSubmit(event)" class="flex gap-2 pt-2 border-t border-slate-800/80">
-                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Ramesh ka 340 udhaar..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Namaste bhaiya kaise ho..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
                     <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-medium transition shadow-md shadow-cyan-600/30">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
@@ -157,61 +163,91 @@
             </div>
 
             <!-- Realistic Kirana Store Test Scenarios -->
-            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center">
-                    <i class="fa-solid fa-flask text-amber-400 mr-1.5"></i> 1-Click Realistic Kirana Audio Scenarios
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <!-- Debt Clearing Test -->
-                    <button onclick="sendPrompt('Ramesh - Kirana Lane cleared his debt')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-emerald-800/60 rounded-xl transition text-slate-200 hover:text-emerald-300">
-                        <div class="font-bold text-emerald-400 flex items-center">
-                            <i class="fa-solid fa-circle-check mr-1"></i> Full Debt Settlement
-                        </div>
-                        "Ramesh cleared his debt"
-                    </button>
-                    <!-- Disambiguation -->
-                    <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-amber-400 flex items-center">
-                            <i class="fa-solid fa-users mr-1"></i> Disambiguate Ramesh
-                        </div>
-                        "Ramesh ka 500 udhaar"
-                    </button>
-                    <!-- Clarify Nickname response -->
-                    <button onclick="sendPrompt('Kirana Lane')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-cyan-400 flex items-center">
-                            <i class="fa-solid fa-reply mr-1"></i> Voice Nickname Reply
-                        </div>
-                        "Kirana Lane" (resolves ambiguity)
-                    </button>
-                    <!-- Correction -->
-                    <button onclick="sendPrompt('nahi, 430')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-rose-400 flex items-center">
-                            <i class="fa-solid fa-bolt mr-1"></i> Spoken Correction
-                        </div>
-                        "nahi, 430" (live strike-through)
-                    </button>
-                    <!-- Kannada Test -->
-                    <button onclick="sendPrompt('ರಮೇಶ್ - Kirana Lane ಗೆ 340 ಸಾಲ')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-purple-400 flex items-center">
-                            <i class="fa-solid fa-language mr-1"></i> Auto-Detect Kannada
-                        </div>
-                        "ರಮೇಶ್ ಗೆ 340 ಸಾಲ"
-                    </button>
-                    <!-- Telugu Test -->
-                    <button onclick="sendPrompt('రమేష్ - Kirana Lane కి 340 అప్పు')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-teal-400 flex items-center">
-                            <i class="fa-solid fa-language mr-1"></i> Auto-Detect Telugu
-                        </div>
-                        "రమేష్ కి 340 అప్పు"
-                    </button>
-                    <!-- Compound Utterance -->
-                    <button onclick="sendPrompt('Suresh General Store ka 340 udhaar, kal 200 diya tha')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300 sm:col-span-2">
-                        <div class="font-bold text-cyan-400 flex items-center">
-                            <i class="fa-solid fa-layer-group mr-1"></i> Compound Anaphora Utterance
-                        </div>
-                        "Suresh ka 340 udhaar, kal 200 diya tha"
-                    </button>
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-4">
+                
+                <!-- Normal Person Chitchat Scenarios -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center mb-2">
+                        <i class="fa-solid fa-comments text-cyan-400 mr-1.5"></i> Conversational Chitchat (Normal Person Talk)
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <button onclick="sendPrompt('Namaste bhaiya, kaise ho?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-cyan-400">Greeting & Status</div>
+                            "Namaste bhaiya, kaise ho?"
+                        </button>
+                        <button onclick="sendPrompt('Tum kaun ho?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-cyan-400">Identity & Role</div>
+                            "Tum kaun ho?"
+                        </button>
+                        <button onclick="sendPrompt('Kya ye safe hai?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-emerald-400">Safety & DPDP Trust</div>
+                            "Kya ye safe hai?"
+                        </button>
+                        <button onclick="sendPrompt('Shukriya bhaiya')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-amber-400">Polite Gratitude</div>
+                            "Shukriya bhaiya"
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Financial Ledger Scenarios -->
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center mb-2">
+                        <i class="fa-solid fa-flask text-amber-400 mr-1.5"></i> 1-Click Realistic Kirana Audio Scenarios
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <!-- Debt Clearing Test -->
+                        <button onclick="sendPrompt('Ramesh - Kirana Lane cleared his debt')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-emerald-800/60 rounded-xl transition text-slate-200 hover:text-emerald-300">
+                            <div class="font-bold text-emerald-400 flex items-center">
+                                <i class="fa-solid fa-circle-check mr-1"></i> Full Debt Settlement
+                            </div>
+                            "Ramesh cleared his debt"
+                        </button>
+                        <!-- Disambiguation -->
+                        <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-amber-400 flex items-center">
+                                <i class="fa-solid fa-users mr-1"></i> Disambiguate Ramesh
+                            </div>
+                            "Ramesh ka 500 udhaar"
+                        </button>
+                        <!-- Clarify Nickname response -->
+                        <button onclick="sendPrompt('Kirana Lane')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-cyan-400 flex items-center">
+                                <i class="fa-solid fa-reply mr-1"></i> Voice Nickname Reply
+                            </div>
+                            "Kirana Lane" (resolves ambiguity)
+                        </button>
+                        <!-- Correction -->
+                        <button onclick="sendPrompt('nahi, 430')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-rose-400 flex items-center">
+                                <i class="fa-solid fa-bolt mr-1"></i> Spoken Correction
+                            </div>
+                            "nahi, 430" (live strike-through)
+                        </button>
+                        <!-- Kannada Test -->
+                        <button onclick="sendPrompt('ರಮೇಶ್ - Kirana Lane ಗೆ 340 ಸಾಲ')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-purple-400 flex items-center">
+                                <i class="fa-solid fa-language mr-1"></i> Auto-Detect Kannada
+                            </div>
+                            "ರಮೇಶ್ ಗೆ 340 ಸಾಲ"
+                        </button>
+                        <!-- Telugu Test -->
+                        <button onclick="sendPrompt('రమేష్ - Kirana Lane కి 340 అప్పు')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-teal-400 flex items-center">
+                                <i class="fa-solid fa-language mr-1"></i> Auto-Detect Telugu
+                            </div>
+                            "రమేష్ కి 340 అప్పు"
+                        </button>
+                        <!-- Compound Utterance -->
+                        <button onclick="sendPrompt('Suresh General Store ka 340 udhaar, kal 200 diya tha')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300 sm:col-span-2">
+                            <div class="font-bold text-cyan-400 flex items-center">
+                                <i class="fa-solid fa-layer-group mr-1"></i> Compound Anaphora Utterance
+                            </div>
+                            "Suresh ka 340 udhaar, kal 200 diya tha"
+                        </button>
+                    </div>
+                </div>
+
             </div>
 
         </div>
@@ -311,74 +347,189 @@
 
     <!-- Client-Side Automation Script (Zero-Clicks Required) -->
     <script>
-        let handsFreeActive = true;
+        let handsFreeActive = false;
+        let micLocked = true;
+        let isIntroPlaying = true;
         let isProcessing = false;
+        let isSpeaking = false;
         let recognition = null;
         let lastSpokenText = "";
         let audioContext = null;
         let analyser = null;
         let micStream = null;
 
-        // Welcome Trust Audio
+        const WELCOME_TRUST_TEXT = "Namaste! Welcome to BolKhata. You are experiencing a safe and trusted AI ledger system built specifically for your store. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — aap bina screen ko chhue, aam bolchaal mein baat kar sakte hain.";
+
+        // UI State Manager
+        function updateMicUIState(state, customText) {
+            const micBtn = document.getElementById('micBtn');
+            const micIcon = document.getElementById('micIcon');
+            const micRing = document.getElementById('micRing');
+            const micPingDot = document.getElementById('micPingDot');
+            const listeningText = document.getElementById('listeningText');
+            const speechBadge = document.getElementById('speechStateBadge');
+            const micStatusIcon = document.getElementById('micStatusIcon');
+            const handsFreeBtn = document.getElementById('handsFreeBtn');
+            const handsFreeStatusText = document.getElementById('handsFreeStatusText');
+
+            if (state === 'locked') {
+                if (micBtn) micBtn.className = "w-28 h-28 rounded-full bg-gradient-to-tr from-amber-600 to-amber-700 text-white flex items-center justify-center shadow-2xl shadow-amber-500/30 relative cursor-pointer border-2 border-amber-400/40";
+                if (micIcon) micIcon.className = "fa-solid fa-lock text-4xl";
+                if (micRing) micRing.className = "absolute inset-0 rounded-full border-4 border-amber-400/40";
+                if (micPingDot) micPingDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
+                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-volume-high mr-1.5 animate-bounce text-amber-400";
+                if (listeningText) listeningText.innerText = customText || "Playing Welcome Trust Message... Microphone Locked";
+                if (speechBadge) {
+                    speechBadge.innerText = "🔒 Mic Locked (Intro Playing)";
+                    speechBadge.className = "text-amber-400 font-semibold";
+                }
+                if (handsFreeBtn) {
+                    handsFreeBtn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-amber-950/80 text-amber-300 border-amber-800";
+                    handsFreeStatusText.innerText = "Mic Locked";
+                }
+            } else if (state === 'active') {
+                if (micBtn) micBtn.className = "w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/40 relative cursor-pointer";
+                if (micIcon) micIcon.className = "fa-solid fa-headset text-4xl";
+                if (micRing) micRing.className = "absolute inset-0 rounded-full border-4 border-cyan-400/60 recording-pulse";
+                if (micPingDot) micPingDot.className = "w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping";
+                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-ear-listen mr-1.5 animate-bounce text-cyan-400";
+                if (listeningText) listeningText.innerText = customText || "Listening continuously across the counter... Just speak!";
+                if (speechBadge) {
+                    speechBadge.innerText = "Active (Listening)";
+                    speechBadge.className = "text-emerald-400 font-semibold";
+                }
+                if (handsFreeBtn) {
+                    handsFreeBtn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/30";
+                    handsFreeStatusText.innerText = "Hands-Free: ON";
+                }
+            } else if (state === 'speaking') {
+                if (micBtn) micBtn.className = "w-28 h-28 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-2xl shadow-teal-500/30 relative cursor-pointer";
+                if (micIcon) micIcon.className = "fa-solid fa-volume-high text-4xl";
+                if (micRing) micRing.className = "absolute inset-0 rounded-full border-4 border-emerald-400/60 animate-pulse";
+                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-waveform mr-1.5 animate-pulse text-emerald-400";
+                if (listeningText) listeningText.innerText = "BolKhata is speaking... Mic muted to prevent echo.";
+                if (speechBadge) {
+                    speechBadge.innerText = "Speaking (Mic Muted)";
+                    speechBadge.className = "text-cyan-400 font-medium";
+                }
+            } else if (state === 'paused') {
+                if (micBtn) micBtn.className = "w-28 h-28 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center shadow-lg relative cursor-pointer border border-slate-700";
+                if (micIcon) micIcon.className = "fa-solid fa-microphone-slash text-4xl";
+                if (micRing) micRing.className = "hidden";
+                if (listeningText) listeningText.innerText = "Hands-free paused. Tap mic to speak.";
+                if (speechBadge) {
+                    speechBadge.innerText = "Paused";
+                    speechBadge.className = "text-slate-500";
+                }
+                if (handsFreeBtn) {
+                    handsFreeBtn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-slate-800 text-slate-400 border-slate-700";
+                    handsFreeStatusText.innerText = "Hands-Free: OFF";
+                }
+            }
+        }
+
+        // Welcome Trust Audio: Keeps mic strictly locked until finish!
         function playWelcomeTrustMessage() {
-            const welcomeText = "Namaste Gupta ji! Welcome to BolKhata. Aapka khata puri tarah surakshit, offline-first aur AES-256 encrypted hai. Main aapka hands-free digital sahayak hoon — dukaan ka hisaab bina screen chhuye, bas bolte rahiye.";
-            speakText(welcomeText, 'hi-IN');
+            micLocked = true;
+            isIntroPlaying = true;
+            handsFreeActive = false;
+
+            if (recognition) {
+                try { recognition.abort(); } catch(e){}
+            }
+
+            updateMicUIState('locked', 'Playing Welcome Trust Audio... Microphone is locked');
+            document.getElementById('liveTranscriptDisplay').innerText = "(Microphone locked while welcome intro is playing...)";
+
+            speakText(WELCOME_TRUST_TEXT, 'hi-IN', null, () => {
+                // Intro is completely finished! Unlock microphone
+                finishIntroAndUnlockMic();
+            });
+        }
+
+        function finishIntroAndUnlockMic() {
+            micLocked = false;
+            isIntroPlaying = false;
+            handsFreeActive = true;
+
+            const banner = document.getElementById('clickToStartBanner');
+            if (banner) banner.style.display = 'none';
+
+            updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
+            document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "Namaste" or record any entry)';
+
+            initAudioVAD();
+            initContinuousSpeechRecognition();
+        }
+
+        function startHandsFreeDirect() {
+            const banner = document.getElementById('clickToStartBanner');
+            if (banner) banner.style.display = 'none';
+            if (isIntroPlaying) {
+                playWelcomeTrustMessage();
+            } else {
+                finishIntroAndUnlockMic();
+            }
         }
 
         // Initialize Speech Recognition in Continuous Hands-Free Loop
         function initContinuousSpeechRecognition() {
+            if (micLocked || isIntroPlaying) return;
+
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRec();
-                recognition.continuous = true;
-                recognition.interimResults = true;
-                // Default to Indic mixed
-                recognition.lang = 'hi-IN';
+                if (!recognition) {
+                    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    recognition = new SpeechRec();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    recognition.lang = 'hi-IN';
 
-                recognition.onstart = () => {
-                    document.getElementById('micRing').classList.remove('hidden');
-                    document.getElementById('speechStateBadge').innerText = "Listening...";
-                    document.getElementById('speechStateBadge').className = "text-cyan-400 font-semibold animate-pulse";
-                };
-
-                recognition.onresult = (event) => {
-                    let finalTranscript = '';
-                    let interimTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            finalTranscript += event.results[i][0].transcript;
-                        } else {
-                            interimTranscript += event.results[i][0].transcript;
+                    recognition.onstart = () => {
+                        if (!micLocked && !isSpeaking) {
+                            updateMicUIState('active');
                         }
-                    }
+                    };
 
-                    if (interimTranscript) {
-                        document.getElementById('liveTranscriptDisplay').innerText = `"${interimTranscript}"`;
-                    }
+                    recognition.onresult = (event) => {
+                        // Strict Gate: Never process input if mic is locked, assistant is speaking, or intro is playing!
+                        if (micLocked || isSpeaking || isIntroPlaying) {
+                            return;
+                        }
 
-                    if (finalTranscript && !isProcessing) {
-                        document.getElementById('liveTranscriptDisplay').innerText = `"${finalTranscript}"`;
-                        document.getElementById('voiceTextInput').value = finalTranscript;
-                        sendVoiceCommand(finalTranscript);
-                    }
-                };
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; ++i) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript;
+                            } else {
+                                interimTranscript += event.results[i][0].transcript;
+                            }
+                        }
 
-                recognition.onerror = (event) => {
-                    console.warn("Speech Recognition Error:", event.error);
-                    if (handsFreeActive && event.error !== 'not-allowed') {
-                        setTimeout(restartRecognition, 500);
-                    }
-                };
+                        if (interimTranscript) {
+                            document.getElementById('liveTranscriptDisplay').innerText = `"${interimTranscript}"`;
+                        }
 
-                recognition.onend = () => {
-                    document.getElementById('micRing').classList.add('hidden');
-                    document.getElementById('speechStateBadge').innerText = "Paused";
-                    document.getElementById('speechStateBadge').className = "text-slate-500";
-                    // Automatically restart if hands-free is active and not currently speaking
-                    if (handsFreeActive && !isProcessing) {
-                        setTimeout(restartRecognition, 400);
-                    }
-                };
+                        if (finalTranscript && !isProcessing && !micLocked && !isSpeaking) {
+                            document.getElementById('liveTranscriptDisplay').innerText = `"${finalTranscript}"`;
+                            document.getElementById('voiceTextInput').value = finalTranscript;
+                            sendVoiceCommand(finalTranscript);
+                        }
+                    };
+
+                    recognition.onerror = (event) => {
+                        console.warn("Speech Recognition Error:", event.error);
+                        if (handsFreeActive && !micLocked && !isSpeaking && event.error !== 'not-allowed') {
+                            setTimeout(restartRecognition, 500);
+                        }
+                    };
+
+                    recognition.onend = () => {
+                        if (!micLocked && !isSpeaking && handsFreeActive && !isProcessing) {
+                            setTimeout(restartRecognition, 400);
+                        }
+                    };
+                }
 
                 restartRecognition();
             } else {
@@ -387,7 +538,7 @@
         }
 
         function restartRecognition() {
-            if (recognition && handsFreeActive && !isProcessing) {
+            if (recognition && handsFreeActive && !micLocked && !isSpeaking && !isProcessing) {
                 try {
                     recognition.start();
                 } catch (e) {
@@ -416,7 +567,7 @@
 
                     const dataArray = new Uint8Array(analyser.frequencyBinCount);
                     function updateEnergy() {
-                        if (handsFreeActive && analyser) {
+                        if (handsFreeActive && !micLocked && analyser) {
                             analyser.getByteFrequencyData(dataArray);
                             let sum = 0;
                             for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
@@ -435,24 +586,25 @@
         }
 
         function toggleHandsFree() {
+            if (micLocked) return;
             handsFreeActive = !handsFreeActive;
-            const btn = document.getElementById('handsFreeBtn');
-            const status = document.getElementById('handsFreeStatusText');
-            const hint = document.getElementById('listeningText');
             if (handsFreeActive) {
-                btn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/30";
-                status.innerText = "Hands-Free: ON";
-                hint.innerText = "Listening continuously across the counter... Just speak!";
+                updateMicUIState('active');
                 restartRecognition();
             } else {
-                btn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-slate-800 text-slate-400 border-slate-700";
-                status.innerText = "Hands-Free: OFF";
-                hint.innerText = "Hands-free paused. Tap mic to speak.";
-                if (recognition) recognition.stop();
+                updateMicUIState('paused');
+                if (recognition) {
+                    try { recognition.stop(); } catch(e){}
+                }
             }
         }
 
         function manualMicToggle() {
+            if (micLocked) {
+                // If clicked during intro, replay or proceed
+                playWelcomeTrustMessage();
+                return;
+            }
             if (!handsFreeActive) {
                 toggleHandsFree();
             } else {
@@ -461,11 +613,11 @@
         }
 
         async function sendVoiceCommand(text) {
-            if (!text || !text.trim()) return;
+            if (!text || !text.trim() || micLocked || isSpeaking) return;
 
             isProcessing = true;
             if (recognition) {
-                try { recognition.stop(); } catch(e){}
+                try { recognition.abort(); } catch(e){}
             }
 
             document.getElementById('aiResponseBox').innerHTML = `<span class="text-cyan-400 flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
@@ -495,7 +647,7 @@
                 console.error(err);
                 document.getElementById('aiResponseBox').innerHTML = `<span class="text-rose-400">Error: ${err.message}</span>`;
                 isProcessing = false;
-                if (handsFreeActive) restartRecognition();
+                if (handsFreeActive && !micLocked) restartRecognition();
             }
         }
 
@@ -524,27 +676,66 @@
             `;
             document.getElementById('replayBtn').classList.remove('hidden');
 
+            // Pause microphone while speaking back
+            updateMicUIState('speaking');
+
             speakText(message, lang, audioBase64, () => {
-                // Resume listening automatically as soon as TTS finishes speaking
+                // Resume listening automatically 400ms after speech finishes (clears room echo)
                 isProcessing = false;
-                if (handsFreeActive) {
-                    setTimeout(restartRecognition, 300);
+                if (handsFreeActive && !micLocked) {
+                    setTimeout(() => {
+                        updateMicUIState('active');
+                        restartRecognition();
+                    }, 400);
                 }
             });
         }
 
         function speakText(text, lang, audioBase64, onDone) {
+            isSpeaking = true;
+            if (recognition) {
+                try { recognition.abort(); } catch(e){}
+            }
+
+            let doneCalled = false;
+            const handleDone = () => {
+                if (doneCalled) return;
+                doneCalled = true;
+                isSpeaking = false;
+                if (onDone) onDone();
+            };
+
             if (audioBase64) {
-                const audio = new Audio("data:audio/wav;base64," + audioBase64);
-                audio.onended = () => { if (onDone) onDone(); };
-                audio.play();
-            } else if ('speechSynthesis' in window) {
+                try {
+                    const audio = new Audio("data:audio/wav;base64," + audioBase64);
+                    audio.onended = handleDone;
+                    audio.onerror = handleDone;
+                    const p = audio.play();
+                    if (p && p.catch) {
+                        p.catch(e => {
+                            console.warn("Audio playback error, falling back to speech synthesis:", e);
+                            fallbackSpeechSynthesis(text, lang, handleDone);
+                        });
+                    }
+                } catch(e) {
+                    fallbackSpeechSynthesis(text, lang, handleDone);
+                }
+            } else {
+                fallbackSpeechSynthesis(text, lang, handleDone);
+            }
+        }
+
+        function fallbackSpeechSynthesis(text, lang, onDone) {
+            if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 const utter = new SpeechSynthesisUtterance(text);
                 utter.lang = lang || 'hi-IN';
-                utter.rate = 1.05;
+                utter.rate = 1.0;
                 utter.onend = () => { if (onDone) onDone(); };
-                utter.onerror = () => { if (onDone) onDone(); };
+                utter.onerror = (e) => {
+                    console.warn("SpeechSynthesis error:", e);
+                    if (onDone) onDone();
+                };
                 window.speechSynthesis.speak(utter);
             } else {
                 if (onDone) onDone();
@@ -671,13 +862,24 @@
             loadTransactions();
         }
 
-        // On Load: Start VAD, Continuous Speech & Welcome Audio
+        // On Load: Start in Locked State, Attempt Intro Audio
         window.addEventListener('DOMContentLoaded', () => {
             refreshAllData();
-            initAudioVAD();
-            initContinuousSpeechRecognition();
-            // Automatically play welcome trust message after 800ms
-            setTimeout(playWelcomeTrustMessage, 800);
+            updateMicUIState('locked', 'Preparing Safe System Welcome Intro...');
+            
+            // Allow 1-click anywhere fallback if browser restricts audio autoplay
+            const handleFirstGesture = () => {
+                document.removeEventListener('click', handleFirstGesture);
+                if (isIntroPlaying) {
+                    playWelcomeTrustMessage();
+                }
+            };
+            document.addEventListener('click', handleFirstGesture);
+
+            // Attempt autoplay intro after 600ms
+            setTimeout(() => {
+                playWelcomeTrustMessage();
+            }, 600);
         });
     </script>
 </body>

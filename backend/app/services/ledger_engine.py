@@ -276,6 +276,59 @@ class LedgerEngine:
             formatted_opts = [f"{d} wale" if "wale" not in d.lower() else d for d in descriptors]
             return f"Kaunse {name}? {' ya '.join(formatted_opts)}? Ya koi nickname hai?"
 
+    def _generate_chitchat_response(self, topic: Optional[str], lang: str) -> str:
+        """Generates polite, natural conversational responses for Kirana shop talk."""
+        topic = topic or "greeting"
+        responses = {
+            "greeting": {
+                "hi": "Namaste! Main aapka digital voice ledger hoon. Dukaan ka hisaab likhna ho ya kisi grahak ka baaki dekhna ho, bas boliye.",
+                "kn": "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಅಂಗಡಿಯ ಡಿಜಿಟಲ್ ಸಹಾಯಕ ಇಲ್ಲಿದ್ದೇನೆ. ವ್ಯಾಪಾರ ಹೇಗಿದೆ? ಯಾರ ಲೆಕ್ಕ ಬರೆಯಬೇಕು?",
+                "te": "నమస్కారం! మీ దుకాణం లెక్కలు రాయడానికి నేను సిద్ధంగా ఉన్నాను. ఎవరి లెక్క రాయాలి?",
+                "en": "Namaste and welcome! How can I assist with your store's ledger today?",
+            },
+            "how_are_you": {
+                "hi": "Main bilkul badhiya hoon! Dukaan ka hisaab sambhalne ke liye hamesha taiyar. Aap bataiye, aaj dhandha kaisa chal raha hai?",
+                "kn": "ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ! ನಿಮ್ಮ ಲೆಕ್ಕಪತ್ರಗಳನ್ನು ಬರೆಯಲು ಸದಾ ಸಿದ್ಧ. ಇವತ್ತಿನ ವ್ಯಾಪಾರ ಹೇಗಿದೆ?",
+                "te": "నేను చాలా బాగున్నాను! మీ దుకాణం ఖాతా నిర్వహించడానికి ఎల్లప్పుడూ సిద్ధంగా ఉన్నాను. ఈరోజు వ్యాపారం ఎలా ఉంది?",
+                "en": "I'm doing great, thank you! Ready to keep your kirana ledger updated. How is business going today?",
+            },
+            "identity": {
+                "hi": "Main BolKhata hoon — aapki dukaan ka surakshit hands-free AI ledger. Aap bina screen ko chhue bol kar udhaar, jama aur saara hisaab rakh sakte hain.",
+                "kn": "ನಾನು ಬೋಲ್ ಖಾತಾ — ನಿಮ್ಮ ಅಂಗಡಿಯ ಸುರಕ್ಷಿತ AI ಧ್ವನಿ ಲೆಕ್ಕಪುಸ್ತಕ. ನೀವು ಪರದೆ ಮುಟ್ಟದೆಯೇ ಮಾತನಾಡಿ ಎಲ್ಲಾ ಸಾಲ-ಜಮಾ ಲೆಕ್ಕ ಇಡಬಹುದು.",
+                "te": "నేను బోల్ ఖాతా — మీ దుకాణం సురక్షిత AI వాయిస్ లెడ్జర్. మీరు స్క్రీన్ ముట్టకుండా మాట్లాడి అప్పు, జమ లెక్కలు రాయవచ్చు.",
+                "en": "I am BolKhata — your autonomous hands-free AI ledger for Kirana stores. You can manage credit, payments, and balances just by speaking naturally.",
+            },
+            "safety": {
+                "hi": "Aap bilkul nishchint rahiye! BolKhata 100% surakshit, safe aur AES-256 encrypted hai. Aapka saara grahak data aur dukaan ka hisaab poori tarah confidential rehta hai.",
+                "kn": "ಖಂಡಿತವಾಗಿಯೂ ಸುರಕ್ಷಿತ! ನಿಮ್ಮ ಎಲ್ಲಾ ಗ್ರಾಹಕರ ಲೆಕ್ಕಗಳು 100% ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದ್ದು ಸುರಕ್ಷಿತವಾಗಿರುತ್ತವೆ.",
+                "te": "మీరు ఎలాంటి చింతా పడనవసరం లేదు! బోల్ ఖాతా 100% సురక్షితం మరియు ఎన్‌క్రిప్టెడ్. మీ వ్యాపార వివరాలు పూర్తిగా భద్రం.",
+                "en": "Rest assured, BolKhata is 100% safe, secure and AES-256 encrypted. All your customer ledgers and financial data remain strictly confidential.",
+            },
+            "gratitude": {
+                "hi": "Aapka swagat hai! Dukaan ka koi bhi hisaab ho, bas bol dijiye.",
+                "kn": "ಸ್ವಾಗತ! ಅಂಗಡಿಯ ಯಾವುದೇ ಲೆಕ್ಕವಿದ್ದರೂ ಧೈರ್ಯವಾಗಿ ಹೇಳಿ, ನಾನು ಬರೆದಿಡುತ್ತೇನೆ.",
+                "te": "ధన్యవాదాలు! దుకాణంలో ఏ లెక్కలైనా నిర్భయంగా చెప్పండి, నేను రాస్తాను.",
+                "en": "You're most welcome! Always here to keep your store's ledger accurate.",
+            },
+            "smalltalk": {
+                "hi": "Haan bilkul, samajh gaya! Dukaan mein grahak ka hisaab likhna ho ya total dekhna ho, toh bataiye.",
+                "kn": "ಸರಿ, ಅರ್ಥವಾಯಿತು! ಅಂಗಡಿಯ ಯಾವುದೇ ಲೆಕ್ಕ ಬರೆಯಲು ಅಥವಾ ಬಾಕಿ ನೋಡಲು ತಿಳಿಸಿ.",
+                "te": "సరే, అర్థమైంది! దుకాణంలో లెక్క రాయాలన్నా లేదా మొత్తం చూడాలన్నా చెప్పండి.",
+                "en": "Understood! Whenever you need to record credit, payment, or check totals, I'm listening.",
+            },
+        }
+
+        lang_prefix = "hi"
+        if lang.startswith("kn"):
+            lang_prefix = "kn"
+        elif lang.startswith("te"):
+            lang_prefix = "te"
+        elif lang.startswith("en"):
+            lang_prefix = "en"
+
+        topic_dict = responses.get(topic, responses["smalltalk"])
+        return topic_dict.get(lang_prefix, topic_dict["hi"])
+
     # ═══════════════════════════════════════════════════════════
     # Complete Voice Utterance Processor
     # ═══════════════════════════════════════════════════════════
@@ -501,6 +554,17 @@ class LedgerEngine:
                 ),
             )
 
+        # ── Step C3: Conversational Chit-Chat & Normal Person Interaction ──
+        if actions and all(act.intent == IntentType.CHITCHAT for act in actions):
+            topic = actions[0].chitchat_topic or "greeting"
+            reply_msg = self._generate_chitchat_response(topic, lang)
+            return VoiceResponse(
+                success=True,
+                message=reply_msg,
+                intent=actions[0],
+                language=lang,
+            )
+
         # ── Step D: Sub-800ms Fast Path Queries ──
         if len(actions) == 1 and actions[0].intent == IntentType.QUERY_BALANCE:
             target_name = actions[0].customer_name
@@ -606,12 +670,23 @@ class LedgerEngine:
             c_name = last_cust.name if last_cust else "Customer"
 
             details = ", aur ".join(success_messages)
+            prefix = ""
+            if actions and actions[0].intent == IntentType.CHITCHAT:
+                if lang.startswith("kn"):
+                    prefix = "ನಮಸ್ಕಾರ! "
+                elif lang.startswith("te"):
+                    prefix = "నమస్కారం! "
+                elif lang.startswith("en"):
+                    prefix = "Hello! "
+                else:
+                    prefix = "Namaste! "
+
             if lang.startswith("kn"):
-                final_message = f"Done! {c_name} ಅವರ ಖಾತೆಗೆ ನಮೂದಿಸಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{final_bal:g}."
+                final_message = f"{prefix}Done! {c_name} ಅವರ ಖಾತೆಗೆ ನಮೂದಿಸಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{final_bal:g}."
             elif lang.startswith("te"):
-                final_message = f"Done! {c_name} కి నమోదు చేశాను. మొత్తం బాకీ: ₹{final_bal:g}."
+                final_message = f"{prefix}Done! {c_name} కి నమోదు చేశాను. మొత్తం బాకీ: ₹{final_bal:g}."
             else:
-                final_message = f"Done! {c_name} ka {details} likha. Ab kul baaki: ₹{final_bal:g}."
+                final_message = f"{prefix}Done! {c_name} ka {details} likha. Ab kul baaki: ₹{final_bal:g}."
 
             return VoiceResponse(
                 success=True,

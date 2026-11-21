@@ -80,6 +80,7 @@ class IntentType(str, Enum):
     QUERY_TODAY = "query_today"     # "Aaj kitna udhaar gaya?"
     CORRECTION = "correction"       # "nahi, 430"
     LIST_DUES = "list_dues"         # "Sabka hisaab bata"
+    CHITCHAT = "chitchat"           # Natural conversational chit-chat & greetings
     UNKNOWN = "unknown"
 
 
@@ -168,6 +169,7 @@ class ParsedIntent(BaseModel):
     confidence: float = 0.0
     needs_disambiguation: bool = False
     disambiguation_options: List[str] = []
+    chitchat_topic: Optional[str] = None
 
 
 class VoiceResponse(BaseModel):

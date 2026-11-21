@@ -151,9 +151,41 @@ async def run_all_tests():
         assert te_exec_resp.success is True
         print(f"  ✓ Telugu Response: \"{te_exec_resp.message}\"")
 
+        # 3h. Conversational Chitchat & Normal Person Interaction
+        print("\n[TEST 9] Conversational Chit-Chat & Normal Person Talk:")
+        # Greeting
+        greet_resp = await ledger.process_voice_command("Namaste bhaiya kaise ho", session_id="live_demo_session")
+        assert greet_resp.success is True
+        assert greet_resp.intent.intent == IntentType.CHITCHAT
+        print(f"  ✓ Greeting Chitchat: \"{greet_resp.message}\"")
+
+        # Identity
+        id_resp = await ledger.process_voice_command("Tum kaun ho", session_id="live_demo_session")
+        assert id_resp.success is True
+        assert "BolKhata" in id_resp.message
+        print(f"  ✓ Identity Chitchat: \"{id_resp.message}\"")
+
+        # Safety & Trust
+        safe_resp = await ledger.process_voice_command("Kya ye safe hai", session_id="live_demo_session")
+        assert safe_resp.success is True
+        assert "surakshit" in safe_resp.message.lower() or "safe" in safe_resp.message.lower()
+        print(f"  ✓ Safety Chitchat: \"{safe_resp.message}\"")
+
+        # Kannada Chitchat
+        kn_chat = await ledger.process_voice_command("ನಮಸ್ಕಾರ ಹೇಗಿದ್ದೀರಾ?", session_id="live_demo_session")
+        assert kn_chat.success is True
+        assert kn_chat.language.startswith("kn")
+        print(f"  ✓ Kannada Chitchat: \"{kn_chat.message}\"")
+
+        # Telugu Chitchat
+        te_chat = await ledger.process_voice_command("నమస్కారం ఎలా ఉన్నారు?", session_id="live_demo_session")
+        assert te_chat.success is True
+        assert te_chat.language.startswith("te")
+        print(f"  ✓ Telugu Chitchat: \"{te_chat.message}\"")
+
     await engine.dispose()
     print("\n" + "=" * 75)
-    print("🎉 ALL 8 UNFAIR ADVANTAGE SCENARIOS PASSED WITH 100% SUCCESS!")
+    print("🎉 ALL 9 UNFAIR ADVANTAGE SCENARIOS PASSED WITH 100% SUCCESS!")
     print("=" * 75)
 
 

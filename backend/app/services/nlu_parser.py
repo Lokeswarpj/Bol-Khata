@@ -111,7 +111,63 @@ SKIP_WORDS = {
     "lo", "nundi", "valla", "undi", "andi", "and", "or", "aur", "mattu", "mari",
     "the", "a", "an", "is", "are", "was", "were", "has", "have", "his", "her",
     "packet", "kilo", "kg", "gram", "rupaye", "rupees", "rs", "debt", "account",
+    "bhaiya", "ji", "babu", "sahab", "anna", "garu", "sir", "madam", "namaste", "hello", "hi",
+    # Indic script greetings & polite words
+    "ನಮಸ್ಕಾರ", "ನಮಸ್ಕಾರಗಳು", "ಹೇಗಿದ್ದೀರಾ", "ಹೇಗಿದ್ದೀರಿ", "ಧನ್ಯವಾದ", "ಧನ್ಯವಾದಗಳು",
+    "నమస్కారం", "నమస్కారాలు", "ఎలా", "ఉన్నారు", "బాగున్నారా", "ధన్యవాదాలు",
+    "नमस्ते", "नमस्कार", "धन्यवाद", "शुक्रिया", "प्रणाम", "राधे", "राम",
 }
+
+# Conversational Chit-Chat Categories & Patterns
+CHITCHAT_PATTERNS = {
+    "greeting": [
+        r'\b(?:namaste|namaskar|namaskara|namaskaram|hello|hi|hey|good\s+morning|good\s+afternoon|good\s+evening|shubh\s+prabhat|shubh\s+sandhya|ram\s+ram|radhe\s+radhe|pranam|salaam|kem\s+cho|vanakkam)\b',
+        r'(?:ನಮಸ್ಕಾರ|ನಮಸ್ಕಾರಗಳು|ಶುಭೋದಯ)',
+        r'(?:నమస్కారం|నమస్కారాలు|శుభోదయం)',
+        r'(?:नमस्ते|नमस्कार|शुभ\s*प्रभात|प्रणाम)',
+    ],
+    "how_are_you": [
+        r'\b(?:kaise\s+ho|kaise\s+hain|kya\s+haal|kaisa\s+chal\s+raha|kya\s+chal\s+raha|sab\s+theek|sab\s+badhiya|how\s+are\s+you|how\s+is\s+it\s+going|hegiddira|hegidiya|chennagiddira|hegide|ela\s+unnaru|bagunnara|ela\s+undi|whats\s+up)\b',
+        r'(?:ಹೇಗಿದ್ದೀರಾ|ಹೇಗಿದ್ದೀರಿ|ಹೇಗಿದೆ|ಚೆನ್ನಾಗಿದ್ದೀರಾ)',
+        r'(?:ఎలా\s*ఉన్నారు|బాగున్నారా|ఎలా\s*ఉంది)',
+        r'(?:कैसे\s*हो|कैसे\s*हैं|क्या\s*हाल|सब\s*ठीक)',
+    ],
+    "identity": [
+        r'\b(?:tum\s+kaun\s+ho|aap\s+kaun\s+ho|kaun\s+ho|who\s+are\s+you|what\s+is\s+your\s+name|tumhara\s+naam|aapka\s+naam|neevu\s+yaaru|nimma\s+hesaru|nuvvu\s+evaru|mee\s+peru|what\s+do\s+you\s+do|kya\s+karte\s+ho|bolkhata\s+kya\s+hai)\b',
+        r'(?:ನೀವು\s*ಯಾರು|ನಿಮ್ಮ\s*ಹೆಸರು)',
+        r'(?:మీరు\s*ఎవరు|నువ్వు\s*ఎవరు|మీ\s*పేరు)',
+        r'(?:तुम\s*कौन\s*हो|आप\s*कौन\s*हो|आपका\s*नाम)',
+    ],
+    "safety": [
+        r'\b(?:safe\s+hai|surakshit|is\s+it\s+safe|data\s+safe|secure|leak|privacy|guarantee|bhadravagiya|surakshitama)\b',
+        r'(?:ಸುರಕ್ಷಿತ|ಸುರಕ್ಷಿತವೇ|ಭದ್ರವಾಗಿದೆಯೇ)',
+        r'(?:సురక్షితం|సురక్షితమేనా|భద్రమేనా)',
+        r'(?:सुरक्षित|सेफ)',
+    ],
+    "gratitude": [
+        r'\b(?:dhanyawaad|dhanyawad|shukriya|thank\s+you|thanks|dhanyavada|dhanyavadagalu|dhanyavadalu|bahut\s+achha|great\s+job|shabaash)\b',
+        r'(?:ಧನ್ಯವಾದ|ಧನ್ಯವಾದಗಳು|ತುಂಬಾ\s*ಧನ್ಯವಾದ)',
+        r'(?:ధన్యవాదాలు|చాలా\s*థాంక్స్)',
+        r'(?:धन्यवाद|शुक्रिया)',
+    ],
+    "smalltalk": [
+        r'\b(?:theek\s+hai|accha|okay|alright|sari|sare|bheed\s+hai|garmi\s+hai|barish\s+ho\s+rahi|dhandha\s+kaisa|kaam\s+kaisa)\b',
+        r'(?:ಸರಿ|ಹೌದು|ಚೆನ್ನಾಗಿದೆ)',
+        r'(?:సరే|అవును|బాగుంది)',
+        r'(?:ठीक\s*है|अच्छा)',
+    ],
+}
+
+
+def detect_chitchat(text: str) -> Optional[str]:
+    """Identifies conversational intent topic if text is natural person small-talk."""
+    text_lower = text.lower()
+    for topic, patterns in CHITCHAT_PATTERNS.items():
+        for pat in patterns:
+            if re.search(pat, text_lower):
+                return topic
+    return None
+
 
 NAME_PATTERNS = [
     # Hyphenated descriptor names: 'Ramesh - Kirana Lane', 'Ramesh - Milk Dairy'
@@ -139,9 +195,22 @@ def detect_language(text: str) -> str:
     text_lower = text.lower()
     tokens = set(re.findall(r'\b\w+\b', text_lower))
 
-    kn_vocab = {"saala", "kottiddaane", "kotta", "ivattu", "ninne", "mooru", "eradu", "nooru", "eshtu", "ottu", "alla", "bare", "ge"}
-    te_vocab = {"appu", "icchaadu", "eeroju", "ninna", "moodu", "rendu", "vanda", "entha", "mottam", "kaadhu", "raayi", "ki"}
-    hi_vocab = {"udhaar", "diya", "hisaab", "chukta", "kitna", "aaj", "kal", "teen", "sau", "chaalis", "nahi", "likh", "jama"}
+    kn_vocab = {
+        "saala", "kottiddaane", "kotta", "ivattu", "ninne", "mooru", "eradu",
+        "nooru", "eshtu", "ottu", "alla", "bare", "ge", "namaskara", "hegiddira",
+        "hegidiya", "chennagiddira", "yaaru", "dhanyavada", "sari", "nimma"
+    }
+    te_vocab = {
+        "appu", "icchaadu", "eeroju", "ninna", "moodu", "rendu", "vanda",
+        "entha", "mottam", "kaadhu", "raayi", "ki", "namaskaram", "ela",
+        "unnaru", "bagunnara", "evaru", "dhanyavadalu", "sare", "meeru"
+    }
+    hi_vocab = {
+        "udhaar", "diya", "hisaab", "chukta", "kitna", "aaj", "kal", "teen",
+        "sau", "chaalis", "nahi", "likh", "jama", "namaste", "kaise", "haal",
+        "kaun", "dhanyawaad", "shukriya", "bhaiya", "theek", "aapka", "surakshit",
+        "kya", "ye", "yeh", "hai", "hain", "kaisa", "chahiye", "batao", "bataiye", "bata"
+    }
 
     kn_score = len(tokens & kn_vocab)
     te_score = len(tokens & te_vocab)
@@ -155,7 +224,11 @@ def detect_language(text: str) -> str:
         return "hi-IN"
 
     # English check
-    en_vocab = {"cleared", "debt", "credit", "paid", "total", "balance", "yesterday", "today", "three", "forty"}
+    en_vocab = {
+        "cleared", "debt", "credit", "paid", "total", "balance", "yesterday",
+        "today", "three", "forty", "hello", "hi", "how", "you", "who", "safe",
+        "thanks", "thank", "good", "morning"
+    }
     if len(tokens & en_vocab) > 0:
         return "en-IN"
 
@@ -216,38 +289,47 @@ def _is_debt_clearing_utterance(text: str) -> bool:
     return False
 
 
-def _classify_intent_clause(clause_text: str) -> IntentType:
+def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]]:
     tokens = _tokenize_clause(clause_text)
 
     # 1. Spoken Correction
     if tokens & CORRECTION_KEYWORDS:
-        return IntentType.CORRECTION
+        return IntentType.CORRECTION, None
 
     # 2. Debt Clearing (CRITICAL FIX: Checks before adding credit!)
     if _is_debt_clearing_utterance(clause_text):
-        return IntentType.CLEAR_DEBT
+        return IntentType.CLEAR_DEBT, None
 
     # 3. Queries
     if tokens & QUERY_KEYWORDS:
         if (tokens & TODAY_QUERY_KEYWORDS) and not _has_name(clause_text):
-            return IntentType.QUERY_TODAY
+            return IntentType.QUERY_TODAY, None
         if tokens & LIST_KEYWORDS:
-            return IntentType.LIST_DUES
-        return IntentType.QUERY_BALANCE
+            return IntentType.LIST_DUES, None
+        return IntentType.QUERY_BALANCE, None
 
     # 4. Payment
     if tokens & PAYMENT_KEYWORDS:
-        return IntentType.ADD_PAYMENT
+        return IntentType.ADD_PAYMENT, None
 
     # 5. Credit
     if tokens & CREDIT_KEYWORDS:
-        return IntentType.ADD_CREDIT
+        return IntentType.ADD_CREDIT, None
+
+    # 6. Conversational Small-Talk & Chitchat (BEFORE default credit / unknown)
+    chitchat_topic = detect_chitchat(clause_text)
+    if chitchat_topic and extract_first_amount(clause_text) is None:
+        return IntentType.CHITCHAT, chitchat_topic
 
     # Default to credit if an amount is present
     if extract_first_amount(clause_text) is not None:
-        return IntentType.ADD_CREDIT
+        return IntentType.ADD_CREDIT, None
 
-    return IntentType.UNKNOWN
+    # Secondary chitchat fallback
+    if chitchat_topic:
+        return IntentType.CHITCHAT, chitchat_topic
+
+    return IntentType.UNKNOWN, None
 
 
 def _split_into_clauses(text: str) -> List[str]:
@@ -263,10 +345,14 @@ def _split_into_clauses(text: str) -> List[str]:
 
 
 def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedIntent:
-    intent = _classify_intent_clause(clause)
+    intent, chitchat_topic = _classify_intent_clause(clause)
     cust_name = _extract_customer_name(clause) or default_customer
     amount = extract_first_amount(clause)
     txn_date = extract_date_from_text(clause)
+
+    # In chitchat, don't accidentally capture words as customer names
+    if intent == IntentType.CHITCHAT:
+        cust_name = None
 
     direction = None
     if intent == IntentType.ADD_CREDIT:
@@ -279,7 +365,7 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
         confidence += 0.2
     if cust_name:
         confidence += 0.2
-    if amount is not None or intent == IntentType.CLEAR_DEBT:
+    if amount is not None or intent in (IntentType.CLEAR_DEBT, IntentType.CHITCHAT):
         confidence += 0.1
 
     return ParsedIntent(
@@ -290,6 +376,7 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
         transaction_date=txn_date,
         raw_text=clause,
         confidence=min(confidence, 1.0),
+        chitchat_topic=chitchat_topic,
     )
 
 
