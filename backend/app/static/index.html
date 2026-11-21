@@ -526,6 +526,39 @@ CREATE POLICY "Allow anon all on transactions" ON public.transactions FOR ALL TO
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
+         DYNAMIC VOICE-TO-UPI SOUNDBOX SETTLEMENT MODAL
+         ═══════════════════════════════════════════════════════════════ -->
+    <div id="upiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="synapse-card rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl text-center space-y-4 border border-violet-500/40">
+            <div class="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
+                <div class="flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="text-violet-400 font-bold text-xs uppercase tracking-wider font-mono"><i class="fa-solid fa-qrcode mr-1"></i> Dynamic UPI Soundbox</span>
+                </div>
+                <button onclick="closeUPIModal()" class="text-neutral-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div>
+                <div class="text-[11px] text-neutral-400">Voice-Generated Settlement Request</div>
+                <h3 id="upiModalCustomer" class="text-lg font-bold mt-0.5">-</h3>
+                <div id="upiModalAmount" class="text-3xl font-mono font-bold text-emerald-400 my-1">₹0</div>
+                <div id="upiModalStore" class="text-[11px] text-neutral-400 font-mono">-</div>
+            </div>
+            <div class="flex justify-center p-3 bg-white rounded-2xl shadow-inner mx-auto w-fit">
+                <img id="upiModalQrImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Dynamic UPI QR" class="w-44 h-44 rounded-xl object-contain">
+            </div>
+            <div class="space-y-2">
+                <button onclick="simulateSoundboxPayment()" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Simulate Payment Received (Soundbox Chime)</span>
+                </button>
+                <button onclick="copyUpiLink()" id="copyUpiBtn" class="w-full py-2 rounded-2xl bg-black/10 dark:bg-white/10 hover:bg-black/20 text-xs font-mono transition">
+                    <i class="fa-solid fa-copy mr-1 text-[11px]"></i> Copy UPI URI
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
          HERO SECTION (Clean, Editorial, No Moving Background Orbs)
          ═══════════════════════════════════════════════════════════════ -->
     <section id="hero" class="relative z-10 pt-8 pb-10 px-4 flex flex-col items-center justify-center text-center">
@@ -2021,6 +2054,28 @@ CREATE POLICY "Allow anon all on transactions" ON public.transactions FOR ALL TO
             }
         }
 
+        function playBase64Audio(audioBase64, onDone) {
+            if (!audioBase64) {
+                if (onDone) onDone();
+                return;
+            }
+            try {
+                const audio = new Audio("data:audio/wav;base64," + audioBase64);
+                audio.onended = () => { if (onDone) onDone(); };
+                audio.onerror = (e) => {
+                    console.warn("Base64 audio playback failed:", e);
+                    if (onDone) onDone();
+                };
+                audio.play().catch(e => {
+                    console.warn("Audio autoplay blocked:", e);
+                    if (onDone) onDone();
+                });
+            } catch (err) {
+                console.warn("Audio init error:", err);
+                if (onDone) onDone();
+            }
+        }
+
         function replayAudio() {
             if (lastSpokenText) {
                 const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
@@ -2742,37 +2797,5 @@ CREATE POLICY "Allow anon all on transactions" ON public.transactions FOR ALL TO
             }, 2200);
         });
     </script>
-    <!-- ═══════════════════════════════════════════════════════════════
-         DYNAMIC VOICE-TO-UPI SOUNDBOX SETTLEMENT MODAL
-         ═══════════════════════════════════════════════════════════════ -->
-    <div id="upiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="synapse-card rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl text-center space-y-4 border border-violet-500/40">
-            <div class="flex items-center justify-between border-b border-black/10 dark:border-white/10 pb-3">
-                <div class="flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span class="text-violet-400 font-bold text-xs uppercase tracking-wider font-mono"><i class="fa-solid fa-qrcode mr-1"></i> Dynamic UPI Soundbox</span>
-                </div>
-                <button onclick="closeUPIModal()" class="text-neutral-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div>
-                <div class="text-[11px] text-neutral-400">Voice-Generated Settlement Request</div>
-                <h3 id="upiModalCustomer" class="text-lg font-bold mt-0.5">-</h3>
-                <div id="upiModalAmount" class="text-3xl font-mono font-bold text-emerald-400 my-1">₹0</div>
-                <div id="upiModalStore" class="text-[11px] text-neutral-400 font-mono">-</div>
-            </div>
-            <div class="flex justify-center p-3 bg-white rounded-2xl shadow-inner mx-auto w-fit">
-                <img id="upiModalQrImg" src="" alt="Dynamic UPI QR" class="w-44 h-44 rounded-xl object-contain">
-            </div>
-            <div class="space-y-2">
-                <button onclick="simulateSoundboxPayment()" class="w-full py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg transition flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-circle-check"></i>
-                    <span>Simulate Payment Received (Soundbox Chime)</span>
-                </button>
-                <button onclick="copyUpiLink()" id="copyUpiBtn" class="w-full py-2 rounded-2xl bg-black/10 dark:bg-white/10 hover:bg-black/20 text-xs font-mono transition">
-                    <i class="fa-solid fa-copy mr-1 text-[11px]"></i> Copy UPI URI
-                </button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
