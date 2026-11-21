@@ -14,6 +14,7 @@ import { ManualEntryModal } from '../components/ManualEntryModal';
 import { DevPanel } from '../components/DevPanel';
 import { BolKhataLogo } from '../components/BolKhataLogo';
 import { VoiceKhataBackground3D } from '../components/VoiceKhataBackground3D';
+import { getTranslation } from '../utils/i18n';
 import { CustomersView } from './CustomersView';
 import { CustomerDetailView } from './CustomerDetailView';
 import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff } from 'lucide-react';
@@ -100,7 +101,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
                 BolKhata
               </span>
               <MonoLabel variant="emerald" className="text-[9px] tracking-[0.25em]">
-                VOICE LEDGER
+                {getTranslation('voiceLedger', settings.language)}
               </MonoLabel>
             </div>
           </div>
@@ -114,14 +115,14 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
                 : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
             }`}>
               {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              <span>{isOnline ? 'LIVE' : 'OFFLINE'}</span>
+              <span>{isOnline ? getTranslation('statusLive', settings.language) : getTranslation('statusOffline', settings.language)}</span>
             </div>
 
             {/* Customers button */}
             <button
               onClick={() => setCurrentView('customers')}
               className="p-2 rounded-xl text-white/70 hover:text-white glass border border-white/10 hover:border-white/20 transition-colors"
-              title="Customers Directory"
+              title={getTranslation('customers', settings.language)}
             >
               <Users className="w-4 h-4" />
             </button>
@@ -130,7 +131,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
             <button
               onClick={() => setDevPanelOpen(true)}
               className="p-2 rounded-xl text-white/70 hover:text-white glass border border-white/10 hover:border-white/20 transition-colors"
-              title="Dev & Demo Panel"
+              title={getTranslation('devPanel', settings.language)}
             >
               <Wrench className="w-4 h-4" />
             </button>
@@ -139,7 +140,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
             <button
               onClick={() => setSettingsOpen(true)}
               className="p-2 rounded-xl text-white/70 hover:text-white glass border border-white/10 hover:border-white/20 transition-colors"
-              title="Settings"
+              title={getTranslation('settings', settings.language)}
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -155,26 +156,26 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
           <div className="glass rounded-3xl p-4 border border-white/10 relative overflow-hidden group">
             <div className="flex items-center justify-between text-rose-400/80 mb-1">
               <span className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3" /> Aaj Ka Udhaar
+                <ArrowUpRight className="w-3 h-3" /> {getTranslation('todayCredit', settings.language)}
               </span>
             </div>
             <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-rose-400">
               ₹{todayCredit.toLocaleString('en-IN')}
             </div>
-            <span className="text-[10px] text-white/40 block mt-1">Given to customers</span>
+            <span className="text-[10px] text-white/40 block mt-1">{getTranslation('givenToCustomers', settings.language)}</span>
           </div>
 
           {/* Jama Received (Emerald) */}
           <div className="glass rounded-3xl p-4 border border-white/10 relative overflow-hidden group">
             <div className="flex items-center justify-between text-emerald-400/80 mb-1">
               <span className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
-                <ArrowDownLeft className="w-3 h-3" /> Aaj Ka Jama
+                <ArrowDownLeft className="w-3 h-3" /> {getTranslation('todayPayment', settings.language)}
               </span>
             </div>
             <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-emerald-400">
               ₹{todayPayment.toLocaleString('en-IN')}
             </div>
-            <span className="text-[10px] text-white/40 block mt-1">Collected payment</span>
+            <span className="text-[10px] text-white/40 block mt-1">{getTranslation('collectedPayment', settings.language)}</span>
           </div>
         </div>
 
@@ -183,23 +184,23 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
           <div className="flex items-center gap-2.5 min-w-0 pr-2">
             <MonoLabel variant="emerald" pulseDot={voiceState === 'listening'}>
               {voiceState === 'listening'
-                ? 'LISTENING'
+                ? getTranslation('listening', settings.language)
                 : voiceState === 'thinking'
-                ? 'THINKING'
+                ? getTranslation('thinking', settings.language)
                 : voiceState === 'speaking'
-                ? 'SPEAKING'
-                : 'HEARD'}
+                ? getTranslation('speaking', settings.language)
+                : getTranslation('heard', settings.language)}
             </MonoLabel>
 
             <span className="text-xs text-white/80 truncate italic">
-              {heardTranscript ? `"${heardTranscript}"` : 'Hold mic below to speak entry...'}
+              {heardTranscript ? `"${heardTranscript}"` : getTranslation('holdMicPrompt', settings.language)}
             </span>
           </div>
 
           <button
             onClick={() => setManualEntryOpen(true)}
             className="p-1.5 rounded-xl glass border border-white/10 hover:border-emerald-500/50 text-white/60 hover:text-white shrink-0"
-            title="Manual entry"
+            title={getTranslation('manualEntry', settings.language)}
           >
             <Plus className="w-4 h-4" />
           </button>
@@ -208,9 +209,9 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
         {/* Recent Entries Header */}
         <div className="flex items-center justify-between pt-1">
           <MonoLabel variant="muted">
-            RECENT LEDGER ENTRIES ({entries.length})
+            {getTranslation('recentLedgerEntries', settings.language)} ({entries.length})
           </MonoLabel>
-          <span className="text-[11px] text-white/40">Latest on top</span>
+          <span className="text-[11px] text-white/40">{getTranslation('latestOnTop', settings.language)}</span>
         </div>
 
         {/* Recent Entries List */}
@@ -225,9 +226,9 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
 
           {entries.length === 0 && (
             <div className="text-center py-12 glass rounded-3xl border border-white/5 space-y-2">
-              <p className="font-serif text-lg text-white/70">Khata is clean for today</p>
+              <p className="font-serif text-lg text-white/70">{getTranslation('cleanKhata', settings.language)}</p>
               <p className="text-xs text-white/40 max-w-xs mx-auto">
-                Press and hold the white button below and say e.g. <span className="text-white/80">"Ramesh ka 340 udhaar"</span>
+                {getTranslation('emptyKhataHint', settings.language)}
               </p>
             </div>
           )}
@@ -250,7 +251,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
               title="Continuous Hands-Free Autonomous Listening"
             >
               <span className={`w-1.5 h-1.5 rounded-full ${settings.handsFree ? 'bg-cyan-400' : 'bg-white/30'}`} />
-              <span>HANDS-FREE {settings.handsFree ? 'ON' : 'OFF'}</span>
+              <span>{getTranslation('handsFree', settings.language)} {settings.handsFree ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Language Selector */}
@@ -285,7 +286,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
             onClickToggle={handleMicToggle}
           />
           <span className="text-[10px] text-white/40 font-mono tracking-wider uppercase">
-            {voiceState === 'listening' ? 'Recording... (release or tap)' : 'Hold or tap to speak'}
+            {voiceState === 'listening' ? getTranslation('recordingRelease', settings.language) : getTranslation('holdOrTapToSpeak', settings.language)}
           </span>
         </div>
       </div>
