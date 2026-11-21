@@ -20,6 +20,10 @@ class VoiceService {
   private t1: number = 0;
   private t2: number = 0;
   private mimeType: string = 'audio/webm';
+  private activeAudio: HTMLAudioElement | null = null;
+  private recentSpokenTexts: string[] = [];
+  private isEchoCooldown: boolean = false;
+  private cooldownTimer: any = null;
 
   constructor() {
     this.initSpeechRecognition();
@@ -38,6 +42,9 @@ class VoiceService {
         this.recognition.maxAlternatives = 1;
 
         this.recognition.onresult = (event: any) => {
+          if (this.isEchoCooldown || useLedgerStore.getState().voiceState === 'speaking') {
+            return;
+          }
           let interim = '';
           for (let i = event.resultIndex; i < event.results.length; ++i) {
             if (event.results[i].isFinal) {
@@ -48,7 +55,11 @@ class VoiceService {
           }
           const text = (this.liveTranscript + interim).trim();
           if (text) {
-            useLedgerStore.getState().setHeardTranscript(text);
+            const lower = text.toLowerCase();
+            const isEcho = this.recentSpokenTexts.some(spoken => spoken.includes(lower) || (lower.length > 6 && spoken.length > 6 && lower.includes(spoken)));
+            if (!isEcho) {
+              useLedgerStore.getState().setHeardTranscript(text);
+            }
           }
         };
 
@@ -213,7 +224,7 @@ class VoiceService {
 
       // Audio Playback
       if (data.audio) {
-        this.playBase64Audio(data.audio);
+        this.playBase64Audio(data.audio, data.text);
       } else if (data.text) {
         this.fallbackSpeechSynthesis(data.text);
       } else {
@@ -240,22 +251,42 @@ class VoiceService {
     }
   }
 
-  private playBase64Audio(base64: string) {
+  private playBase64Audio(base64: string, spokenText?: string) {
     const store = useLedgerStore.getState();
+    if (this.activeAudio) {
+      try { this.activeAudio.pause(); } catch {}
+      this.activeAudio = null;
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (spokenText) {
+      this.recentSpokenTexts.push(spokenText.toLowerCase().trim());
+      if (this.recentSpokenTexts.length > 15) this.recentSpokenTexts.shift();
+    }
     try {
-      const audio = new Audio(`data:audio/wav;base64,${base64}`);
+      this.activeAudio = new Audio(`data:audio/wav;base64,${base64}`);
       store.setVoiceState('speaking');
+      this.isEchoCooldown = true;
+      if (this.cooldownTimer) clearTimeout(this.cooldownTimer);
+      if (this.recognition) {
+        try { this.recognition.abort(); } catch {}
+      }
+
       const handleEnded = () => {
+        this.activeAudio = null;
         store.setVoiceState('idle');
-        if (store.settings.handsFree) {
-          setTimeout(() => this.startRecording(), 450);
-        }
+        this.cooldownTimer = setTimeout(() => {
+          this.isEchoCooldown = false;
+          if (store.settings.handsFree) {
+            this.startRecording();
+          }
+        }, 1100);
       };
-      audio.onended = handleEnded;
-      audio.onerror = handleEnded;
-      audio.play().catch(handleEnded);
+      this.activeAudio.onended = handleEnded;
+      this.activeAudio.onerror = handleEnded;
+      this.activeAudio.play().catch(handleEnded);
     } catch {
       store.setVoiceState('idle');
+      this.isEchoCooldown = false;
     }
   }
 
@@ -266,17 +297,27 @@ class VoiceService {
       return;
     }
     window.speechSynthesis.cancel();
+    this.recentSpokenTexts.push(text.toLowerCase().trim());
+    if (this.recentSpokenTexts.length > 15) this.recentSpokenTexts.shift();
     const utterance = new SpeechSynthesisUtterance(text);
     const lang = store.settings.language === 'auto' ? 'hi-IN' : (store.settings.language || 'hi-IN');
     utterance.lang = lang;
     utterance.rate = 1.05;
     store.setVoiceState('speaking');
+    this.isEchoCooldown = true;
+    if (this.cooldownTimer) clearTimeout(this.cooldownTimer);
+    if (this.recognition) {
+      try { this.recognition.abort(); } catch {}
+    }
 
     const handleEnded = () => {
       store.setVoiceState('idle');
-      if (store.settings.handsFree) {
-        setTimeout(() => this.startRecording(), 450);
-      }
+      this.cooldownTimer = setTimeout(() => {
+        this.isEchoCooldown = false;
+        if (store.settings.handsFree) {
+          this.startRecording();
+        }
+      }, 1100);
     };
 
     utterance.onend = handleEnded;

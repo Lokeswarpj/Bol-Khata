@@ -23,21 +23,36 @@ router = APIRouter(prefix="/api/ledger", tags=["Ledger"])
 @router.post("/transaction", response_model=TransactionResponse)
 async def create_transaction(
     data: ManualTransactionCreate,
+    owner_id: Optional[int] = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a ledger entry manually (REST fallback)."""
-    # Find or create customer
+    if owner_id is None:
+        owner_res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
+        active_o = owner_res.scalars().first()
+        active_owner_id = active_o.id if active_o else 1
+    else:
+        active_owner_id = owner_id
+
+    # Find or create customer scoped to owner
     result = await db.execute(
-        select(Customer).where(func.lower(Customer.name) == data.customer_name.lower())
+        select(Customer).where(
+            func.lower(Customer.name) == data.customer_name.lower(),
+            or_(Customer.owner_id == active_owner_id, Customer.owner_id.is_(None))
+        )
     )
     customer = result.scalars().first()
     
     if not customer:
-        customer = Customer(name=data.customer_name.strip().title())
+        customer = Customer(
+            name=data.customer_name.strip().title(),
+            owner_id=active_owner_id
+        )
         db.add(customer)
         await db.flush()
     
     txn = Transaction(
+        owner_id=active_owner_id,
         customer_id=customer.id,
         amount=data.amount,
         direction=data.direction.value,
@@ -75,7 +90,9 @@ async def list_transactions(
     if owner_id is None:
         owner_res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
         active_o = owner_res.scalars().first()
-        active_owner_id = active_o.id if active_o else 1
+        if not active_o:
+            return []
+        active_owner_id = active_o.id
     else:
         active_owner_id = owner_id
 
@@ -126,7 +143,16 @@ async def get_summary(
     if owner_id is None:
         owner_res = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
         active_o = owner_res.scalars().first()
-        active_owner_id = active_o.id if active_o else 1
+        if not active_o:
+            return LedgerSummary(
+                total_credit=0.0,
+                total_payments=0.0,
+                net_outstanding=0.0,
+                customer_count=0,
+                today_credit=0.0,
+                today_payments=0.0,
+            )
+        active_owner_id = active_o.id
     else:
         active_owner_id = owner_id
     

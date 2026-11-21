@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     # ── Database ──────────────────────────────────────────────
     database_url: str = "sqlite+aiosqlite:///./bolkhata.db"
     db_encryption_key: str = secrets.token_hex(32)
+    supabase_url: str = "https://bniyjwlqzrnszxzacomp.supabase.co"
+    supabase_anon_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuaXlqd2xxenJuc3p4emFjb21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNzE2MzEsImV4cCI6MjExMDg0NzYzMX0.7-YfHIR2yBEL6WicrC8jDNVZOT6CbDnufbiDjFZFl_c"
 
     # ── Server ────────────────────────────────────────────────
     host: str = "0.0.0.0"

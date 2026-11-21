@@ -18,6 +18,8 @@ from app.models import (
     Customer, Transaction, TransactionDirection
 )
 from app.services.gnani_tts import tts_service
+from app.services.supabase_service import supabase_service
+from app.services.security import hash_pin, verify_pin, create_access_token
 
 logger = logging.getLogger("bolkhata.owner")
 
@@ -80,18 +82,9 @@ async def get_owner_profile(db: AsyncSession = Depends(get_db)):
     owner = result.scalars().first()
 
     if not owner:
-        # Fallback to first owner if none marked active
-        fallback_res = await db.execute(select(StoreOwner).order_by(StoreOwner.id.asc()))
-        owner = fallback_res.scalars().first()
-        if owner:
-            owner.is_active = True
-            await db.commit()
-            await db.refresh(owner)
-
-    if not owner:
         return {
             "registered": False,
-            "message": "No store owner registered yet. Please sign up or register to personalize BolKhata.",
+            "message": "No merchant currently logged in. Please log in or register.",
             "owner": None,
         }
 
@@ -134,31 +127,41 @@ async def signup_store_owner(
     if not data.store_name.strip() or not data.owner_name.strip():
         raise HTTPException(status_code=400, detail="Store name and Owner name are required.")
 
-    # Deactivate existing owners to make the new store active
-    await db.execute(update(StoreOwner).values(is_active=False))
-
-    phone_val = data.phone.strip() if data.phone else None
-    existing = None
-    if phone_val:
-        q = select(StoreOwner).where(
-            StoreOwner.phone == phone_val,
-            StoreOwner.store_name == data.store_name.strip()
-        )
-        existing = (await db.execute(q)).scalars().first()
-
-    if existing:
-        existing.is_active = True
-        existing.owner_name = data.owner_name.strip()
-        if data.pin:
-            existing.pin = data.pin.strip()
-        await db.commit()
-        await db.refresh(existing)
-        owner = existing
+    # Check if merchant phone already registered
+    if data.phone and data.phone.strip():
+        existing = await db.execute(select(StoreOwner).where(StoreOwner.phone == data.phone.strip()))
+        existing_owner = existing.scalars().first()
+        if existing_owner:
+            # Switch to this owner
+            await db.execute(update(StoreOwner).values(is_active=False))
+            existing_owner.is_active = True
+            existing_owner.store_name = data.store_name.strip()
+            existing_owner.owner_name = data.owner_name.strip()
+            if data.pin:
+                existing_owner.pin = hash_pin(data.pin.strip())
+            await db.commit()
+            await db.refresh(existing_owner)
+            owner = existing_owner
+        else:
+            # Set all existing owners to inactive
+            await db.execute(update(StoreOwner).values(is_active=False))
+            owner = StoreOwner(
+                store_name=data.store_name.strip(),
+                owner_name=data.owner_name.strip(),
+                phone=data.phone.strip() if data.phone else None,
+                pin=hash_pin(data.pin.strip() if data.pin else "1234"),
+                address=data.address.strip() if data.address else None,
+                language_preference=data.language_preference or "en-IN",
+                is_active=True,
+            )
+            db.add(owner)
+            await db.commit()
+            await db.refresh(owner)
     else:
+        await db.execute(update(StoreOwner).values(is_active=False))
         owner = StoreOwner(
             store_name=data.store_name.strip(),
             owner_name=data.owner_name.strip(),
-            phone=phone_val,
             pin=data.pin.strip() if data.pin else "1234",
             address=data.address.strip() if data.address else None,
             language_preference=data.language_preference or "en-IN",
@@ -168,17 +171,26 @@ async def signup_store_owner(
         await db.commit()
         await db.refresh(owner)
 
+    # Sync to Supabase Cloud Database
+    await supabase_service.sync_store_owner({
+        "id": owner.id,
+        "store_name": owner.store_name,
+        "owner_name": owner.owner_name,
+        "phone": owner.phone,
+        "language_preference": owner.language_preference,
+    })
+
     profile = await _get_owner_metrics(db, owner)
 
     lang = owner.language_preference or "en-IN"
     if lang.startswith("kn"):
-        welcome_msg = f"ನಮಸ್ಕಾರ {owner.owner_name} ಅವರೇ! {owner.store_name} ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಣಿಯಾಗಿದೆ. ನಿಮ್ಮ ಖಾತೆ 100% ಸುರಕ್ಷಿತವಾಗಿದೆ."
+        welcome_msg = f"ನಮಸ್ಕಾರ {owner.owner_name} ಅವರೇ! {owner.store_name} ಯಶಸ್ವಿಯಾಗಿ ನೋಂದಣಿಯಾಗಿದೆ. ಲೆಕ್ಕ ಬರೆಯಲು ಸಿದ್ಧ."
     elif lang.startswith("te"):
-        welcome_msg = f"నమస్కారం {owner.owner_name} గారు! {owner.store_name} విజయవంతంగా నమోదయింది. మీ లెక్కలు 100% సురక్షితం."
+        welcome_msg = f"నమస్కారం {owner.owner_name} గారు! {owner.store_name} విజయవంతంగా నమోదయింది. లెక్కలు రాయడానికి సిద్ధం."
     elif lang.startswith("hi"):
-        welcome_msg = f"Namaste {owner.owner_name} ji! {owner.store_name} safalta-purvak register ho gaya hai. Aapka saara hisaab 100% surakshit aur encrypted hai."
+        welcome_msg = f"Namaste {owner.owner_name} ji! {owner.store_name} register ho gaya hai. Boliye kya hisaab likhna hai."
     else:
-        welcome_msg = f"Namaste {owner.owner_name} ji! Welcome to {owner.store_name}. Your merchant account is secured with AES-256 encryption."
+        welcome_msg = f"Namaste {owner.owner_name} ji! Welcome to {owner.store_name}. BolKhata is ready."
 
     audio_base64 = None
     try:
@@ -188,9 +200,11 @@ async def signup_store_owner(
     except Exception as e:
         logger.warning(f"Could not generate welcome audio: {e}")
 
+    token = create_access_token({"sub": owner.id, "owner_name": owner.owner_name, "store_name": owner.store_name})
     return {
         "success": True,
         "registered": True,
+        "token": token,
         "message": welcome_msg,
         "audio_base64": audio_base64,
         "owner": profile,
@@ -216,10 +230,9 @@ async def login_store_owner(
     if not owner:
         raise HTTPException(status_code=404, detail=f"No store merchant found registered with phone {phone_clean}")
 
-    # Check PIN if configured
-    if owner.pin and data.pin:
-        if str(owner.pin).strip() != str(data.pin).strip():
-            raise HTTPException(status_code=401, detail="Incorrect 4-digit PIN. Please try again.")
+    # Verify PIN with salted hash or legacy plaintext
+    if not verify_pin(data.pin or "1234", owner.pin):
+        raise HTTPException(status_code=401, detail="Incorrect 4-digit PIN. Access denied.")
 
     # Switch active store
     await db.execute(update(StoreOwner).values(is_active=False))
@@ -247,11 +260,24 @@ async def login_store_owner(
     except Exception as e:
         logger.warning(f"Could not generate login audio: {e}")
 
+    token = create_access_token({"sub": owner.id, "owner_name": owner.owner_name, "store_name": owner.store_name})
     return {
         "success": True,
+        "token": token,
         "message": msg,
         "audio_base64": audio_base64,
         "owner": profile,
+    }
+
+
+@router.post("/logout")
+async def logout_store_owner(db: AsyncSession = Depends(get_db)):
+    """Logs out the active store owner by marking accounts inactive."""
+    await db.execute(update(StoreOwner).values(is_active=False))
+    await db.commit()
+    return {
+        "success": True,
+        "message": "Logged out successfully."
     }
 
 
@@ -346,17 +372,32 @@ async def register_store_owner(
     if not data.store_name.strip() or not data.owner_name.strip():
         raise HTTPException(status_code=400, detail="Store name and Owner name are required.")
 
-    await db.execute(update(StoreOwner).values(is_active=False))
-    owner = StoreOwner(
-        store_name=data.store_name.strip(),
-        owner_name=data.owner_name.strip(),
-        phone=data.phone.strip() if data.phone else None,
-        pin=data.pin.strip() if data.pin else "1234",
-        address=data.address.strip() if data.address else None,
-        language_preference=data.language_preference or "en-IN",
-        is_active=True,
-    )
-    db.add(owner)
+    result = await db.execute(select(StoreOwner).where(StoreOwner.is_active == True).order_by(StoreOwner.id.desc()))
+    owner = result.scalars().first()
+
+    if owner:
+        owner.store_name = data.store_name.strip()
+        owner.owner_name = data.owner_name.strip()
+        if data.phone:
+            owner.phone = data.phone.strip()
+        if data.pin:
+            owner.pin = data.pin.strip()
+        if data.address:
+            owner.address = data.address.strip()
+        if data.language_preference:
+            owner.language_preference = data.language_preference
+    else:
+        owner = StoreOwner(
+            store_name=data.store_name.strip(),
+            owner_name=data.owner_name.strip(),
+            phone=data.phone.strip() if data.phone else None,
+            pin=data.pin.strip() if data.pin else "1234",
+            address=data.address.strip() if data.address else None,
+            language_preference=data.language_preference or "en-IN",
+            is_active=True,
+        )
+        db.add(owner)
+
     await db.commit()
     await db.refresh(owner)
 
@@ -368,7 +409,7 @@ async def register_store_owner(
     elif lang.startswith("te"):
         welcome_msg = f"నమస్కారం {owner.owner_name} గారు! {owner.store_name} విజయవంతంగా నమోదయింది. మీ లెక్కలు 100% సురಕ್ಷితం."
     elif lang.startswith("hi"):
-        welcome_msg = f"Namaste {owner.owner_name} ji! {owner.store_name} safalta-purvak register ho gaya hai. Aapka saara hisaab 100% surakshit aur encrypted hai."
+        welcome_msg = f"Namaste {owner.owner_name} ji! {owner.store_name} register ho gaya hai. Boliye kya hisaab likhna hai."
     else:
         welcome_msg = f"Namaste {owner.owner_name} ji! {owner.store_name} has been successfully registered. Your store ledger is safe, 100% encrypted, and DPDP compliant."
 
