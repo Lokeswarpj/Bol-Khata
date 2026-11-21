@@ -1,45 +1,47 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BolKhata — AI Voice Ledger | Cinematic Kirana Intelligence</title>
+    <title>BolKhata — Futuristic AI Voice Ledger for Kirana Stores</title>
     
-    <!-- Luxury Typography -->
+    <!-- Synapse Design System Fonts: Instrument Serif, Inter, JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Icons & Styling Frameworks -->
+    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Three.js for 3D Hollywood Visuals -->
+    <!-- Three.js for 3D Floating Particles -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
         tailwind.config = {
-            darkMode: ['class', '[data-theme="dark"]'],
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-                        display: ['"Cabinet Grotesk"', '"Plus Jakarta Sans"', 'sans-serif'],
-                        serif: ['"Playfair Display"', 'serif'],
+                        serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+                        sans: ['"Inter"', 'system-ui', 'sans-serif'],
                         mono: ['"JetBrains Mono"', 'monospace'],
                     },
                     colors: {
-                        gold: {
-                            300: '#FDE68A',
-                            400: '#F59E0B',
-                            500: '#D97706',
-                            600: '#B45309',
+                        vantablack: '#030303',
+                        violet: {
+                            400: '#a78bfa',
+                            500: '#8B5CF6',
+                            600: '#7c3aed',
+                        },
+                        cyan: {
+                            400: '#22d3ee',
+                            500: '#06B6D4',
+                            600: '#0891b2',
                         },
                         emerald: {
-                            400: '#34D399',
+                            400: '#34d399',
                             500: '#10B981',
                             600: '#059669',
-                            950: '#022C22',
                         }
                     }
                 }
@@ -49,839 +51,962 @@
 
     <style>
         /* ═══════════════════════════════════════════════════════════
-           LUXURY DUAL-THEME ARCHITECTURE (CINEMATIC LIGHT & DARK)
+           SYNAPSE DESIGN SYSTEM SPECIFICATION (VANTABLACK LUXURY)
            ═══════════════════════════════════════════════════════════ */
         :root {
-            --bg-base: #06070B;
-            --bg-surface: rgba(14, 17, 26, 0.72);
-            --bg-surface-elevated: rgba(22, 27, 42, 0.82);
-            --border-subtle: rgba(255, 255, 255, 0.07);
-            --border-highlight: rgba(212, 175, 55, 0.35);
-            --text-primary: #F8FAFC;
-            --text-secondary: #94A3B8;
-            --text-muted: #64748B;
-            --accent-gold: #E5C07B;
+            --bg-vantablack: #030303;
+            --accent-violet: #8B5CF6;
+            --accent-cyan: #06B6D4;
             --accent-emerald: #10B981;
-            --accent-rose: #F43F5E;
-            --card-glass: rgba(15, 20, 32, 0.65);
-            --card-glass-specular: rgba(255, 255, 255, 0.08);
-            --glow-color: rgba(16, 185, 129, 0.15);
-            --shadow-elevation: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
-        }
-
-        [data-theme="light"] {
-            --bg-base: #F8F9FC;
-            --bg-surface: rgba(255, 255, 255, 0.88);
-            --bg-surface-elevated: rgba(255, 255, 255, 0.98);
-            --border-subtle: rgba(0, 0, 0, 0.08);
-            --border-highlight: rgba(180, 130, 20, 0.35);
-            --text-primary: #0F172A;
-            --text-secondary: #475569;
-            --text-muted: #94A3B8;
-            --accent-gold: #B45309;
-            --accent-emerald: #059669;
-            --accent-rose: #E11D48;
-            --card-glass: rgba(255, 255, 255, 0.85);
-            --card-glass-specular: rgba(0, 0, 0, 0.04);
-            --glow-color: rgba(5, 150, 105, 0.12);
-            --shadow-elevation: 0 25px 50px -12px rgba(15, 23, 42, 0.08), 0 0 1px 1px rgba(0,0,0,0.04);
+            --ease-snappy: cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         body {
-            background-color: var(--bg-base);
-            color: var(--text-primary);
-            transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background-color: var(--bg-vantablack);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
             overflow-x: hidden;
+            selection-background-color: #8B5CF6;
+            selection-color: #ffffff;
         }
 
-        /* Frosted Glassmorphism with Specular Rim Highlight */
-        .luxury-card {
-            background: var(--card-glass);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
-            border: 1px solid var(--border-subtle);
-            box-shadow: var(--shadow-elevation), inset 0 1px 1px 0 var(--card-glass-specular);
+        /* ── Typography Spec ── */
+        .font-serif-synapse {
+            font-family: 'Instrument Serif', Georgia, serif;
+            letter-spacing: -0.035em;
+        }
+
+        /* ── Text Shimmer Animation ── */
+        .text-shimmer {
+            background: linear-gradient(90deg, #a78bfa 0%, #ffffff 40%, #ffffff 60%, #22d3ee 100%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: textShimmer 4s linear infinite;
+        }
+        @keyframes textShimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* ── Floating Ambient Glow Orbs ── */
+        @keyframes floatOrb1 {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-24px) scale(1.06); }
+        }
+        @keyframes floatOrb2 {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(28px) scale(0.95); }
+        }
+        .ambient-orb-violet {
+            animation: floatOrb1 9s ease-in-out infinite;
+        }
+        .ambient-orb-cyan {
+            animation: floatOrb2 13s ease-in-out infinite;
+        }
+
+        /* ── Glassmorphism ── */
+        .synapse-glass {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ── Interactive Feature Cards with Snappy Hover ── */
+        .synapse-card {
             border-radius: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: transform 0.4s var(--ease-snappy), border-color 0.4s var(--ease-snappy), box-shadow 0.4s var(--ease-snappy), background 0.4s ease;
+        }
+        .synapse-card:hover {
+            transform: translateY(-12px);
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 25px -10px rgba(139, 92, 246, 0.5);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .synapse-card:hover .card-icon-box {
+            transform: scale(1.1) rotate(-4deg);
+        }
+        .card-icon-box {
+            transition: transform 0.4s var(--ease-snappy);
+        }
+
+        /* ── Shiny Border Button (Conic Gradient 4s loop) ── */
+        .shiny-border-btn {
             position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+            padding: 1.5px;
+            border-radius: 9999px;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s var(--ease-snappy);
         }
-
-        .luxury-card:hover {
-            border-color: rgba(229, 192, 123, 0.3);
+        .shiny-border-btn:hover {
+            transform: scale(1.02);
         }
-
-        /* 3D Depth Card Tilt Effect */
-        .card-tilt {
-            will-change: transform;
-            transform-style: preserve-3d;
+        .shiny-border-btn:active {
+            transform: scale(0.98);
         }
-
-        /* Cinematic Specular Reflection Beam */
-        .luxury-card::after {
+        .shiny-border-btn::before {
             content: '';
             position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.07), transparent 60%);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent 0%, #8b5cf6 40%, #06b6d4 50%, transparent 60%);
+            animation: rotateConic 4s linear infinite;
+            z-index: 0;
         }
-
-        .luxury-card:hover::after {
-            opacity: 1;
-        }
-
-        /* Ambient 3D Three.js Canvas Backdrop */
-        #hero3dCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .shiny-border-btn-inner {
+            position: relative;
+            background: #0a0a0a;
+            padding: 14px 34px;
+            border-radius: 9999px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             width: 100%;
             height: 100%;
+        }
+        @keyframes rotateConic {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ── Infinite Horizontal Metrics Ticker ── */
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .ticker-track {
+            display: flex;
+            width: max-content;
+            animation: tickerScroll 38s linear infinite;
+        }
+        .ticker-track:hover {
+            animation-play-state: paused;
+        }
+
+        /* ── Microphone State Pulses ── */
+        @keyframes synPulse {
+            0% { transform: scale(0.94); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+            50% { transform: scale(1.06); box-shadow: 0 0 30px 15px rgba(6, 182, 212, 0.3); }
+            100% { transform: scale(0.94); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+        }
+        .syn-mic-listening {
+            animation: synPulse 1.9s infinite var(--ease-snappy);
+        }
+
+        /* ── Strike-Through Correction Banner ── */
+        @keyframes strikeFlash {
+            0% { opacity: 0; transform: translateY(-8px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .strike-flash-anim {
+            animation: strikeFlash 6s var(--ease-snappy) forwards;
+        }
+
+        /* ── Canvas Layers ── */
+        #synapse3dCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             pointer-events: none;
-            z-index: 1;
-            opacity: 0.9;
+            z-index: 0;
+            opacity: 0.85;
         }
 
-        /* Tactile Luxury Buttons */
-        .btn-luxury {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            border-radius: 0.875rem;
-            font-weight: 600;
-            letter-spacing: -0.01em;
-        }
-
-        .btn-luxury:active {
-            transform: scale(0.97);
-        }
-
-        /* Pulse Waves for Mic State */
-        @keyframes acoustic-pulse {
-            0% { transform: scale(0.92); opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-            50% { transform: scale(1.06); opacity: 0.3; box-shadow: 0 0 35px 15px rgba(16, 185, 129, 0.2); }
-            100% { transform: scale(0.92); opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
-        }
-
-        .acoustic-active {
-            animation: acoustic-pulse 1.8s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Dramatic Strike-Through Reveal */
-        @keyframes strikeCinematic {
-            0% { background: rgba(225, 29, 72, 0.4); transform: translateY(-4px) scale(1.02); }
-            50% { background: rgba(16, 185, 129, 0.3); }
-            100% { background: transparent; transform: translateY(0) scale(1); }
-        }
-        .strike-cinematic {
-            animation: strikeCinematic 2.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* Luxury Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(148, 163, 184, 0.2);
-            border-radius: 999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(148, 163, 184, 0.4);
-        }
-
-        /* Custom Audio Visualizer Canvas */
         #audioWaveCanvas {
             width: 100%;
-            height: 48px;
+            height: 36px;
             display: block;
         }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #030303; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.4); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white relative">
+<body class="bg-vantablack text-white min-h-screen relative flex flex-col selection:bg-violet-500 selection:text-white">
 
-    <!-- 3D WebGL Background Simulation Canvas -->
-    <canvas id="hero3dCanvas"></canvas>
+    <!-- 3D Three.js Synapse Background Galaxy -->
+    <canvas id="synapse3dCanvas"></canvas>
+
+    <!-- Ambient Glowing Orbs -->
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-violet-500/20 blur-[130px] pointer-events-none ambient-orb-violet -z-10"></div>
+    <div class="fixed top-1/3 left-10 w-[500px] h-[400px] rounded-full bg-cyan-500/10 blur-[140px] pointer-events-none ambient-orb-cyan -z-10"></div>
+    <div class="fixed bottom-10 right-10 w-[450px] h-[350px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none -z-10"></div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         EXECUTIVE NAVIGATION & MULTI-STORE CONSOLE
+         1. FIXED NAVIGATION PILL (Synapse Spec)
          ═══════════════════════════════════════════════════════════ -->
-    <header class="sticky top-0 z-40 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] backdrop-blur-2xl transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-            
-            <!-- Brand & Store Profile -->
-            <div class="flex items-center space-x-3.5 z-10">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-amber-400 p-[1.5px] shadow-lg shadow-emerald-500/20">
-                    <div class="w-full h-full rounded-[14px] bg-[var(--bg-base)] flex items-center justify-center">
-                        <i class="fa-solid fa-microphone-lines text-emerald-400 text-lg"></i>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-display font-black text-xl tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
-                            BolKhata
-                        </span>
-                        <span class="text-[9px] font-mono px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold uppercase tracking-widest hidden sm:inline">
-                            PRO 3D
-                        </span>
-                    </div>
-                    <!-- Current Store Identity & Switcher -->
-                    <div class="flex items-center text-xs space-x-1.5 text-[var(--text-secondary)]">
-                        <i class="fa-solid fa-store text-emerald-400 text-[10px]"></i>
-                        <span id="headerStoreName" class="font-bold text-[var(--text-primary)]">Sri Balaji Kirana</span>
-                        <span class="text-[var(--text-muted)]">·</span>
-                        <span id="headerOwnerName" class="text-amber-400 font-semibold">Niranjan Patel</span>
-                        <button onclick="openMerchantModal()" class="text-[11px] text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer ml-1 transition">
-                            Switch Store
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Executive Quick Controls & Telemetry -->
-            <div class="flex items-center gap-2 sm:gap-3 z-10">
-
-                <!-- Gnani.ai Timbre Neural Voice Badge -->
-                <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-mono shadow-sm" title="Gnani Neural Timbre v2.5 TTS Active with Audio Cache">
-                    <span class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
-                    <i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i>
-                    <span class="font-semibold">Gnani Neural</span>
-                    <span class="text-[9px] px-1 bg-violet-900/60 rounded text-violet-200">timbre-v2.5</span>
-                </div>
-
-                <!-- Wake-Word Standby Status / Toggle -->
-                <button onclick="toggleStandbyMode()" id="standbyToggleBtn" class="btn-luxury px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border-subtle)] bg-[var(--card-glass)] text-[var(--text-secondary)] hover:border-amber-500 transition flex items-center gap-1.5" title="Say 'Stop' to sleep, 'BolKhata' to wake">
-                    <i id="standbyIcon" class="fa-solid fa-shield-halved text-emerald-400 text-xs"></i>
-                    <span id="standbyText" class="hidden sm:inline">Wake-Word: Active</span>
-                </button>
-
-                <!-- Hands-Free Listening Switch -->
-                <button onclick="toggleHandsFree()" id="handsFreeBtn" class="btn-luxury px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30">
-                    <i class="fa-solid fa-headset animate-pulse"></i>
-                    <span id="handsFreeStatusText">Hands-Free: ON</span>
-                </button>
-
-                <!-- Cinematic Theme Toggle (Light / Dark) -->
-                <button onclick="toggleTheme()" id="themeToggleBtn" class="btn-luxury w-9 h-9 rounded-xl border border-[var(--border-subtle)] bg-[var(--card-glass)] flex items-center justify-center text-[var(--text-secondary)] hover:text-amber-400 transition" title="Toggle Cinematic Theme (Light/Dark)">
-                    <i id="themeIcon" class="fa-solid fa-moon text-sm"></i>
-                </button>
-
-            </div>
+    <nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[720px] rounded-full synapse-glass px-4 py-2.5 flex items-center justify-between shadow-2xl border border-white/10 transition-all duration-300">
+        
+        <!-- Left: Logo (4px gradient circle + 'Instrument Serif' text) -->
+        <div class="flex items-center space-x-2.5 pl-2 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+            <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-violet-500 via-cyan-400 to-emerald-400 animate-pulse"></div>
+            <span class="font-serif-synapse text-2xl font-normal tracking-tight text-white flex items-center">
+                BolKhata
+            </span>
         </div>
-    </header>
 
-    <!-- ═══════════════════════════════════════════════════════════
-         FIRST-GESTURE AUDIO UNLOCK BANNER (AUTO-DISMISSES)
-         ═══════════════════════════════════════════════════════════ -->
-    <div id="clickToStartBanner" onclick="startHandsFreeDirect()" class="bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-600 text-white py-2 px-4 text-center text-xs font-semibold cursor-pointer shadow-xl flex items-center justify-center space-x-2 border-b border-emerald-400/40 relative z-30 transition-all">
-        <i class="fa-solid fa-hand-pointer animate-bounce mr-1"></i>
-        <span>👋 Welcome to BolKhata! Click anywhere once to initialize your hands-free Kirana counter session.</span>
+        <!-- Center: Links (12px uppercase Inter, neutral-400) -->
+        <div class="hidden sm:flex items-center space-x-6 text-[12px] font-sans font-medium uppercase tracking-[0.1em] text-neutral-400">
+            <a href="#counter" class="hover:text-white transition">Counter</a>
+            <a href="#ledger" class="hover:text-white transition">Ledger</a>
+            <a href="#customers" class="hover:text-white transition">Customers</a>
+            <a href="#engine" class="hover:text-white transition">Engine</a>
+        </div>
+
+        <!-- Right: CTA Button (White background, black text, rounded-full) -->
+        <div class="flex items-center space-x-2">
+            <button onclick="openMerchantModal()" class="px-4 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition shadow-lg flex items-center gap-1.5" title="Switch Store Profile">
+                <i class="fa-solid fa-store text-[11px] text-neutral-800"></i>
+                <span id="navStoreName">Sri Balaji</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- First Gesture Click Banner (Ensures Chrome audio permission) -->
+    <div id="clickToStartBanner" onclick="startHandsFreeDirect()" class="fixed top-20 inset-x-0 z-40 mx-auto max-w-xl bg-gradient-to-r from-violet-900/90 via-black to-cyan-900/90 text-neutral-200 text-xs py-2 px-4 rounded-full border border-violet-500/40 text-center cursor-pointer shadow-2xl flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-hand-pointer text-cyan-400 animate-bounce"></i>
+        <span>Welcome to BolKhata. Click anywhere to activate hands-free Kirana counter audio.</span>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         MAIN HOLLYWOOD WORKSPACE (DUAL-PANEL 3D ARCHITECTURE)
+         2. MASSIVE HERO SECTION (Synapse Spec)
          ═══════════════════════════════════════════════════════════ -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+    <section class="pt-36 pb-16 px-4 sm:px-6 max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center">
+        
+        <!-- Telemetry Pill Header -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-md text-[11px] font-mono text-neutral-400 mb-6 uppercase tracking-widest">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>Gnani Timbre Neural Active</span>
+            <span class="text-neutral-600">/</span>
+            <span class="text-cyan-400">100% Hands-Free</span>
+        </div>
+
+        <!-- Massive Editorial Heading: 'Instrument Serif' with Text Shimmer on Last Word -->
+        <h1 class="font-serif-synapse text-6xl sm:text-8xl lg:text-9xl leading-[0.92] text-white tracking-[-0.04em] max-w-4xl">
+            Autonomous voice ledger for <span class="text-shimmer italic font-normal">retail.</span>
+        </h1>
+
+        <!-- Subtext: max-w-2xl, Inter font, neutral-400, text-lg -->
+        <p class="mt-6 max-w-2xl text-neutral-400 font-sans text-base sm:text-lg leading-relaxed font-light">
+            Engineered for high-noise Indian Kirana stores. Speaks fluent Hindi, Kannada, Telugu, and English. Zero screens touched across the counter.
+        </p>
+
+        <!-- Interactive Centerpiece: Shiny Border Button & Mic Dome -->
+        <div class="mt-10 flex flex-col items-center gap-6" id="counter">
+            
+            <!-- Shiny Border Conic Rotating Button -->
+            <button onclick="manualMicToggle()" class="shiny-border-btn">
+                <div class="shiny-border-btn-inner">
+                    <div id="micStatusDot" class="w-2.5 h-2.5 rounded-full bg-violet-400 animate-ping"></div>
+                    <span id="heroCtaText" class="text-sm font-medium tracking-wide text-white uppercase font-mono">
+                        Initializing Safe Intro...
+                    </span>
+                    <i id="heroCtaIcon" class="fa-solid fa-lock text-xs text-neutral-400 ml-1"></i>
+                </div>
+            </button>
+
+            <!-- Language Dial Bar -->
+            <div class="flex items-center gap-1.5 p-1 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-xl text-xs">
+                <button onclick="setVoiceLanguage('en-IN')" id="langBtn-en" class="px-3 py-1 rounded-full text-white font-medium bg-violet-600/60 border border-violet-400/40 text-[11px] font-mono transition">
+                    EN
+                </button>
+                <button onclick="setVoiceLanguage('kn-IN')" id="langBtn-kn" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition">
+                    ಕನ್ನಡ
+                </button>
+                <button onclick="setVoiceLanguage('te-IN')" id="langBtn-te" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition">
+                    తెలుగు
+                </button>
+                <button onclick="setVoiceLanguage('hi-IN')" id="langBtn-hi" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition">
+                    हिंदी
+                </button>
+                <button onclick="setVoiceLanguage('auto')" id="langBtn-auto" class="px-3 py-1 rounded-full text-neutral-500 hover:text-cyan-300 text-[11px] font-mono transition">
+                    AUTO
+                </button>
+            </div>
+
+            <!-- Wake-Word Helper / Secondary Link -->
+            <div class="flex items-center gap-3 text-xs text-neutral-400 font-mono">
+                <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-ear-listen text-violet-400 text-[11px]"></i>
+                    <span>Say <strong class="text-white font-semibold">"BolKhata"</strong> to wake</span>
+                </span>
+                <span class="text-neutral-700">·</span>
+                <span class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-moon text-cyan-400 text-[11px]"></i>
+                    <span>Say <strong class="text-neutral-300 font-semibold">"Stop"</strong> to sleep</span>
+                </span>
+                <span class="text-neutral-700">·</span>
+                <button onclick="toggleStandbyMode()" id="standbyQuickBtn" class="text-cyan-400 hover:underline">
+                    Toggle Sleep
+                </button>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         3. INFINITE METRICS TICKER (Synapse Spec)
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="w-full h-[60px] bg-black/40 border-y border-white/5 overflow-hidden flex items-center relative z-20">
+        <div class="ticker-track">
+            <!-- Ticker Items Repeated for Seamless Loop -->
+            <div class="flex items-center space-x-12 px-6">
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY UDHAAR</span>
+                    <span id="tickerTodayCredit" class="text-sm font-mono text-rose-400 font-semibold">₹0</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY JAMA</span>
+                    <span id="tickerTodayPayment" class="text-sm font-mono text-emerald-400 font-semibold">₹0</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">NET OUTSTANDING</span>
+                    <span id="tickerNetOutstanding" class="text-sm font-mono text-cyan-300 font-semibold">₹0</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">GNANI TTS</span>
+                    <span class="text-sm font-mono text-violet-400">timbre-v2.5 (Token-Saver Active)</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">ACTIVE STORE</span>
+                    <span id="tickerStoreName" class="text-sm font-mono text-white">Sri Balaji Kirana</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">SECURITY</span>
+                    <span class="text-sm font-mono text-emerald-400">AES-256 DPDP Compliant</span>
+                </div>
+            </div>
+
+            <!-- Repeated Chunk for 100% Smooth Infinite Loop -->
+            <div class="flex items-center space-x-12 px-6">
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY UDHAAR</span>
+                    <span id="tickerTodayCredit2" class="text-sm font-mono text-rose-400 font-semibold">₹0</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY JAMA</span>
+                    <span id="tickerTodayPayment2" class="text-sm font-mono text-emerald-400 font-semibold">₹0</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">NET OUTSTANDING</span>
+                    <span id="tickerNetOutstanding2" class="text-sm font-mono text-cyan-300 font-semibold">₹0</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">GNANI TTS</span>
+                    <span class="text-sm font-mono text-violet-400">timbre-v2.5 (Token-Saver Active)</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">ACTIVE STORE</span>
+                    <span id="tickerStoreName2" class="text-sm font-mono text-white">Sri Balaji Kirana</span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">SECURITY</span>
+                    <span class="text-sm font-mono text-emerald-400">AES-256 DPDP Compliant</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         4. FEATURE GRID (Synapse Spec: 3-column cards with lift)
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16 relative z-10">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Card 1: Today Udhaar (Credit) -->
+            <div class="synapse-card p-8 flex flex-col justify-between relative overflow-hidden group">
+                <div>
+                    <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 card-icon-box mb-6">
+                        <i class="fa-solid fa-arrow-up-right-from-square text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">
+                        DAILY CREDIT
+                    </span>
+                    <h3 class="font-serif-synapse text-5xl font-normal text-white mt-1 mb-2 tracking-tight">
+                        <span id="statTodayCredit">₹0</span>
+                    </h3>
+                </div>
+                <p class="text-neutral-400 text-xs font-light mt-4 leading-relaxed">
+                    Total groceries and supplies taken on credit by neighborhood customers today.
+                </p>
+            </div>
+
+            <!-- Card 2: Today Jama (Payments) with 1-Click Reset -->
+            <div class="synapse-card p-8 flex flex-col justify-between relative overflow-hidden group">
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 card-icon-box">
+                            <i class="fa-solid fa-arrow-down-left-and-up-right-to-center text-lg"></i>
+                        </div>
+                        <button onclick="triggerResetPayments()" class="text-[11px] font-mono text-amber-400 hover:text-amber-300 underline font-medium" title="Clear and reset today's cash payments to ₹0">
+                            Reset Today
+                        </button>
+                    </div>
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">
+                        CASH SETTLEMENTS
+                    </span>
+                    <h3 class="font-serif-synapse text-5xl font-normal text-emerald-400 mt-1 mb-2 tracking-tight">
+                        <span id="statTodayPayment">₹0</span>
+                    </h3>
+                </div>
+                <p class="text-neutral-400 text-xs font-light mt-4 leading-relaxed">
+                    Cash received and debts cleared. Automatically updates credit ledger balances.
+                </p>
+            </div>
+
+            <!-- Card 3: Net Outstanding Portfolio -->
+            <div class="synapse-card p-8 flex flex-col justify-between relative overflow-hidden group">
+                <div>
+                    <div class="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 card-icon-box mb-6">
+                        <i class="fa-solid fa-scale-balanced text-lg"></i>
+                    </div>
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">
+                        TOTAL PORTFOLIO
+                    </span>
+                    <h3 class="font-serif-synapse text-5xl font-normal text-white mt-1 mb-2 tracking-tight">
+                        <span id="statTotalNet">₹0</span>
+                    </h3>
+                </div>
+                <p class="text-neutral-400 text-xs font-light mt-4 leading-relaxed">
+                    Total unpaid balance across all customer accounts registered in your store database.
+                </p>
+            </div>
+
+        </div>
 
         <!-- ─────────────────────────────────────────────────────────
-             LEFT STAGE: 3D ACOUSTIC NEURAL COUNTER (5 COLS)
+             LIVE SPEECH & AUDIO STAGE (Synapse Glass Experience)
              ───────────────────────────────────────────────────────── -->
-        <div class="lg:col-span-5 space-y-6">
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-            <!-- 3D Voice Sphere & Hardware Mic Card -->
-            <div class="luxury-card card-tilt p-6 relative overflow-hidden" id="micHeroCard">
+            <!-- Left: Interactive Mic & Live Heard Speech (5 Cols) -->
+            <div class="lg:col-span-5 synapse-card p-6 flex flex-col justify-between space-y-4">
                 
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between border-b border-white/5 pb-3">
                     <div class="flex items-center space-x-2">
-                        <span id="micPingDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
-                        <h2 class="text-xs uppercase font-mono tracking-widest text-[var(--text-secondary)] font-bold">
-                            3D Acoustic Counter
-                        </h2>
+                        <span id="micPingDot" class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                            VOICE HARDWARE
+                        </span>
                     </div>
-                    <span id="detectedLangBadge" class="text-[11px] px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono font-semibold">
-                        🌐 English (en-IN)
+                    <span id="speechStateBadge" class="text-[11px] font-mono text-amber-400">
+                        🔒 Mic Locked (Intro Playing)
                     </span>
                 </div>
 
-                <!-- Multilingual Language Selector Dial -->
-                <div class="mb-5 p-1.5 rounded-2xl bg-[var(--bg-base)]/80 border border-[var(--border-subtle)] flex items-center justify-between gap-1 text-[11px]">
-                    <span class="text-[var(--text-muted)] font-mono pl-2 text-[10px] uppercase font-bold flex items-center">
-                        <i class="fa-solid fa-language text-emerald-400 mr-1.5"></i> Dial:
-                    </span>
-                    <div class="flex items-center gap-1 flex-wrap justify-end">
-                        <button onclick="setVoiceLanguage('en-IN')" id="langBtn-en" class="px-2.5 py-1 rounded-xl font-bold transition border bg-emerald-600 text-white border-emerald-400 shadow-sm shadow-emerald-600/30">
-                            🇬🇧 EN
-                        </button>
-                        <button onclick="setVoiceLanguage('kn-IN')" id="langBtn-kn" class="px-2.5 py-1 rounded-xl font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-emerald-400 hover:border-emerald-500/40">
-                            🟡 ಕನ್ನಡ
-                        </button>
-                        <button onclick="setVoiceLanguage('te-IN')" id="langBtn-te" class="px-2.5 py-1 rounded-xl font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-emerald-400 hover:border-emerald-500/40">
-                            🟣 తెలుగు
-                        </button>
-                        <button onclick="setVoiceLanguage('hi-IN')" id="langBtn-hi" class="px-2.5 py-1 rounded-xl font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-emerald-400 hover:border-emerald-500/40">
-                            🔴 हिंदी
-                        </button>
-                        <button onclick="setVoiceLanguage('auto')" id="langBtn-auto" class="px-2.5 py-1 rounded-xl font-medium transition border border-transparent text-[var(--text-muted)] hover:text-amber-400">
-                            ⚡ Auto
-                        </button>
+                <!-- Central 3D Glowing Mic Dome -->
+                <div class="flex flex-col items-center justify-center py-4">
+                    <div id="micBtn" class="w-24 h-24 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 flex items-center justify-center text-white cursor-pointer shadow-2xl relative transition-all duration-300" onclick="manualMicToggle()">
+                        <div id="micRing" class="absolute inset-0 rounded-full border-2 border-cyan-400/50"></div>
+                        <i id="micIcon" class="fa-solid fa-lock text-3xl"></i>
                     </div>
-                </div>
-
-                <!-- Central 3D Interactive Acoustic Sphere Dome -->
-                <div class="flex flex-col items-center justify-center py-4 relative">
-                    
-                    <!-- Ambient Glow Rings -->
-                    <div id="micAcousticHalo" class="absolute w-44 h-44 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none transition-all duration-500"></div>
-
-                    <!-- 3D Mic Hardware Orb -->
-                    <div id="micBtn" class="w-32 h-32 rounded-full bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-800 text-white flex items-center justify-center shadow-2xl shadow-amber-500/30 relative cursor-pointer border-4 border-amber-400/40 transition-all duration-300" onclick="manualMicToggle()">
-                        <div id="micRing" class="absolute inset-0 rounded-full border-4 border-amber-400/50"></div>
-                        <i id="micIcon" class="fa-solid fa-lock text-4xl"></i>
-                    </div>
-
-                    <!-- Spoken Status Hint -->
-                    <p id="micHint" class="mt-4 text-xs font-semibold text-amber-400 text-center flex items-center gap-1.5">
-                        <i id="micStatusIcon" class="fa-solid fa-volume-high animate-bounce text-amber-400"></i>
-                        <span id="listeningText">Initializing Safe Welcome Intro... Mic Locked</span>
+                    <p id="micHint" class="mt-3 text-xs text-neutral-400 font-mono text-center">
+                        <span id="listeningText">Playing welcome trust message...</span>
                     </p>
-
-                    <!-- Real-Time Audio Waveform Canvas -->
-                    <div class="w-full max-w-xs mt-3">
+                    
+                    <!-- Oscilloscope Visualizer -->
+                    <div class="w-full max-w-[240px] mt-2">
                         <canvas id="audioWaveCanvas"></canvas>
                     </div>
                 </div>
 
-                <!-- Live Spoken Correction Strike-Through Alert Banner -->
-                <div id="strikeThroughAlert" class="hidden p-4 rounded-2xl bg-amber-500/10 border border-amber-500/40 my-3 strike-cinematic">
+                <!-- Strike-Through Spoken Correction Reveal -->
+                <div id="strikeThroughAlert" class="hidden p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs strike-flash-anim">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-bolt text-amber-400"></i> Spoken Correction Applied!
+                        <span class="text-amber-300 font-semibold flex items-center gap-1.5">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Correction Applied
                         </span>
-                        <div id="strikeValues" class="text-sm font-mono">
+                        <div id="strikeValues" class="font-mono text-xs">
                             <span class="line-through text-rose-400 font-bold">₹500</span>
-                            <span class="text-[var(--text-muted)] mx-1">➔</span>
-                            <span class="text-emerald-400 font-bold text-base">₹430</span>
+                            <span class="text-neutral-500 mx-1">➔</span>
+                            <span class="text-emerald-400 font-bold text-sm">₹430</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Live Heard Speech Pill -->
-                <div class="p-3.5 rounded-2xl bg-[var(--bg-base)]/90 border border-[var(--border-subtle)] mt-2">
-                    <div class="text-[10px] uppercase font-mono font-bold text-[var(--text-muted)] flex items-center justify-between">
-                        <span>Live Heard Speech</span>
-                        <span id="speechStateBadge" class="text-amber-400 font-semibold">🔒 Mic Locked (Intro Playing)</span>
+                <div class="p-3 rounded-2xl bg-black/60 border border-white/5">
+                    <div class="text-[9px] font-mono uppercase tracking-widest text-neutral-500 mb-1">
+                        LIVE HEARD TRANSCRIPT
                     </div>
-                    <div id="liveTranscriptDisplay" class="text-xs text-[var(--text-primary)] mt-1.5 min-h-[22px] font-sans italic font-medium">
+                    <div id="liveTranscriptDisplay" class="text-xs text-neutral-200 italic font-mono min-h-[20px]">
                         (Microphone locked during welcome introduction...)
                     </div>
                 </div>
 
-                <!-- Manual Command Input Bar -->
-                <form onsubmit="handleTextSubmit(event)" class="flex gap-2 pt-3 mt-3 border-t border-[var(--border-subtle)]">
-                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Reset today's payment / Stop..." class="flex-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-emerald-500 transition font-sans">
-                    <button type="submit" class="btn-luxury bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-md shadow-emerald-600/30">
-                        <i class="fa-solid fa-paper-plane"></i>
+                <!-- Manual Command Input -->
+                <form onsubmit="handleTextSubmit(event)" class="flex gap-2 pt-2">
+                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Reset today's payment..." class="flex-1 bg-black/60 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-violet-500 transition font-mono">
+                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition">
+                        <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </form>
+
             </div>
 
-            <!-- BolKhata Spoken Response Feed -->
-            <div class="luxury-card card-tilt p-5 space-y-3">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-volume-high text-emerald-400"></i> BolKhata Neural Voice Response
-                    </h3>
-                    <div class="flex items-center space-x-2">
-                        <span id="gnaniSpokenBadge" class="hidden text-[10px] px-2.5 py-0.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 font-mono">
-                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-violet-400"></i> Gnani Timbre
-                        </span>
-                        <button onclick="replayAudio()" id="replayBtn" class="text-emerald-400 hover:text-emerald-300 text-xs hidden flex items-center cursor-pointer font-medium">
+            <!-- Right: Spoken Response & 1-Click Judge Scenarios (7 Cols) -->
+            <div class="lg:col-span-7 synapse-card p-6 flex flex-col justify-between space-y-4">
+                
+                <!-- BolKhata Neural Response -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-volume-high text-cyan-400 text-xs"></i>
+                            <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                                BOLKHATA SPOKEN RESPONSE
+                            </span>
+                        </div>
+                        <button onclick="replayAudio()" id="replayBtn" class="text-[11px] font-mono text-cyan-400 hover:underline hidden">
                             <i class="fa-solid fa-rotate-right mr-1"></i> Replay
                         </button>
                     </div>
-                </div>
-                <div id="aiResponseBox" class="p-4 rounded-2xl bg-[var(--bg-base)]/90 border border-[var(--border-subtle)] text-sm text-[var(--text-primary)] min-h-[72px] flex items-center leading-relaxed font-sans">
-                    <span class="text-[var(--text-muted)] italic">"Namaste! BolKhata live hai. Boliye kya hisaab likhna hai..."</span>
-                </div>
-            </div>
-
-            <!-- 1-Click Realistic Kirana Audio Scenarios -->
-            <div class="luxury-card card-tilt p-5 space-y-3">
-                <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2.5">
-                    <div class="flex items-center space-x-2">
-                        <i class="fa-solid fa-flask text-amber-400"></i>
-                        <h3 class="text-xs font-mono uppercase tracking-wider text-[var(--text-primary)] font-bold">
-                            1-Click Realistic Kirana Scenarios
-                        </h3>
+                    <div id="aiResponseBox" class="p-4 rounded-2xl bg-black/60 border border-white/5 text-sm text-neutral-100 min-h-[64px] flex items-center leading-relaxed">
+                        <span class="text-neutral-500 italic">"Namaste! BolKhata live hai. Boliye kya hisaab likhna hai..."</span>
                     </div>
-                    <span class="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-widest">
-                        Judge-Proof
-                    </span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <button onclick="sendPrompt('Ramesh cleared his debt')" class="btn-luxury p-2.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-left transition">
-                        <div class="font-bold text-emerald-400 flex items-center gap-1.5"><i class="fa-solid fa-check-circle"></i> Debt Settlement</div>
-                        <div class="text-[10px] text-[var(--text-secondary)] mt-0.5 italic">"Ramesh cleared his debt"</div>
-                    </button>
+                <!-- 1-Click Realistic Kirana Audio Scenarios -->
+                <div class="space-y-2.5 pt-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-500">
+                            1-CLICK REALISTIC KIRANA AUDIO SCENARIOS
+                        </span>
+                        <span class="text-[9px] font-mono text-violet-400 uppercase">
+                            Zero Halucination
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <button onclick="sendPrompt('Ramesh cleared his debt')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition">
+                            <div class="font-semibold text-emerald-400 text-[11px] truncate">Debt Cleared</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Ramesh cleared his debt"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="btn-luxury p-2.5 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-left transition">
-                        <div class="font-bold text-purple-400 flex items-center gap-1.5"><i class="fa-solid fa-people-arrows"></i> Disambiguate</div>
-                        <div class="text-[10px] text-[var(--text-secondary)] mt-0.5 italic">"Ramesh ka 500 udhaar"</div>
-                    </button>
+                        <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/10 text-left transition">
+                            <div class="font-semibold text-violet-400 text-[11px] truncate">Disambiguate</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Ramesh ka 500 udhaar"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('Kirana Lane')" class="btn-luxury p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/80 hover:border-emerald-500/50 text-left transition">
-                        <div class="font-bold text-emerald-300 flex items-center gap-1.5"><i class="fa-solid fa-reply"></i> Nickname Reply</div>
-                        <div class="text-[10px] text-[var(--text-muted)] mt-0.5 italic">"Kirana Lane" (resolves)</div>
-                    </button>
+                        <button onclick="sendPrompt('Kirana Lane')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/40 hover:bg-cyan-500/10 text-left transition">
+                            <div class="font-semibold text-cyan-400 text-[11px] truncate">Nickname Reply</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Kirana Lane"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('nahi, 430')" class="btn-luxury p-2.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-left transition">
-                        <div class="font-bold text-rose-400 flex items-center gap-1.5"><i class="fa-solid fa-bolt"></i> Spoken Correction</div>
-                        <div class="text-[10px] text-[var(--text-secondary)] mt-0.5 italic">"nahi, 430" (live strike)</div>
-                    </button>
+                        <button onclick="sendPrompt('nahi, 430')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-rose-500/40 hover:bg-rose-500/10 text-left transition">
+                            <div class="font-semibold text-rose-400 text-[11px] truncate">Correction</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"nahi, 430"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('Reset today\'s payment')" class="btn-luxury p-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-left transition">
-                        <div class="font-bold text-amber-400 flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Reset Today's Jama</div>
-                        <div class="text-[10px] text-[var(--text-secondary)] mt-0.5 italic">"Reset today's payment"</div>
-                    </button>
+                        <button onclick="sendPrompt('Reset today\'s payment')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-amber-500/40 hover:bg-amber-500/10 text-left transition">
+                            <div class="font-semibold text-amber-400 text-[11px] truncate">Reset Jama</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Reset today's payment"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('Stop')" class="btn-luxury p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]/80 hover:border-amber-500/50 text-left transition">
-                        <div class="font-bold text-amber-300 flex items-center gap-1.5"><i class="fa-solid fa-moon"></i> Spoken Sleep</div>
-                        <div class="text-[10px] text-[var(--text-muted)] mt-0.5 italic">"Stop" / "Ruko" (sleeps)</div>
-                    </button>
+                        <button onclick="sendPrompt('Stop')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-neutral-500/40 hover:bg-neutral-500/10 text-left transition">
+                            <div class="font-semibold text-neutral-300 text-[11px] truncate">Standby Sleep</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Stop" / "Ruko"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('ರಮೇಶ್ ಗೆ 340 ಸಾಲ')" class="btn-luxury p-2.5 rounded-xl border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-left transition">
-                        <div class="font-bold text-teal-400 flex items-center gap-1.5">🟡 Kannada Voice</div>
-                        <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">"ರಮೇಶ್ ಗೆ 340 ಸಾಲ"</div>
-                    </button>
+                        <button onclick="sendPrompt('ರಮೇಶ್ ಗೆ 340 ಸಾಲ')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/40 hover:bg-cyan-500/10 text-left transition">
+                            <div class="font-semibold text-cyan-300 text-[11px] truncate">🟡 Kannada Voice</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"ರಮೇಶ್ ಗೆ 340 ಸಾಲ"</div>
+                        </button>
 
-                    <button onclick="sendPrompt('రమేష్ కి 340 అప్పు')" class="btn-luxury p-2.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-left transition">
-                        <div class="font-bold text-indigo-400 flex items-center gap-1.5">🟣 Telugu Voice</div>
-                        <div class="text-[10px] text-[var(--text-secondary)] mt-0.5">"రమేష్ కి 340 అప్పు"</div>
-                    </button>
+                        <button onclick="sendPrompt('రమేష్ కి 340 అప్పు')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/10 text-left transition">
+                            <div class="font-semibold text-violet-300 text-[11px] truncate">🟣 Telugu Voice</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"రమేష్ కి 340 అప్పు"</div>
+                        </button>
+                    </div>
                 </div>
+
             </div>
 
         </div>
 
-        <!-- ─────────────────────────────────────────────────────────
-             RIGHT STAGE: EXECUTIVE FINANCIAL LEDGER SUITE (7 COLS)
-             ───────────────────────────────────────────────────────── -->
-        <div class="lg:col-span-7 space-y-6">
+    </section>
 
-            <!-- Today's Financial Metrics Card with 1-Click Reset -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                
-                <!-- Today Udhaar Card -->
-                <div class="luxury-card card-tilt p-5 relative overflow-hidden group">
-                    <div class="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-rose-400 mb-2">
-                        <span>Today Udhaar</span>
-                        <div class="w-7 h-7 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400">
-                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                        </div>
-                    </div>
-                    <div id="statTodayCredit" class="text-3xl font-display font-extrabold text-[var(--text-primary)] tracking-tight">
-                        ₹0
-                    </div>
-                    <span class="text-[10px] text-[var(--text-muted)] font-mono mt-1 block">Given to customers</span>
-                </div>
-
-                <!-- Today Jama Card -->
-                <div class="luxury-card card-tilt p-5 relative overflow-hidden group">
-                    <div class="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 mb-2">
-                        <span>Today Jama</span>
-                        <button onclick="triggerResetPayments()" class="text-[10px] text-amber-400 hover:text-amber-300 underline font-semibold" title="Reset Today's Payments to ₹0">
-                            (Reset)
-                        </button>
-                    </div>
-                    <div id="statTodayPayment" class="text-3xl font-display font-extrabold text-[var(--text-primary)] tracking-tight">
-                        ₹0
-                    </div>
-                    <span class="text-[10px] text-[var(--text-muted)] font-mono mt-1 block">Cash collected</span>
-                </div>
-
-                <!-- Net Outstanding Portfolio Card -->
-                <div class="luxury-card card-tilt p-5 relative overflow-hidden group">
-                    <div class="flex items-center justify-between text-xs font-mono font-bold uppercase tracking-wider text-amber-400 mb-2">
-                        <span>Net Outstanding</span>
-                        <div class="w-7 h-7 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
-                            <i class="fa-solid fa-scale-balanced text-xs"></i>
-                        </div>
-                    </div>
-                    <div id="statTotalNet" class="text-3xl font-display font-extrabold text-[var(--text-primary)] tracking-tight">
-                        ₹0
-                    </div>
-                    <span class="text-[10px] text-[var(--text-muted)] font-mono mt-1 block">Total credit ledger</span>
-                </div>
-
-            </div>
-
-            <!-- Master Ledger Suite Tabs -->
-            <div class="luxury-card overflow-hidden flex flex-col">
-                
-                <!-- Tab Selector Bar -->
-                <div class="p-3.5 border-b border-[var(--border-subtle)] bg-[var(--bg-base)]/60 flex items-center justify-between flex-wrap gap-2">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        <button onclick="switchLedgerTab('udhaar')" id="ledgerTab-udhaar" class="btn-luxury px-3.5 py-2 rounded-xl text-xs font-bold transition border border-rose-500/40 bg-rose-500/10 text-rose-400 shadow-sm">
-                            🔴 Udhaar (Debt)
-                        </button>
-                        <button onclick="switchLedgerTab('jama')" id="ledgerTab-jama" class="btn-luxury px-3.5 py-2 rounded-xl text-xs font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-emerald-400">
-                            🟢 Jama (Payments)
-                        </button>
-                        <button onclick="switchLedgerTab('customers')" id="ledgerTab-customers" class="btn-luxury px-3.5 py-2 rounded-xl text-xs font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-cyan-400">
-                            👥 Customers & Nicknames
-                        </button>
-                        <button onclick="switchLedgerTab('all')" id="ledgerTab-all" class="btn-luxury px-3.5 py-2 rounded-xl text-xs font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-                            📑 Audit Trail
-                        </button>
-                    </div>
-                    <button onclick="refreshAllData()" class="btn-luxury text-xs text-emerald-400 hover:text-emerald-300 font-semibold px-2 py-1">
-                        <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+    <!-- ═══════════════════════════════════════════════════════════
+         5. MASTER LEDGER VIEW (Synapse Spec: Tabbed Dark Ledger)
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-8 relative z-10" id="ledger">
+        
+        <div class="synapse-card overflow-hidden">
+            
+            <!-- Tab Headers -->
+            <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchLedgerTab('udhaar')" id="ledgerTab-udhaar" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-rose-500/40 bg-rose-500/10 text-rose-400 transition">
+                        🔴 UDHAAR (DEBT)
+                    </button>
+                    <button onclick="switchLedgerTab('jama')" id="ledgerTab-jama" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
+                        🟢 JAMA (PAYMENTS)
+                    </button>
+                    <button onclick="switchLedgerTab('customers')" id="ledgerTab-customers" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
+                        👥 CUSTOMERS
+                    </button>
+                    <button onclick="switchLedgerTab('all')" id="ledgerTab-all" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
+                        📑 AUDIT TRAIL
                     </button>
                 </div>
 
-                <!-- Tab 1: 🔴 Udhaar / Debt Ledger -->
-                <div id="ledgerView-udhaar" class="p-5 space-y-3">
-                    <div class="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                        <span class="flex items-center text-rose-400 font-bold">
-                            <i class="fa-solid fa-file-invoice-dollar mr-2"></i> Outstanding Udhaar (Credit) Accounts
-                        </span>
-                        <span id="udhaarCountBadge" class="font-mono text-[11px] text-[var(--text-muted)]">0 credit records</span>
-                    </div>
-                    <div class="overflow-x-auto max-h-80">
-                        <table class="w-full text-left text-xs">
-                            <thead class="border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-[11px] uppercase">
-                                <tr>
-                                    <th class="p-3">Debtor Customer</th>
-                                    <th class="p-3">Udhaar Balance</th>
-                                    <th class="p-3">Date</th>
-                                    <th class="p-3">Spoken Grocery Note</th>
-                                    <th class="p-3 text-right">Instant Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="udhaarTableBody" class="divide-y divide-[var(--border-subtle)] text-[var(--text-primary)] font-medium">
-                                <tr><td colspan="5" class="p-6 text-center text-[var(--text-muted)]">Loading credit entries...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Tab 2: 🟢 Jama / Payment Ledger -->
-                <div id="ledgerView-jama" class="p-5 space-y-3 hidden">
-                    <div class="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                        <span class="flex items-center text-emerald-400 font-bold">
-                            <i class="fa-solid fa-receipt mr-2"></i> Jama (Payment) Receipts & Settlements
-                        </span>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="triggerResetPayments()" class="btn-luxury px-3 py-1 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[11px] font-bold hover:bg-amber-500/20 transition">
-                                <i class="fa-solid fa-rotate-left mr-1"></i> Reset Today's Payments
-                            </button>
-                            <span id="jamaCountBadge" class="font-mono text-[11px] text-[var(--text-muted)]">0 payments</span>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto max-h-80">
-                        <table class="w-full text-left text-xs">
-                            <thead class="border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-[11px] uppercase">
-                                <tr>
-                                    <th class="p-3">Customer Name</th>
-                                    <th class="p-3">Payment Amount</th>
-                                    <th class="p-3">Date</th>
-                                    <th class="p-3">Receipt Note</th>
-                                </tr>
-                            </thead>
-                            <tbody id="jamaTableBody" class="divide-y divide-[var(--border-subtle)] text-[var(--text-primary)] font-medium">
-                                <tr><td colspan="4" class="p-6 text-center text-[var(--text-muted)]">Loading payment entries...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Tab 3: 👥 Customers & Nicknames for Disambiguation -->
-                <div id="ledgerView-customers" class="p-5 space-y-3 hidden">
-                    <div class="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                        <span class="flex items-center text-emerald-400 font-bold">
-                            <i class="fa-solid fa-users mr-2"></i> Store Customer Directory & Nicknames
-                        </span>
-                        <span id="custCountBadge" class="font-mono text-[11px] text-[var(--text-muted)]">0 customers</span>
-                    </div>
-                    <div class="overflow-x-auto max-h-80">
-                        <table class="w-full text-left text-xs">
-                            <thead class="border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-[11px] uppercase">
-                                <tr>
-                                    <th class="p-3">Customer & Nickname</th>
-                                    <th class="p-3">Current Balance</th>
-                                    <th class="p-3 text-center">DPDP Opt-In</th>
-                                    <th class="p-3 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="customersTableBody" class="divide-y divide-[var(--border-subtle)] text-[var(--text-primary)] font-medium">
-                                <tr><td colspan="4" class="p-6 text-center text-[var(--text-muted)]">Loading customer directory...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Tab 4: 📑 Consolidated Audit Trail -->
-                <div id="ledgerView-all" class="p-5 space-y-3 hidden">
-                    <div class="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-                        <span class="flex items-center text-[var(--text-primary)] font-bold">
-                            <i class="fa-solid fa-book mr-2 text-emerald-400"></i> Consolidated Double-Entry Audit Trail
-                        </span>
-                        <span id="txnCountBadge" class="font-mono text-[11px] text-[var(--text-muted)]">0 entries</span>
-                    </div>
-                    <div class="overflow-x-auto max-h-80">
-                        <table class="w-full text-left text-xs">
-                            <thead class="border-b border-[var(--border-subtle)] text-[var(--text-muted)] font-mono text-[11px] uppercase">
-                                <tr>
-                                    <th class="p-3">Customer</th>
-                                    <th class="p-3">Direction</th>
-                                    <th class="p-3">Amount</th>
-                                    <th class="p-3">Timestamp</th>
-                                    <th class="p-3">Transcript / Note</th>
-                                </tr>
-                            </thead>
-                            <tbody id="transactionsTableBody" class="divide-y divide-[var(--border-subtle)] text-[var(--text-primary)] font-medium">
-                                <tr><td colspan="5" class="p-6 text-center text-[var(--text-muted)]">No transactions recorded yet.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Responsible AI & DPDP Compliance Badge Card -->
-            <div class="luxury-card p-4 flex items-center justify-between">
-                <div class="flex items-center space-x-3.5">
-                    <div class="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                        <i class="fa-solid fa-shield-halved text-lg"></i>
-                    </div>
-                    <div>
-                        <div class="text-xs font-bold text-[var(--text-primary)]">100% Encrypted at Rest & DPDP Act Compliant</div>
-                        <div class="text-[11px] text-[var(--text-muted)]">Zero-coercion polite reminders · Automated ephemeral demo transcript purge</div>
-                    </div>
-                </div>
-                <button onclick="purgeTranscripts()" class="btn-luxury px-3.5 py-1.5 text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-xl transition font-semibold">
-                    <i class="fa-solid fa-trash-can mr-1"></i> Purge Transcripts
+                <button onclick="refreshAllData()" class="text-xs font-mono text-neutral-400 hover:text-white transition">
+                    <i class="fa-solid fa-arrows-rotate mr-1 text-cyan-400"></i> REFRESH
                 </button>
             </div>
 
+            <!-- Tab 1: 🔴 Udhaar (Debt) Ledger -->
+            <div id="ledgerView-udhaar" class="p-6">
+                <div class="overflow-x-auto max-h-80">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="pb-3">Debtor</th>
+                                <th class="pb-3">Amount</th>
+                                <th class="pb-3">Date</th>
+                                <th class="pb-3">Spoken Grocery Transcript</th>
+                                <th class="pb-3 text-right">Quick Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="udhaarTableBody" class="divide-y divide-white/5 text-neutral-200">
+                            <tr><td colspan="5" class="py-6 text-center text-neutral-500">Loading credit entries...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 2: 🟢 Jama (Payment) Ledger -->
+            <div id="ledgerView-jama" class="p-6 hidden">
+                <div class="overflow-x-auto max-h-80">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="pb-3">Customer</th>
+                                <th class="pb-3">Payment</th>
+                                <th class="pb-3">Date</th>
+                                <th class="pb-3">Confirmation Note</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jamaTableBody" class="divide-y divide-white/5 text-neutral-200">
+                            <tr><td colspan="4" class="py-6 text-center text-neutral-500">Loading payment entries...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 3: 👥 Customers Directory -->
+            <div id="ledgerView-customers" class="p-6 hidden">
+                <div class="overflow-x-auto max-h-80">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="pb-3">Customer & Nickname</th>
+                                <th class="pb-3">Balance</th>
+                                <th class="pb-3 text-center">DPDP Opt-In</th>
+                                <th class="pb-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody" class="divide-y divide-white/5 text-neutral-200">
+                            <tr><td colspan="4" class="py-6 text-center text-neutral-500">Loading customers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 4: 📑 Audit Trail -->
+            <div id="ledgerView-all" class="p-6 hidden">
+                <div class="overflow-x-auto max-h-80">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="pb-3">Customer</th>
+                                <th class="pb-3">Type</th>
+                                <th class="pb-3">Amount</th>
+                                <th class="pb-3">Timestamp</th>
+                                <th class="pb-3">Transcript</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody" class="divide-y divide-white/5 text-neutral-200">
+                            <tr><td colspan="5" class="py-6 text-center text-neutral-500">No transactions recorded yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-    </main>
+    </section>
 
     <!-- ═══════════════════════════════════════════════════════════
-         EXECUTIVE STORE OWNER ACCOUNTS MODAL
+         6. CODE INTEGRATION BLOCK (Synapse Spec: Dark IDE Window)
          ═══════════════════════════════════════════════════════════ -->
-    <div id="merchantModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="luxury-card p-6 max-w-lg w-full space-y-5 border border-emerald-500/40 shadow-2xl">
+    <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 relative z-10" id="engine">
+        
+        <div class="rounded-3xl border border-white/10 bg-[#080808]/90 backdrop-blur-xl shadow-2xl overflow-hidden">
             
-            <div class="flex items-center justify-between border-b border-[var(--border-subtle)] pb-3">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                        <i class="fa-solid fa-store text-lg"></i>
+            <!-- IDE Toolbar -->
+            <div class="px-5 py-3 border-b border-white/10 bg-black/40 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 rounded-full bg-rose-500/70"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500/70"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-500/70"></div>
+                </div>
+                <div class="text-[11px] font-mono text-neutral-400">
+                    bolkhata_voice_stream.py
+                </div>
+                <button class="text-neutral-500 hover:text-white transition text-xs" title="Copy Integration Spec">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+            </div>
+
+            <!-- Code with Syntax Highlighting -->
+            <div class="p-6 font-mono text-xs leading-relaxed overflow-x-auto">
+                <pre class="text-neutral-300"><code><span class="text-violet-400">from</span> bolkhata <span class="text-violet-400">import</span> <span class="text-cyan-400">HandsFreeLedger</span>, <span class="text-cyan-400">GnaniNeuralEngine</span>
+
+<span class="text-neutral-500"># Low-token streaming voice pipeline with local audio caching</span>
+<span class="text-violet-400">engine</span> = <span class="text-cyan-400">GnaniNeuralEngine</span>(model=<span class="text-emerald-400">"prisma-v3.0"</span>, tts_model=<span class="text-emerald-400">"timbre-v2.5"</span>)
+<span class="text-violet-400">ledger</span> = <span class="text-cyan-400">HandsFreeLedger</span>(owner_id=<span class="text-amber-400">1</span>, wake_word=<span class="text-emerald-400">"BolKhata"</span>)
+
+<span class="text-violet-400">async def</span> <span class="text-cyan-400">on_counter_audio_frame</span>(audio_stream):
+    <span class="text-neutral-500"># Handles numbers under noise ("teen sau chaalis" / "dedh sau" / "340")</span>
+    intent = <span class="text-violet-400">await</span> ledger.parse_and_execute(audio_stream)
+    <span class="text-violet-400">if</span> intent.is_debt_cleared:
+        <span class="text-violet-400">await</span> engine.speak_confirmation(<span class="text-emerald-400">f"{intent.customer} ka hisaab poora chukta hua. ₹0 baaki."</span>)</code></pre>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         7. FOOTER (Synapse Spec: 4-column grid + Status Indicator)
+         ═══════════════════════════════════════════════════════════ -->
+    <footer class="bg-[#050505] border-t border-white/5 pt-16 pb-12 px-4 sm:px-6 relative z-10 mt-auto">
+        <div class="max-w-6xl mx-auto">
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                <!-- Col 1: Brand -->
+                <div class="col-span-2 md:col-span-1 space-y-3">
+                    <span class="font-serif-synapse text-3xl text-white">
+                        BolKhata
+                    </span>
+                    <p class="text-xs text-neutral-500 font-sans leading-relaxed">
+                        Hands-Free AI Voice Ledger for Informal Retail. Built for Build Bengaluru 2.0 Hackathon.
+                    </p>
+                </div>
+
+                <!-- Col 2: Capabilities -->
+                <div class="space-y-2">
+                    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
+                        CAPABILITIES
+                    </div>
+                    <ul class="text-xs text-neutral-500 space-y-1.5 font-sans">
+                        <li>Numbers Under Noise</li>
+                        <li>Spoken Corrections</li>
+                        <li>Spoken Disambiguation</li>
+                        <li>Debt Settlement</li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Languages -->
+                <div class="space-y-2">
+                    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
+                        VOICE TIMBRE
+                    </div>
+                    <ul class="text-xs text-neutral-500 space-y-1.5 font-sans">
+                        <li>Hindi (hi-IN)</li>
+                        <li>Kannada (kn-IN)</li>
+                        <li>Telugu (te-IN)</li>
+                        <li>Indian English (en-IN)</li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Compliance -->
+                <div class="space-y-2">
+                    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
+                        COMPLIANCE
+                    </div>
+                    <ul class="text-xs text-neutral-500 space-y-1.5 font-sans">
+                        <li>DPDP Act 2023</li>
+                        <li>Zero-Coercion Reminders</li>
+                        <li>AES-256 Storage</li>
+                        <li>
+                            <button onclick="purgeTranscripts()" class="text-rose-400 hover:underline">
+                                Purge Demo Logs
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="border-t border-white/5 pt-8 flex items-center justify-between text-xs font-mono text-neutral-500">
+                <div>
+                    © 2026 Team Drona (SJCIT) · BolKhata
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-emerald-400 font-medium">All Systems Operational</span>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STORE OWNER PROFILE MODAL (Synapse Glass)
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="merchantModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl hidden flex items-center justify-center p-4">
+        <div class="rounded-3xl border border-white/10 bg-[#0a0a0a] p-6 max-w-md w-full shadow-2xl space-y-5">
+            
+            <div class="flex items-center justify-between border-b border-white/5 pb-3">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                        <i class="fa-solid fa-store text-sm"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-display font-bold text-[var(--text-primary)]">Store Merchant Profile</h3>
-                        <p class="text-[11px] text-[var(--text-muted)]">Isolated Store Databases & Kirana Accounts</p>
+                        <h3 class="text-sm font-semibold text-white">Store Accounts</h3>
+                        <p class="text-[10px] font-mono text-neutral-500">Multi-Store Database</p>
                     </div>
                 </div>
-                <button onclick="closeMerchantModal()" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-1 text-lg">
+                <button onclick="closeMerchantModal()" class="text-neutral-500 hover:text-white p-1 text-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Tabs: Demo Stores, Sign Up, Login -->
-            <div class="flex border-b border-[var(--border-subtle)] gap-2 text-xs">
-                <button onclick="setModalTab('switch')" id="tabBtn-switch" class="py-2 px-3.5 font-bold border-b-2 border-emerald-400 text-emerald-400">
-                    <i class="fa-solid fa-arrows-split-up-and-left mr-1.5"></i> Demo Stores
+            <!-- Tabs: Demo Stores, Register, Login -->
+            <div class="flex border-b border-white/5 gap-2 text-xs font-mono">
+                <button onclick="setModalTab('switch')" id="tabBtn-switch" class="py-1.5 px-3 font-semibold border-b border-violet-400 text-violet-400">
+                    Stores
                 </button>
-                <button onclick="setModalTab('signup')" id="tabBtn-signup" class="py-2 px-3.5 font-medium border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-                    <i class="fa-solid fa-user-plus mr-1.5"></i> Register Store
+                <button onclick="setModalTab('signup')" id="tabBtn-signup" class="py-1.5 px-3 font-normal border-b border-transparent text-neutral-500 hover:text-white">
+                    Register
                 </button>
-                <button onclick="setModalTab('login')" id="tabBtn-login" class="py-2 px-3.5 font-medium border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-                    <i class="fa-solid fa-right-to-bracket mr-1.5"></i> PIN Login
+                <button onclick="setModalTab('login')" id="tabBtn-login" class="py-1.5 px-3 font-normal border-b border-transparent text-neutral-500 hover:text-white">
+                    PIN Login
                 </button>
             </div>
 
-            <!-- Tab 1: Demo Stores List -->
-            <div id="modalTab-switch" class="space-y-3">
-                <p class="text-xs text-[var(--text-secondary)]">
-                    Switch between active Kirana stores to test completely isolated ledgers and customer balances:
-                </p>
-                <div id="demoOwnersList" class="space-y-2 max-h-60 overflow-y-auto">
-                    <!-- Populated dynamically -->
+            <!-- Tab 1: Demo Stores -->
+            <div id="modalTab-switch" class="space-y-2.5">
+                <div id="demoOwnersList" class="space-y-2 max-h-56 overflow-y-auto">
+                    <!-- Loaded dynamically -->
                 </div>
             </div>
 
-            <!-- Tab 2: New Store Sign Up -->
-            <form id="modalTab-signup" onsubmit="submitMerchantSignup(event)" class="hidden space-y-3">
+            <!-- Tab 2: Register -->
+            <form id="modalTab-signup" onsubmit="submitMerchantSignup(event)" class="hidden space-y-3 font-mono text-xs">
                 <div>
-                    <label class="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">Kirana Store Name *</label>
-                    <input id="signupStoreName" type="text" placeholder="e.g. Sri Balaji Kirana Store" required class="w-full mt-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500">
+                    <label class="text-[10px] uppercase text-neutral-500">Store Name</label>
+                    <input id="signupStoreName" type="text" placeholder="Sri Balaji Kirana" required class="w-full mt-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-500">
                 </div>
                 <div>
-                    <label class="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">Merchant / Owner Name *</label>
-                    <input id="signupOwnerName" type="text" placeholder="e.g. Niranjan Patel" required class="w-full mt-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500">
+                    <label class="text-[10px] uppercase text-neutral-500">Owner Name</label>
+                    <input id="signupOwnerName" type="text" placeholder="Niranjan Patel" required class="w-full mt-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-500">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">Phone Number *</label>
-                        <input id="signupPhone" type="tel" placeholder="e.g. 9876543210" required class="w-full mt-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500">
+                        <label class="text-[10px] uppercase text-neutral-500">Phone</label>
+                        <input id="signupPhone" type="tel" placeholder="9876543210" required class="w-full mt-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-500">
                     </div>
                     <div>
-                        <label class="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">4-Digit PIN</label>
-                        <input id="signupPin" type="password" maxlength="4" placeholder="1234" value="1234" class="w-full mt-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500">
+                        <label class="text-[10px] uppercase text-neutral-500">4-Digit PIN</label>
+                        <input id="signupPin" type="password" maxlength="4" placeholder="1234" value="1234" class="w-full mt-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-500">
                     </div>
                 </div>
                 <div class="pt-2 flex justify-end space-x-2">
-                    <button type="button" onclick="closeMerchantModal()" class="btn-luxury px-4 py-2 rounded-xl text-xs bg-[var(--bg-base)] text-[var(--text-secondary)]">Cancel</button>
-                    <button type="submit" class="btn-luxury px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30">Activate Store</button>
+                    <button type="button" onclick="closeMerchantModal()" class="px-3 py-1.5 rounded-xl bg-white/5 text-neutral-400">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium">Activate</button>
                 </div>
             </form>
 
-            <!-- Tab 3: Merchant Login -->
-            <form id="modalTab-login" onsubmit="submitMerchantLogin(event)" class="hidden space-y-3">
+            <!-- Tab 3: Login -->
+            <form id="modalTab-login" onsubmit="submitMerchantLogin(event)" class="hidden space-y-3 font-mono text-xs">
                 <div>
-                    <label class="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">Merchant Phone *</label>
-                    <input id="loginPhone" type="tel" placeholder="e.g. 9876543210" required class="w-full mt-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500">
+                    <label class="text-[10px] uppercase text-neutral-500">Merchant Phone</label>
+                    <input id="loginPhone" type="tel" placeholder="9876543210" required class="w-full mt-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-500">
                 </div>
                 <div>
-                    <label class="text-[11px] font-mono uppercase font-bold text-[var(--text-muted)]">4-Digit PIN *</label>
-                    <input id="loginPin" type="password" maxlength="4" placeholder="1234" value="1234" class="w-full mt-1 bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-emerald-500">
+                    <label class="text-[10px] uppercase text-neutral-500">4-Digit PIN</label>
+                    <input id="loginPin" type="password" maxlength="4" placeholder="1234" value="1234" class="w-full mt-1 bg-black border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-violet-500">
                 </div>
                 <div class="pt-2 flex justify-end space-x-2">
-                    <button type="button" onclick="closeMerchantModal()" class="btn-luxury px-4 py-2 rounded-xl text-xs bg-[var(--bg-base)] text-[var(--text-secondary)]">Cancel</button>
-                    <button type="submit" class="btn-luxury px-5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30">Log In</button>
+                    <button type="button" onclick="closeMerchantModal()" class="px-3 py-1.5 rounded-xl bg-white/5 text-neutral-400">Cancel</button>
+                    <button type="submit" class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium">Log In</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         HOLLYWOOD CLIENT-SIDE 3D & VOICE ENGINE SCRIPT
+         SYNAPSE 3D PARTICLES & FULL ENGINE JAVASCRIPT
          ═══════════════════════════════════════════════════════════ -->
     <script>
-        // ── Theme Management (Persisted Light / Dark) ──────────────
-        function initTheme() {
-            const savedTheme = localStorage.getItem('bolkhata_theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeIcon(savedTheme);
-        }
-
-        function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme') || 'dark';
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('bolkhata_theme', next);
-            updateThemeIcon(next);
-            if (window.onThemeChanged) window.onThemeChanged(next);
-        }
-
-        function updateThemeIcon(theme) {
-            const icon = document.getElementById('themeIcon');
-            if (!icon) return;
-            if (theme === 'dark') {
-                icon.className = "fa-solid fa-sun text-amber-400 text-sm";
-            } else {
-                icon.className = "fa-solid fa-moon text-slate-700 text-sm";
-            }
-        }
-        initTheme();
-
-        // ── 3D Card Interactive Tilt & Specular Shine Physics ─────
-        function init3DTiltCards() {
-            const cards = document.querySelectorAll('.card-tilt');
-            cards.forEach(card => {
-                card.addEventListener('mousemove', (e) => {
-                    const rect = card.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    
-                    const rotateX = ((y - centerY) / centerY) * -6.5;
-                    const rotateY = ((x - centerX) / centerX) * 6.5;
-                    
-                    card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.015, 1.015, 1.015)`;
-                    card.style.setProperty('--mouse-x', `${(x / rect.width * 100).toFixed(1)}%`);
-                    card.style.setProperty('--mouse-y', `${(y / rect.height * 100).toFixed(1)}%`);
-                });
-
-                card.addEventListener('mouseleave', () => {
-                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
-                });
-            });
-        }
-
-        // ── Three.js Hollywood 3D Background Galaxy & Neural Orb ────
-        let scene, camera, renderer, particleSystem, neuralOrb;
-        let audioEnergyVal = 0;
-
-        function initThreeJS() {
-            const canvas = document.getElementById('hero3dCanvas');
+        // ── Three.js Ambient Particle Field ────────────────────────
+        function initSynapseThreeJS() {
+            const canvas = document.getElementById('synapse3dCanvas');
             if (!canvas || !window.THREE) return;
 
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 45;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 40;
 
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            // Ambient Dust Particle Galaxy
-            const particleCount = 700;
+            const particleCount = 500;
             const geometry = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
             const colors = new Float32Array(particleCount * 3);
 
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const baseColor = isDark ? new THREE.Color(0x10b981) : new THREE.Color(0x059669);
-            const goldColor = new THREE.Color(0xd97706);
+            const violet = new THREE.Color(0x8B5CF6);
+            const cyan = new THREE.Color(0x06B6D4);
 
             for (let i = 0; i < particleCount * 3; i += 3) {
-                positions[i] = (Math.random() - 0.5) * 120;
-                positions[i + 1] = (Math.random() - 0.5) * 120;
-                positions[i + 2] = (Math.random() - 0.5) * 90;
+                positions[i] = (Math.random() - 0.5) * 100;
+                positions[i + 1] = (Math.random() - 0.5) * 100;
+                positions[i + 2] = (Math.random() - 0.5) * 80;
 
-                const mixed = Math.random() > 0.4 ? baseColor : goldColor;
-                colors[i] = mixed.r;
-                colors[i + 1] = mixed.g;
-                colors[i + 2] = mixed.b;
+                const c = Math.random() > 0.5 ? violet : cyan;
+                colors[i] = c.r;
+                colors[i + 1] = c.g;
+                colors[i + 2] = c.b;
             }
 
             geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
             const material = new THREE.PointsMaterial({
-                size: 1.4,
+                size: 1.2,
                 vertexColors: true,
                 transparent: true,
-                opacity: isDark ? 0.45 : 0.25,
+                opacity: 0.35,
                 blending: THREE.AdditiveBlending
             });
 
-            particleSystem = new THREE.Points(geometry, material);
-            scene.add(particleSystem);
-
-            // Floating 3D Geometric Neural Orb
-            const orbGeo = new THREE.IcosahedronGeometry(12, 2);
-            const orbMat = new THREE.MeshBasicMaterial({
-                color: isDark ? 0x10b981 : 0x059669,
-                wireframe: true,
-                transparent: true,
-                opacity: isDark ? 0.15 : 0.08
-            });
-            neuralOrb = new THREE.Mesh(orbGeo, orbMat);
-            neuralOrb.position.set(-25, 10, -10);
-            scene.add(neuralOrb);
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
 
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
@@ -889,45 +1014,25 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
 
-            // Subtle mouse parallax
             let mouseX = 0, mouseY = 0;
             window.addEventListener('mousemove', (e) => {
-                mouseX = (e.clientX - window.innerWidth / 2) * 0.02;
-                mouseY = (e.clientY - window.innerHeight / 2) * 0.02;
+                mouseX = (e.clientX - window.innerWidth / 2) * 0.015;
+                mouseY = (e.clientY - window.innerHeight / 2) * 0.015;
             });
-
-            window.onThemeChanged = (newTheme) => {
-                const dark = newTheme === 'dark';
-                material.opacity = dark ? 0.45 : 0.25;
-                orbMat.opacity = dark ? 0.15 : 0.08;
-            };
 
             function animate() {
                 requestAnimationFrame(animate);
-
-                // Rotate particles smoothly
-                particleSystem.rotation.y += 0.0006;
-                particleSystem.rotation.x += 0.0003;
-
-                // Neural orb reacts dynamically to audio energy!
-                if (neuralOrb) {
-                    neuralOrb.rotation.y += 0.003;
-                    neuralOrb.rotation.x += 0.002;
-                    const scaleFactor = 1 + (audioEnergyVal * 0.015);
-                    neuralOrb.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                }
-
-                // Camera follow
-                camera.position.x += (mouseX - camera.position.x) * 0.04;
-                camera.position.y += (-mouseY - camera.position.y) * 0.04;
+                particles.rotation.y += 0.0004;
+                particles.rotation.x += 0.0002;
+                camera.position.x += (mouseX - camera.position.x) * 0.03;
+                camera.position.y += (-mouseY - camera.position.y) * 0.03;
                 camera.lookAt(scene.position);
-
                 renderer.render(scene, camera);
             }
             animate();
         }
 
-        // ── Voice, WebSocket & Ledger State Machine ───────────────
+        // ── Voice, State Machine & Backend Integration ─────────────
         let currentLanguage = 'en-IN';
         let handsFreeActive = false;
         let micLocked = true;
@@ -946,10 +1051,9 @@
             'en-IN': "Namaste! Welcome to BolKhata. You are experiencing a safe and trusted AI ledger system built specifically for your store. All your records are 100% encrypted, secure, and DPDP compliant. I am your hands-free assistant — you can talk naturally across the counter without touching the screen.",
             'hi-IN': "Namaste! BolKhata mein aapka swagat hai. Aap ek surakshit aur vishwasniya AI ledger system ka anubhav kar rahe hain. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — aap bina screen ko chhue, aam bolchaal mein baat kar sakte hain.",
             'kn-IN': "ನಮಸ್ಕಾರ! ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಅಂಗಡಿಗೆ ಸಂಪೂರ್ಣ ಸುರಕ್ಷಿತ ಮತ್ತು ನಂಬಿಕಸ್ಥ ಎಐ ಲೆಡ್ಜರ್ ವ್ಯವಸ್ಥೆ ಇಲ್ಲಿದೆ. ನಿಮ್ಮ ಎಲ್ಲಾ ಲೆಕ್ಕಗಳು ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿವೆ. ನಾನು ನಿಮ್ಮ ವಾಯ್ಸ್ ಸಹಾಯಕ — ಪರದೆಯನ್ನು ಮುಟ್ಟದೆಯೇ ನೀವು ಸಹಜವಾಗಿ ಮಾತನಾಡಬಹುದು.",
-            'te-IN': "నమస్కారం! బోల్ ఖాతాకు స్వాగతం. మీ కిరాణా దుకాణం కోసం ఇది అత్యంత సురక్షితమైన మరియు నమ్మకమైన AI లెడ్జర్ సిస్టమ్. మీ లెక్కలన్నీ 100% సురಕ್ಷితంగా మరియు ఎన్‌క్రిప్ట్ చేయబడి ఉన్నాయి. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మీరు సహజంగా మాట్లాడవచ్చు."
+            'te-IN': "నమస్కారం! బోల్ ఖాతాకు స్వాగతం. మీ కిరాణా దుకాణం కోసం ఇది అత్యంత సురక్షితమైన మరియు నమ్మకమైన AI లెడ్జర్ సిస్టమ్. మీ లెక్కలన్నీ 100% సురక్షితంగా మరియు ఎన్‌క్రిప్ట్ చేయబడి ఉన్నాయి. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి."
         };
 
-        // Multilingual Language Switcher Handler
         function setVoiceLanguage(langCode) {
             currentLanguage = langCode;
             const buttons = {
@@ -963,21 +1067,11 @@
             for (const [code, btn] of Object.entries(buttons)) {
                 if (!btn) continue;
                 if (code === langCode) {
-                    btn.className = "px-2.5 py-1 rounded-xl font-bold transition border bg-emerald-600 text-white border-emerald-400 shadow-sm shadow-emerald-600/30";
+                    btn.className = "px-3 py-1 rounded-full text-white font-medium bg-violet-600/60 border border-violet-400/40 text-[11px] font-mono transition";
                 } else {
-                    btn.className = "px-2.5 py-1 rounded-xl font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-emerald-400 hover:border-emerald-500/40";
+                    btn.className = "px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition";
                 }
             }
-
-            const badge = document.getElementById('detectedLangBadge');
-            const langLabels = {
-                'en-IN': '🌐 English (en-IN)',
-                'kn-IN': '🟡 ಕನ್ನಡ (kn-IN)',
-                'te-IN': '🟣 తెలుగు (te-IN)',
-                'hi-IN': '🔴 हिंदी (hi-IN)',
-                'auto': '⚡ Auto-Detect'
-            };
-            if (badge) badge.innerText = langLabels[langCode] || langCode;
 
             if (recognition) {
                 const targetModel = langCode === 'auto' ? 'en-IN' : langCode;
@@ -989,7 +1083,6 @@
             }
         }
 
-        // Ledger View Tab Switcher: Udhaar vs Jama vs Customers vs All
         function switchLedgerTab(tab) {
             const tabs = ['udhaar', 'jama', 'customers', 'all'];
             tabs.forEach(t => {
@@ -999,23 +1092,22 @@
                     if (t === tab) {
                         view.classList.remove('hidden');
                         if (t === 'udhaar') {
-                            btn.className = "btn-luxury px-3.5 py-2 rounded-xl text-xs font-bold transition border border-rose-500/40 bg-rose-500/10 text-rose-400 shadow-sm";
+                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-rose-500/40 bg-rose-500/10 text-rose-400 transition";
                         } else if (t === 'jama') {
-                            btn.className = "btn-luxury px-3.5 py-2 rounded-xl text-xs font-bold transition border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 shadow-sm";
+                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 transition";
                         } else if (t === 'customers') {
-                            btn.className = "btn-luxury px-3.5 py-2 rounded-xl text-xs font-bold transition border border-cyan-500/40 bg-cyan-500/10 text-cyan-400 shadow-sm";
+                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-cyan-500/40 bg-cyan-500/10 text-cyan-400 transition";
                         } else {
-                            btn.className = "btn-luxury px-3.5 py-2 rounded-xl text-xs font-bold transition border border-[var(--border-subtle)] bg-[var(--bg-base)] text-[var(--text-primary)] shadow-sm";
+                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-violet-500/40 bg-violet-500/10 text-violet-400 transition";
                         }
                     } else {
                         view.classList.add('hidden');
-                        btn.className = "btn-luxury px-3.5 py-2 rounded-xl text-xs font-medium transition border border-transparent text-[var(--text-secondary)] hover:text-emerald-400";
+                        btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition";
                     }
                 }
             });
         }
 
-        // Standby Mode Toggle (Say 'Stop' to sleep, 'BolKhata' to wake up)
         function toggleStandbyMode() {
             if (isStandby) {
                 wakeUpAssistant();
@@ -1027,105 +1119,73 @@
         function putAssistantToSleep() {
             isStandby = true;
             updateMicUIState('standby', 'Standby 🌙 — Ambient chatter ignored. Say "BolKhata" to wake up');
-            document.getElementById('standbyText').innerText = "Standby (Sleeping)";
-            document.getElementById('standbyIcon').className = "fa-solid fa-moon text-amber-400 text-xs";
-            document.getElementById('standbyToggleBtn').className = "btn-luxury px-3 py-1.5 rounded-xl text-xs font-medium border border-amber-500/40 bg-amber-500/10 text-amber-400 shadow-sm transition flex items-center gap-1.5";
+            const quickBtn = document.getElementById('standbyQuickBtn');
+            if (quickBtn) quickBtn.innerText = "Wake Up";
         }
 
         function wakeUpAssistant() {
             isStandby = false;
             updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
-            document.getElementById('standbyText').innerText = "Wake-Word: Active";
-            document.getElementById('standbyIcon').className = "fa-solid fa-shield-halved text-emerald-400 text-xs";
-            document.getElementById('standbyToggleBtn').className = "btn-luxury px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border-subtle)] bg-[var(--card-glass)] text-[var(--text-secondary)] hover:border-amber-500 transition flex items-center gap-1.5";
+            const quickBtn = document.getElementById('standbyQuickBtn');
+            if (quickBtn) quickBtn.innerText = "Toggle Sleep";
         }
 
-        // Hardware Mic Visualizer State Machine
         function updateMicUIState(state, customText) {
             const micBtn = document.getElementById('micBtn');
             const micIcon = document.getElementById('micIcon');
             const micRing = document.getElementById('micRing');
-            const micPingDot = document.getElementById('micPingDot');
             const listeningText = document.getElementById('listeningText');
             const speechBadge = document.getElementById('speechStateBadge');
-            const micStatusIcon = document.getElementById('micStatusIcon');
-            const handsFreeBtn = document.getElementById('handsFreeBtn');
-            const handsFreeStatusText = document.getElementById('handsFreeStatusText');
-            const micAcousticHalo = document.getElementById('micAcousticHalo');
+            const heroCtaText = document.getElementById('heroCtaText');
+            const heroCtaIcon = document.getElementById('heroCtaIcon');
+            const micStatusDot = document.getElementById('micStatusDot');
 
             if (state === 'locked') {
-                if (micBtn) micBtn.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-800 text-white flex items-center justify-center shadow-2xl shadow-amber-500/30 relative cursor-pointer border-4 border-amber-400/40";
-                if (micIcon) micIcon.className = "fa-solid fa-lock text-4xl";
-                if (micRing) micRing.className = "absolute inset-0 rounded-full border-4 border-amber-400/40";
-                if (micPingDot) micPingDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
-                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-volume-high animate-bounce text-amber-400";
-                if (listeningText) listeningText.innerText = customText || "Playing Welcome Trust Message... Microphone Locked";
+                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-amber-700 to-amber-900 flex items-center justify-center text-white cursor-pointer shadow-2xl relative border-2 border-amber-400/40";
+                if (micIcon) micIcon.className = "fa-solid fa-lock text-3xl";
+                if (listeningText) listeningText.innerText = customText || "Playing welcome trust message... Mic locked";
                 if (speechBadge) {
                     speechBadge.innerText = "🔒 Mic Locked (Intro Playing)";
-                    speechBadge.className = "text-amber-400 font-semibold";
+                    speechBadge.className = "text-[11px] font-mono text-amber-400";
                 }
-                if (handsFreeBtn) {
-                    handsFreeBtn.className = "btn-luxury px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-600/30 text-amber-400 border border-amber-500/40";
-                    handsFreeStatusText.innerText = "Mic Locked";
-                }
-                if (micAcousticHalo) micAcousticHalo.className = "absolute w-44 h-44 rounded-full bg-amber-500/10 blur-2xl pointer-events-none";
+                if (heroCtaText) heroCtaText.innerText = "Initializing Safe Intro...";
+                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-lock text-xs text-amber-400 ml-1";
+                if (micStatusDot) micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
             } else if (state === 'standby') {
-                if (micBtn) micBtn.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-900 to-slate-900 text-amber-300 flex items-center justify-center shadow-2xl relative cursor-pointer border-4 border-indigo-500/40";
-                if (micIcon) micIcon.className = "fa-solid fa-moon text-4xl text-amber-300 animate-pulse";
-                if (micRing) micRing.className = "absolute inset-0 rounded-full border-2 border-indigo-500/30";
-                if (micPingDot) micPingDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-400";
-                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-bed text-indigo-300";
-                if (listeningText) listeningText.innerText = customText || "Standby 🌙 — Ambient chatter ignored. Say 'BolKhata' to wake up";
+                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-950 to-neutral-900 text-amber-300 flex items-center justify-center shadow-2xl relative border-2 border-indigo-500/40";
+                if (micIcon) micIcon.className = "fa-solid fa-moon text-3xl text-amber-300 animate-pulse";
+                if (listeningText) listeningText.innerText = customText || "Standby 🌙 — Ambient noise ignored. Say 'BolKhata' to wake";
                 if (speechBadge) {
                     speechBadge.innerText = "🌙 Standby (Waiting for 'BolKhata')";
-                    speechBadge.className = "text-indigo-400 font-medium";
+                    speechBadge.className = "text-[11px] font-mono text-indigo-400";
                 }
-                if (micAcousticHalo) micAcousticHalo.className = "absolute w-44 h-44 rounded-full bg-indigo-500/10 blur-2xl pointer-events-none";
+                if (heroCtaText) heroCtaText.innerText = "Standby (Say 'BolKhata')";
+                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-moon text-xs text-amber-300 ml-1";
+                if (micStatusDot) micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-400";
             } else if (state === 'active') {
-                if (micBtn) micBtn.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-2xl shadow-emerald-500/40 relative cursor-pointer border-4 border-emerald-400/60 acoustic-active";
-                if (micIcon) micIcon.className = "fa-solid fa-headset text-4xl";
-                if (micRing) micRing.className = "absolute inset-0 rounded-full border-4 border-emerald-400/60";
-                if (micPingDot) micPingDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
-                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-ear-listen animate-bounce text-emerald-400";
+                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 text-white flex items-center justify-center shadow-2xl shadow-violet-500/40 relative syn-mic-listening border-2 border-cyan-400/60";
+                if (micIcon) micIcon.className = "fa-solid fa-headset text-3xl";
                 if (listeningText) listeningText.innerText = customText || "Listening continuously across the counter... Just speak!";
                 if (speechBadge) {
                     speechBadge.innerText = "Active (Continuous Listening)";
-                    speechBadge.className = "text-emerald-400 font-semibold";
+                    speechBadge.className = "text-[11px] font-mono text-emerald-400 font-semibold";
                 }
-                if (handsFreeBtn) {
-                    handsFreeBtn.className = "btn-luxury px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-emerald-600 text-white shadow-lg shadow-emerald-600/30";
-                    handsFreeStatusText.innerText = "Hands-Free: ON";
-                }
-                if (micAcousticHalo) micAcousticHalo.className = "absolute w-48 h-48 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none";
+                if (heroCtaText) heroCtaText.innerText = "Hands-Free Active";
+                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-microphone text-xs text-emerald-400 ml-1";
+                if (micStatusDot) micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
             } else if (state === 'speaking') {
-                if (micBtn) micBtn.className = "w-32 h-32 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-600 text-white flex items-center justify-center shadow-2xl shadow-teal-500/30 relative cursor-pointer border-4 border-cyan-400/60 animate-pulse";
-                if (micIcon) micIcon.className = "fa-solid fa-volume-high text-4xl";
-                if (micRing) micRing.className = "absolute inset-0 rounded-full border-4 border-cyan-400/60";
-                if (micStatusIcon) micStatusIcon.className = "fa-solid fa-waveform animate-pulse text-cyan-400";
-                if (listeningText) listeningText.innerText = "BolKhata is speaking... Mic muted to prevent echo.";
+                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-600 text-white flex items-center justify-center shadow-2xl relative border-2 border-cyan-400 animate-pulse";
+                if (micIcon) micIcon.className = "fa-solid fa-volume-high text-3xl";
+                if (listeningText) listeningText.innerText = "BolKhata is speaking... Echo cancellation active.";
                 if (speechBadge) {
                     speechBadge.innerText = "Speaking (Echo Guard Active)";
-                    speechBadge.className = "text-cyan-400 font-medium";
+                    speechBadge.className = "text-[11px] font-mono text-cyan-400";
                 }
-                if (micAcousticHalo) micAcousticHalo.className = "absolute w-48 h-48 rounded-full bg-cyan-500/25 blur-3xl pointer-events-none";
-            } else if (state === 'paused') {
-                if (micBtn) micBtn.className = "w-32 h-32 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center shadow-lg relative cursor-pointer border-2 border-slate-700";
-                if (micIcon) micIcon.className = "fa-solid fa-microphone-slash text-4xl";
-                if (micRing) micRing.className = "hidden";
-                if (listeningText) listeningText.innerText = "Hands-free paused. Tap mic or click Hands-Free button.";
-                if (speechBadge) {
-                    speechBadge.innerText = "Paused";
-                    speechBadge.className = "text-slate-500";
-                }
-                if (handsFreeBtn) {
-                    handsFreeBtn.className = "btn-luxury px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-slate-800 text-slate-400 border border-slate-700";
-                    handsFreeStatusText.innerText = "Hands-Free: OFF";
-                }
-                if (micAcousticHalo) micAcousticHalo.className = "hidden";
+                if (heroCtaText) heroCtaText.innerText = "Speaking Response...";
+                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-volume-high text-xs text-cyan-400 ml-1";
             }
         }
 
-        // Welcome Trust Audio: Keeps mic strictly locked until finish!
         function playWelcomeTrustMessage() {
             micLocked = true;
             isIntroPlaying = true;
@@ -1135,7 +1195,7 @@
                 try { recognition.abort(); } catch(e){}
             }
 
-            updateMicUIState('locked', 'Playing Welcome Trust Audio... Microphone is locked');
+            updateMicUIState('locked', 'Playing welcome trust intro... Mic locked');
             document.getElementById('liveTranscriptDisplay').innerText = "(Microphone locked while welcome intro is playing...)";
 
             const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
@@ -1144,7 +1204,7 @@
                 if (langKey.startsWith('kn')) {
                     welcomeText = `ನಮಸ್ಕಾರ ${storeOwner.owner_name} ಅವರೇ! ${storeOwner.store_name} ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಲೆಡ್ಜರ್ 100% ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದೆ. ನಾನು ನಿಮ್ಮ ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ ಸಹಾಯಕ — ಪರದೆ ಮುಟ್ಟದೆಯೇ ಸಹಜವಾಗಿ ಮಾತನಾಡಿ.`;
                 } else if (langKey.startsWith('te')) {
-                    welcomeText = `నమస్కారం ${storeOwner.owner_name} గారు! ${storeOwner.store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురక్షితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి.`;
+                    welcomeText = `నమస్కారం ${storeOwner.owner_name} గారు! ${storeOwner.store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురಕ್ಷితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి.`;
                 } else if (langKey.startsWith('hi')) {
                     welcomeText = `Namaste ${storeOwner.owner_name} ji! ${storeOwner.store_name} ke BolKhata mein aapka swagat hai. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — bina screen ko chhue aam bolchaal mein baat kijiye.`;
                 } else {
@@ -1170,7 +1230,7 @@
             updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
             document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "BolKhata" or record any entry)';
 
-            initAudioWaveVisualizer();
+            initAudioOscilloscope();
             initContinuousSpeechRecognition();
         }
 
@@ -1184,7 +1244,6 @@
             }
         }
 
-        // Initialize Speech Recognition in Continuous Hands-Free Loop
         function initContinuousSpeechRecognition() {
             if (micLocked || isIntroPlaying) return;
 
@@ -1198,11 +1257,7 @@
 
                     recognition.onstart = () => {
                         if (!micLocked && !isSpeaking) {
-                            if (isStandby) {
-                                updateMicUIState('standby');
-                            } else {
-                                updateMicUIState('active');
-                            }
+                            updateMicUIState(isStandby ? 'standby' : 'active');
                         }
                     };
 
@@ -1227,12 +1282,12 @@
                             const trimmed = finalTranscript.trim();
                             const lower = trimmed.toLowerCase();
 
-                            // Standby Filter: ignores ambient background room talk
+                            // Standby Ambient Drop Filter
                             const wakeMatch = lower.includes('bolkhata') || lower.includes('bol khata') || lower.includes('बोल खाता') || lower.includes('ಬೋಲ್ ಖಾತಾ') || lower.includes('బోల్ ఖాతా');
 
                             if (isStandby) {
                                 if (!wakeMatch) {
-                                    document.getElementById('liveTranscriptDisplay').innerText = `(Ambient room talk ignored: "${trimmed}". Say "BolKhata" to wake up)`;
+                                    document.getElementById('liveTranscriptDisplay').innerText = `(Ambient noise dropped: "${trimmed}". Say "BolKhata" to wake)`;
                                     return;
                                 } else {
                                     wakeUpAssistant();
@@ -1251,7 +1306,7 @@
                     };
 
                     recognition.onerror = (event) => {
-                        console.warn("Speech Recognition Error:", event.error);
+                        console.warn("Speech error:", event.error);
                         if (handsFreeActive && !micLocked && !isSpeaking && event.error !== 'not-allowed') {
                             setTimeout(restartRecognition, 500);
                         }
@@ -1265,8 +1320,6 @@
                 }
 
                 restartRecognition();
-            } else {
-                console.warn("Speech recognition is not natively supported in this browser. Text input remains fully active.");
             }
         }
 
@@ -1274,41 +1327,32 @@
             if (recognition && handsFreeActive && !micLocked && !isSpeaking && !isProcessing) {
                 try {
                     recognition.start();
-                } catch (e) {
-                    // Already running
-                }
+                } catch (e) {}
             }
         }
 
-        // Live Canvas Audio Waveform Oscilloscope & VAD
-        function initAudioWaveVisualizer() {
+        function initAudioOscilloscope() {
             const canvas = document.getElementById('audioWaveCanvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
 
             navigator.mediaDevices.getUserMedia({
-                audio: {
-                    noiseSuppression: true,
-                    echoCancellation: true,
-                    autoGainControl: true,
-                    channelCount: 1,
-                    sampleRate: 16000
-                }
+                audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true, channelCount: 1 }
             }).then(stream => {
                 micStream = stream;
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const source = audioContext.createMediaStreamSource(micStream);
                 analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
+                analyser.fftSize = 128;
                 source.connect(analyser);
 
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
 
-                function drawWave() {
-                    requestAnimationFrame(drawWave);
+                function draw() {
+                    requestAnimationFrame(draw);
                     canvas.width = canvas.parentElement.clientWidth;
-                    canvas.height = 48;
+                    canvas.height = 36;
 
                     if (!handsFreeActive || micLocked || !analyser) {
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1316,51 +1360,25 @@
                     }
 
                     analyser.getByteFrequencyData(dataArray);
-                    let sum = 0;
-                    for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-                    audioEnergyVal = sum / bufferLength;
-
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     
-                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                    const barWidth = (canvas.width / bufferLength) * 2.5;
+                    const barWidth = (canvas.width / bufferLength) * 2;
                     let x = 0;
 
                     for (let i = 0; i < bufferLength; i++) {
                         const barHeight = (dataArray[i] / 255) * canvas.height;
-                        
-                        const gradient = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-                        if (isDark) {
-                            gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
-                            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.85)');
-                        } else {
-                            gradient.addColorStop(0, 'rgba(5, 150, 105, 0.2)');
-                            gradient.addColorStop(1, 'rgba(5, 150, 105, 0.85)');
-                        }
-
-                        ctx.fillStyle = gradient;
+                        const grad = ctx.createLinearGradient(0, canvas.height, 0, 0);
+                        grad.addColorStop(0, 'rgba(139, 92, 246, 0.2)');
+                        grad.addColorStop(1, 'rgba(6, 182, 212, 0.85)');
+                        ctx.fillStyle = grad;
                         ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
                         x += barWidth;
                     }
                 }
-                drawWave();
+                draw();
             }).catch(e => {
-                console.warn("Waveform initialisation bypassed:", e);
+                console.warn("Oscilloscope bypass:", e);
             });
-        }
-
-        function toggleHandsFree() {
-            if (micLocked) return;
-            handsFreeActive = !handsFreeActive;
-            if (handsFreeActive) {
-                updateMicUIState(isStandby ? 'standby' : 'active');
-                restartRecognition();
-            } else {
-                updateMicUIState('paused');
-                if (recognition) {
-                    try { recognition.stop(); } catch(e){}
-                }
-            }
         }
 
         function manualMicToggle() {
@@ -1372,11 +1390,7 @@
                 wakeUpAssistant();
                 return;
             }
-            if (!handsFreeActive) {
-                toggleHandsFree();
-            } else {
-                restartRecognition();
-            }
+            restartRecognition();
         }
 
         async function sendVoiceCommand(text) {
@@ -1387,7 +1401,7 @@
                 try { recognition.abort(); } catch(e){}
             }
 
-            document.getElementById('aiResponseBox').innerHTML = `<span class="text-emerald-400 flex items-center font-medium"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
+            document.getElementById('aiResponseBox').innerHTML = `<span class="text-cyan-400 font-mono text-xs flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
 
             try {
                 const payload = {
@@ -1404,11 +1418,6 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-
-                if (data.language && (currentLanguage === 'auto' || !currentLanguage)) {
-                    const langMap = { 'hi-IN': '🔴 Hindi (Auto)', 'kn-IN': '🟡 ಕನ್ನಡ (Auto)', 'te-IN': '🟣 తెలుగు (Auto)', 'en-IN': '🌐 English (Auto)' };
-                    document.getElementById('detectedLangBadge').innerText = langMap[data.language] || data.language;
-                }
 
                 if (data.correction_event) {
                     showStrikeThroughEffect(data.correction_event);
@@ -1428,7 +1437,7 @@
                 refreshAllData();
             } catch (err) {
                 console.error(err);
-                document.getElementById('aiResponseBox').innerHTML = `<span class="text-rose-400">Error: ${err.message}</span>`;
+                document.getElementById('aiResponseBox').innerHTML = `<span class="text-rose-400 text-xs">Error: ${err.message}</span>`;
                 isProcessing = false;
                 if (handsFreeActive && !micLocked) restartRecognition();
             }
@@ -1438,35 +1447,26 @@
             const banner = document.getElementById('strikeThroughAlert');
             const values = document.getElementById('strikeValues');
             values.innerHTML = `
-                <span class="line-through text-rose-400 font-bold text-sm">₹${ev.old_amount}</span>
-                <span class="text-[var(--text-muted)] mx-1">➔</span>
-                <span class="text-emerald-400 font-extrabold text-base">₹${ev.new_amount}</span>
-                <span class="text-[var(--text-secondary)] ml-2 font-mono">(${ev.customer})</span>
+                <span class="line-through text-rose-400 font-bold">₹${ev.old_amount}</span>
+                <span class="text-neutral-500 mx-1">➔</span>
+                <span class="text-emerald-400 font-bold text-sm">₹${ev.new_amount}</span>
+                <span class="text-neutral-400 ml-1.5">(${ev.customer})</span>
             `;
             banner.classList.remove('hidden');
             setTimeout(() => {
                 banner.classList.add('hidden');
-            }, 8000);
+            }, 6000);
         }
 
         function displayAIResponse(message, audioBase64, lang) {
             lastSpokenText = message;
             document.getElementById('aiResponseBox').innerHTML = `
                 <div class="flex items-start space-x-2.5">
-                    <i class="fa-solid fa-comment-dots text-emerald-400 mt-1 text-base"></i>
-                    <p class="font-semibold text-[var(--text-primary)] leading-relaxed">${message}</p>
+                    <i class="fa-solid fa-comment-dots text-violet-400 mt-1"></i>
+                    <p class="font-sans text-neutral-100 font-medium leading-relaxed">${message}</p>
                 </div>
             `;
             document.getElementById('replayBtn').classList.remove('hidden');
-
-            const gBadge = document.getElementById('gnaniSpokenBadge');
-            if (gBadge) {
-                if (audioBase64) {
-                    gBadge.classList.remove('hidden');
-                } else {
-                    gBadge.classList.add('hidden');
-                }
-            }
 
             updateMicUIState('speaking');
 
@@ -1503,7 +1503,7 @@
                     const p = audio.play();
                     if (p && p.catch) {
                         p.catch(e => {
-                            console.warn("Audio playback error, falling back to speech synthesis:", e);
+                            console.warn("Audio error, fallback:", e);
                             fallbackSpeechSynthesis(text, lang, handleDone);
                         });
                     }
@@ -1522,10 +1522,7 @@
                 utter.lang = lang || 'hi-IN';
                 utter.rate = 1.0;
                 utter.onend = () => { if (onDone) onDone(); };
-                utter.onerror = (e) => {
-                    console.warn("SpeechSynthesis error:", e);
-                    if (onDone) onDone();
-                };
+                utter.onerror = () => { if (onDone) onDone(); };
                 window.speechSynthesis.speak(utter);
             } else {
                 if (onDone) onDone();
@@ -1551,7 +1548,6 @@
             input.value = '';
         }
 
-        // 1-Click Reset Today's Payments Action
         async function triggerResetPayments() {
             try {
                 const res = await fetch('/api/owner/reset-today-payments', { method: 'POST' });
@@ -1570,9 +1566,20 @@
                 const ownerParam = storeOwner ? `?owner_id=${storeOwner.id}` : '';
                 const res = await fetch(`/api/ledger/summary${ownerParam}`);
                 const data = await res.json();
-                document.getElementById('statTodayCredit').innerText = `₹${Math.round(data.today_credit).toLocaleString('en-IN')}`;
-                document.getElementById('statTodayPayment').innerText = `₹${Math.round(data.today_payments).toLocaleString('en-IN')}`;
-                document.getElementById('statTotalNet').innerText = `₹${Math.round(data.net_outstanding).toLocaleString('en-IN')}`;
+                const creditFormatted = `₹${Math.round(data.today_credit).toLocaleString('en-IN')}`;
+                const paymentFormatted = `₹${Math.round(data.today_payments).toLocaleString('en-IN')}`;
+                const netFormatted = `₹${Math.round(data.net_outstanding).toLocaleString('en-IN')}`;
+
+                document.getElementById('statTodayCredit').innerText = creditFormatted;
+                document.getElementById('statTodayPayment').innerText = paymentFormatted;
+                document.getElementById('statTotalNet').innerText = netFormatted;
+
+                document.getElementById('tickerTodayCredit').innerText = creditFormatted;
+                document.getElementById('tickerTodayCredit2').innerText = creditFormatted;
+                document.getElementById('tickerTodayPayment').innerText = paymentFormatted;
+                document.getElementById('tickerTodayPayment2').innerText = paymentFormatted;
+                document.getElementById('tickerNetOutstanding').innerText = netFormatted;
+                document.getElementById('tickerNetOutstanding2').innerText = netFormatted;
             } catch (e) {
                 console.error(e);
             }
@@ -1584,31 +1591,30 @@
                 const res = await fetch(`/api/customers/${ownerParam}`);
                 const data = await res.json();
                 const tbody = document.getElementById('customersTableBody');
-                document.getElementById('custCountBadge').innerText = `${data.length} customers`;
                 if (data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-[var(--text-muted)]">No customers registered for this store.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-neutral-500 font-mono">No customers registered.</td></tr>`;
                     return;
                 }
                 tbody.innerHTML = data.map(c => `
-                    <tr class="hover:bg-[var(--bg-base)]/40 transition">
-                        <td class="p-3 font-semibold text-[var(--text-primary)]">
+                    <tr class="hover:bg-white/[0.02] transition font-mono">
+                        <td class="py-3 font-medium text-white">
                             <div>${c.name}</div>
-                            ${c.nickname ? `<div class="text-[10px] text-emerald-400 font-mono">Nickname: "${c.nickname}"</div>` : ''}
+                            ${c.nickname ? `<div class="text-[10px] text-violet-400">Nickname: "${c.nickname}"</div>` : ''}
                         </td>
-                        <td class="p-3 font-bold font-mono ${c.balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">₹${Math.round(c.balance).toLocaleString('en-IN')}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="toggleConsent(${c.id}, ${!c.opted_in_reminders})" class="btn-luxury px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${c.opted_in_reminders ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                        <td class="py-3 font-semibold ${c.balance > 0 ? 'text-rose-400' : 'text-emerald-400'}">₹${Math.round(c.balance).toLocaleString('en-IN')}</td>
+                        <td class="py-3 text-center">
+                            <button onclick="toggleConsent(${c.id}, ${!c.opted_in_reminders})" class="px-2 py-0.5 rounded-full text-[10px] border ${c.opted_in_reminders ? 'border-emerald-500/40 text-emerald-400' : 'border-white/10 text-neutral-500'}">
                                 ${c.opted_in_reminders ? 'Opted In ✓' : 'Opted Out ✕'}
                             </button>
                         </td>
-                        <td class="p-3 text-right space-x-2">
+                        <td class="py-3 text-right space-x-2">
                             ${c.balance > 0 ? `
-                                <button onclick="sendPrompt('${c.name} cleared his debt')" class="btn-luxury text-emerald-400 hover:text-emerald-300 text-[11px] underline font-bold mr-2" title="Clear Full Debt">
-                                    Clear Debt
+                                <button onclick="sendPrompt('${c.name} cleared his debt')" class="text-emerald-400 hover:underline text-[11px] mr-2">
+                                    Settle
                                 </button>
                             ` : ''}
-                            <button onclick="sendReminder(${c.id})" class="btn-luxury text-amber-400 hover:text-amber-300" title="Send Polite DPDP Reminder">
-                                <i class="fa-solid fa-paper-plane"></i>
+                            <button onclick="sendReminder(${c.id})" class="text-cyan-400 hover:text-cyan-300" title="Send Polite Reminder">
+                                <i class="fa-solid fa-paper-plane text-xs"></i>
                             </button>
                         </td>
                     </tr>
@@ -1627,46 +1633,41 @@
                 const allTbody = document.getElementById('transactionsTableBody');
                 const udhaarTbody = document.getElementById('udhaarTableBody');
                 const jamaTbody = document.getElementById('jamaTableBody');
-                
-                document.getElementById('txnCountBadge').innerText = `${data.length} entries`;
 
                 const credits = data.filter(t => t.direction === 'credit');
                 const payments = data.filter(t => t.direction === 'payment');
 
-                document.getElementById('udhaarCountBadge').innerText = `${credits.length} credit entries`;
-                document.getElementById('jamaCountBadge').innerText = `${payments.length} payment entries`;
-
                 // All Transactions Table
                 if (data.length === 0) {
-                    allTbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-[var(--text-muted)]">No transactions recorded yet.</td></tr>`;
+                    allTbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-neutral-500 font-mono">No transactions recorded yet.</td></tr>`;
                 } else {
                     allTbody.innerHTML = data.map(t => `
-                        <tr class="hover:bg-[var(--bg-base)]/40 transition">
-                            <td class="p-3 font-semibold text-[var(--text-primary)]">${t.customer_name}</td>
-                            <td class="p-3">
-                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${t.direction === 'credit' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'}">
+                        <tr class="hover:bg-white/[0.02] transition font-mono">
+                            <td class="py-3 font-medium text-white">${t.customer_name}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-0.5 rounded-full text-[9px] ${t.direction === 'credit' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'}">
                                     ${t.direction === 'credit' ? 'Udhaar' : 'Jama'}
                                 </span>
                             </td>
-                            <td class="p-3 font-bold font-mono text-[var(--text-primary)]">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                            <td class="p-3 text-[var(--text-muted)] font-mono text-[11px]">${t.transaction_date}</td>
-                            <td class="p-3 text-[var(--text-secondary)] truncate max-w-xs">${t.note || '-'}</td>
+                            <td class="py-3 font-semibold text-white">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                            <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
+                            <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || '-'}</td>
                         </tr>
                     `).join('');
                 }
 
-                // Udhaar / Debt Ledger Table
+                // Udhaar Table
                 if (credits.length === 0) {
-                    udhaarTbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-[var(--text-muted)]">No credit entries recorded.</td></tr>`;
+                    udhaarTbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-neutral-500 font-mono">No credit entries.</td></tr>`;
                 } else {
                     udhaarTbody.innerHTML = credits.map(t => `
-                        <tr class="hover:bg-[var(--bg-base)]/40 transition">
-                            <td class="p-3 font-bold text-rose-400">${t.customer_name}</td>
-                            <td class="p-3 font-extrabold font-mono text-rose-400 text-sm">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                            <td class="p-3 text-[var(--text-muted)] font-mono text-[11px]">${t.transaction_date}</td>
-                            <td class="p-3 text-[var(--text-secondary)] truncate max-w-xs">${t.note || '-'}</td>
-                            <td class="p-3 text-right">
-                                <button onclick="sendPrompt('${t.customer_name} cleared his debt')" class="btn-luxury px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl text-[10px] hover:bg-emerald-500/20 transition font-bold">
+                        <tr class="hover:bg-white/[0.02] transition font-mono">
+                            <td class="py-3 font-medium text-white">${t.customer_name}</td>
+                            <td class="py-3 font-semibold text-rose-400">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                            <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
+                            <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || '-'}</td>
+                            <td class="py-3 text-right">
+                                <button onclick="sendPrompt('${t.customer_name} cleared his debt')" class="px-2.5 py-1 rounded-full text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20">
                                     Settle Debt
                                 </button>
                             </td>
@@ -1674,16 +1675,16 @@
                     `).join('');
                 }
 
-                // Jama / Payment Ledger Table
+                // Jama Table
                 if (payments.length === 0) {
-                    jamaTbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-[var(--text-muted)]">No payment entries recorded.</td></tr>`;
+                    jamaTbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-neutral-500 font-mono">No payment entries.</td></tr>`;
                 } else {
                     jamaTbody.innerHTML = payments.map(t => `
-                        <tr class="hover:bg-[var(--bg-base)]/40 transition">
-                            <td class="p-3 font-bold text-emerald-400">${t.customer_name}</td>
-                            <td class="p-3 font-extrabold font-mono text-emerald-400 text-sm">+₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                            <td class="p-3 text-[var(--text-muted)] font-mono text-[11px]">${t.transaction_date}</td>
-                            <td class="p-3 text-[var(--text-secondary)] truncate max-w-xs">${t.note || 'Payment Received'}</td>
+                        <tr class="hover:bg-white/[0.02] transition font-mono">
+                            <td class="py-3 font-medium text-white">${t.customer_name}</td>
+                            <td class="py-3 font-semibold text-emerald-400">+₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                            <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
+                            <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || 'Payment Received'}</td>
                         </tr>
                     `).join('');
                 }
@@ -1703,7 +1704,7 @@
             if (data.success) {
                 alert(`Polite DPDP Reminder Approved:\n\n${data.reminder_text}`);
             } else {
-                alert(`Guardrail Notice:\n\n${data.message}`);
+                alert(`Notice:\n\n${data.message}`);
             }
         }
 
@@ -1715,10 +1716,7 @@
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        // Merchant Accounts Management: Switch, Sign Up, Login
-        // ═══════════════════════════════════════════════════════════
-
+        // ── Merchant Accounts Modal (Multi-Store Switcher) ────────
         function openMerchantModal() {
             const modal = document.getElementById('merchantModal');
             if (modal) modal.classList.remove('hidden');
@@ -1738,10 +1736,10 @@
                 if (view && btn) {
                     if (t === tab) {
                         view.classList.remove('hidden');
-                        btn.className = "py-2 px-3.5 font-bold border-b-2 border-emerald-400 text-emerald-400";
+                        btn.className = "py-1.5 px-3 font-semibold border-b border-violet-400 text-violet-400";
                     } else {
                         view.classList.add('hidden');
-                        btn.className = "py-2 px-3.5 font-medium border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]";
+                        btn.className = "py-1.5 px-3 font-normal border-b border-transparent text-neutral-500 hover:text-white";
                     }
                 }
             });
@@ -1754,24 +1752,24 @@
                 const container = document.getElementById('demoOwnersList');
                 if (data.success && data.owners) {
                     container.innerHTML = data.owners.map(o => `
-                        <div class="luxury-card p-3.5 flex items-center justify-between transition ${o.is_active ? 'border-emerald-500/80 bg-emerald-500/10' : ''}">
+                        <div class="p-3 rounded-2xl border ${o.is_active ? 'border-violet-500/60 bg-violet-500/10' : 'border-white/5 bg-white/[0.02]'} flex items-center justify-between font-mono text-xs">
                             <div>
-                                <div class="font-bold text-[var(--text-primary)] flex items-center">
-                                    <i class="fa-solid fa-store text-emerald-400 mr-2"></i> ${o.store_name}
-                                    ${o.is_active ? '<span class="ml-2 text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase font-mono font-bold">Active Store</span>' : ''}
+                                <div class="font-bold text-white flex items-center">
+                                    ${o.store_name}
+                                    ${o.is_active ? '<span class="ml-2 text-[9px] text-emerald-400 uppercase font-semibold">Active</span>' : ''}
                                 </div>
-                                <div class="text-xs text-[var(--text-muted)] mt-0.5">
-                                    Owner: <span class="text-[var(--text-secondary)] font-medium">${o.owner_name}</span> · Phone: <span class="font-mono">${o.phone || 'N/A'}</span>
+                                <div class="text-[10px] text-neutral-400 mt-0.5">
+                                    Owner: ${o.owner_name} · ${o.phone || 'N/A'}
                                 </div>
                             </div>
-                            <button onclick="switchActiveStore(${o.id})" class="btn-luxury px-3.5 py-1.5 rounded-xl text-xs font-bold ${o.is_active ? 'bg-slate-800 text-[var(--text-muted)] cursor-default' : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md'}">
-                                ${o.is_active ? 'Selected' : 'Switch Store'}
+                            <button onclick="switchActiveStore(${o.id})" class="px-3 py-1 rounded-full text-xs font-semibold ${o.is_active ? 'bg-white/10 text-neutral-400' : 'bg-white text-black hover:bg-neutral-200'}">
+                                ${o.is_active ? 'Selected' : 'Switch'}
                             </button>
                         </div>
                     `).join('');
                 }
             } catch (e) {
-                console.warn("Could not load owners for switcher:", e);
+                console.warn(e);
             }
         }
 
@@ -1857,11 +1855,14 @@
                 const data = await res.json();
                 if (data.registered && data.owner) {
                     storeOwner = data.owner;
-                    document.getElementById('headerStoreName').innerText = storeOwner.store_name;
-                    document.getElementById('headerOwnerName').innerText = storeOwner.owner_name;
+                    document.getElementById('navStoreName').innerText = storeOwner.store_name.split(' ')[0] || 'Store';
+                    const ticker = document.getElementById('tickerStoreName');
+                    if (ticker) ticker.innerText = storeOwner.store_name;
+                    const ticker2 = document.getElementById('tickerStoreName2');
+                    if (ticker2) ticker2.innerText = storeOwner.store_name;
                 }
             } catch (e) {
-                console.warn("Could not load owner profile:", e);
+                console.warn(e);
             }
         }
 
@@ -1871,10 +1872,8 @@
             loadTransactions();
         }
 
-        // On Load: Start in Locked State, Attempt Intro Audio & 3D Initialization
         window.addEventListener('DOMContentLoaded', async () => {
-            initThreeJS();
-            init3DTiltCards();
+            initSynapseThreeJS();
             await loadOwnerProfile();
             refreshAllData();
             updateMicUIState('locked', 'Preparing Safe System Welcome Intro...');
