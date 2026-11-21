@@ -75,6 +75,7 @@ class TransactionDirection(str, Enum):
 class IntentType(str, Enum):
     ADD_CREDIT = "add_credit"       # "Ramesh ka 340 udhaar"
     ADD_PAYMENT = "add_payment"     # "Ramesh ne 200 diya"
+    CLEAR_DEBT = "clear_debt"       # "Ramesh cleared his debt" / "hisaab clear kar diya"
     QUERY_BALANCE = "query_balance" # "Ramesh ka total?"
     QUERY_TODAY = "query_today"     # "Aaj kitna udhaar gaya?"
     CORRECTION = "correction"       # "nahi, 430"

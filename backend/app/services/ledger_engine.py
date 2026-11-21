@@ -264,17 +264,17 @@ class LedgerEngine:
         descriptors = [c.nickname or c.name.split("-")[-1].strip() for c in candidates]
         
         if lang.startswith("kn"):
-            # Kannada: "ಯಾವ ರಮೇಶ್? ಕಿರಾಣಿ ಲೇನ್ ಅಥವಾ ಮಿಲ್ಕ್ ಡೈರಿ?"
-            return f"ಯಾವ {name}? {' ಅಥವಾ '.join(descriptors)}?"
+            # Kannada: "ಯಾವ ರಮೇಶ್? ಕಿರಾಣಿ ಲೇನ್ ಅಥವಾ ಮಿಲ್ಕ್ ಡೈರಿ? ಅಥವಾ ಯಾವುದೇ ಅಡ್ಡಹೆಸರು ಇದೆಯೇ?"
+            return f"ಯಾವ {name}? {' ಅಥವಾ '.join(descriptors)}? ಅಥವಾ ಯಾವುದೇ ಅಡ್ಡಹೆಸರು ಇದೆಯೇ?"
         elif lang.startswith("te"):
-            # Telugu: "ఏ రమేష్? కిరాణా లేన్ లేదా మిల్క్ డైరీ?"
-            return f"ఏ {name}? {' లేదా '.join(descriptors)}?"
+            # Telugu: "ఏ రమేష్? కిరాణా లేన్ లేదా మిల్క్ డైరీ? లేదా ఏదైనా నిక్ నేమ్ ఉందా?"
+            return f"ఏ {name}? {' లేదా '.join(descriptors)}? లేదా ఏదైనా నిక్ నేమ్ ఉందా?"
         elif lang.startswith("en"):
-            return f"Which {name}? {' or '.join(descriptors)}?"
+            return f"Which {name}? {' or '.join(descriptors)}? Or please specify a nickname."
         else:
-            # Hindi: "Kaunse Ramesh? Kirana Lane wale ya Milk Dairy wale?"
+            # Hindi: "Kaunse Ramesh? Kirana Lane wale ya Milk Dairy wale? Ya koi nickname hai?"
             formatted_opts = [f"{d} wale" if "wale" not in d.lower() else d for d in descriptors]
-            return f"Kaunse {name}? {' ya '.join(formatted_opts)}?"
+            return f"Kaunse {name}? {' ya '.join(formatted_opts)}? Ya koi nickname hai?"
 
     # ═══════════════════════════════════════════════════════════
     # Complete Voice Utterance Processor
@@ -306,6 +306,42 @@ class LedgerEngine:
             if matched_cust:
                 session.clear_pending_action()
                 intent = pending.intent
+                
+                # If pending action was CLEAR_DEBT
+                if intent.intent == IntentType.CLEAR_DEBT:
+                    cur_bal = await self.get_customer_balance(matched_cust["id"])
+                    if cur_bal <= 0:
+                        msg = f"{matched_cust['name']} ka hisaab already clear hai!"
+                        return VoiceResponse(success=True, message=msg, intent=intent, language=lang)
+                    txn = await self.add_transaction(
+                        customer_id=matched_cust["id"],
+                        amount=cur_bal,
+                        direction=TransactionDirection.PAYMENT,
+                        transaction_date=date.today(),
+                        note=f"Full Debt Settlement: Cleared ₹{cur_bal:g}",
+                        raw_transcript=text,
+                        session=session,
+                    )
+                    await self.db.commit()
+                    msg = f"Done! {matched_cust['name']} ka poora hisaab clear kar diya. ₹{cur_bal:g} jama hua. Ab ₹0 baaki hai."
+                    return VoiceResponse(
+                        success=True,
+                        message=msg,
+                        intent=intent,
+                        language=lang,
+                        transaction=TransactionResponse(
+                            id=txn.id,
+                            customer_id=matched_cust["id"],
+                            customer_name=matched_cust["name"],
+                            amount=txn.amount,
+                            direction=txn.direction,
+                            transaction_date=txn.transaction_date,
+                            note=txn.note,
+                            corrected=txn.corrected,
+                            created_at=txn.created_at,
+                        ),
+                    )
+
                 direction = intent.direction or TransactionDirection.CREDIT
                 txn = await self.add_transaction(
                     customer_id=matched_cust["id"],
@@ -385,6 +421,84 @@ class LedgerEngine:
                 message="Koi pichli entry nahi mili sudharne ke liye.",
                 intent=actions[0],
                 language=lang,
+            )
+
+        # ── Step C2: Full Debt Clearing ("Ramesh cleared his debt") ──
+        if len(actions) == 1 and actions[0].intent == IntentType.CLEAR_DEBT:
+            target_name = actions[0].customer_name
+            if not target_name:
+                return VoiceResponse(success=False, message="Kiska hisaab clear karna hai? Naam bataiye.", intent=actions[0], language=lang)
+
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_prompt = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_prompt,
+                    intent=actions[0],
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    language=lang,
+                )
+
+            customer = await self.find_customer_exact(target_name)
+            if not customer and similar:
+                customer = similar[0]
+
+            if not customer:
+                return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
+
+            cur_bal = await self.get_customer_balance(customer.id)
+            if cur_bal <= 0:
+                if lang.startswith("kn"):
+                    msg = f"{customer.name} ಅವರ ಯಾವುದೇ ಸಾಲ ಬಾಕಿ ಇಲ್ಲ. ಖಾತೆ ಈಗಾಗಲೇ ಕ್ಲಿಯರ್ ಆಗಿದೆ!"
+                elif lang.startswith("te"):
+                    msg = f"{customer.name} కి ఎలాంటి బాకీ లేదు. లెక్క ఇప్పటికే క్లియర్ గా ఉంది!"
+                elif lang.startswith("en"):
+                    msg = f"{customer.name} has no outstanding debt. Account is already clear!"
+                else:
+                    msg = f"{customer.name} ka pehle se koi baaki nahi hai. Hisaab already clear hai!"
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
+            txn = await self.add_transaction(
+                customer_id=customer.id,
+                amount=cur_bal,
+                direction=TransactionDirection.PAYMENT,
+                transaction_date=date.today(),
+                note=f"Full Debt Settlement: Cleared previous balance of ₹{cur_bal:g}",
+                raw_transcript=text,
+                session=session,
+            )
+            await self.db.commit()
+
+            if lang.startswith("kn"):
+                msg = f"ಆಯಿತು! {customer.name} ಅವರ ಸಂಪೂರ್ಣ ಸಾಲ ಕ್ಲಿಯರ್ ಆಗಿದೆ. ₹{cur_bal:g} ಪಾವತಿಯಾಗಿದೆ. ಈಗ ₹0 ಬಾಕಿ."
+            elif lang.startswith("te"):
+                msg = f"సరే! {customer.name} మొత్తం బాకీ క్లియర్ చేశాను. ₹{cur_bal:g} జమ అయింది. ఇప్పుడు ₹0 ఉంది."
+            elif lang.startswith("en"):
+                msg = f"Done! Cleared full debt for {customer.name}. Recorded payment of ₹{cur_bal:g}. Balance is ₹0."
+            else:
+                msg = f"Done! {customer.name} ka poora hisaab clear kar diya. ₹{cur_bal:g} jama ho gaya. Ab ₹0 baaki hai."
+
+            return VoiceResponse(
+                success=True,
+                message=msg,
+                intent=actions[0],
+                language=lang,
+                transaction=TransactionResponse(
+                    id=txn.id,
+                    customer_id=customer.id,
+                    customer_name=customer.name,
+                    amount=txn.amount,
+                    direction=txn.direction,
+                    transaction_date=txn.transaction_date,
+                    note=txn.note,
+                    corrected=txn.corrected,
+                    created_at=txn.created_at,
+                ),
             )
 
         # ── Step D: Sub-800ms Fast Path Queries ──

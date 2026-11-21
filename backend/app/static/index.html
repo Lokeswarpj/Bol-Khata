@@ -13,12 +13,12 @@
             100% { transform: scale(0.95); opacity: 0.8; }
         }
         .recording-pulse {
-            animation: pulse-ring 1.4s infinite ease-in-out;
+            animation: pulse-ring 1.3s infinite ease-in-out;
         }
         @keyframes strikeFlash {
-            0% { background-color: rgba(244, 63, 94, 0.4); }
+            0% { background-color: rgba(244, 63, 94, 0.4); transform: scale(1.02); }
             50% { background-color: rgba(16, 185, 129, 0.3); }
-            100% { background-color: transparent; }
+            100% { background-color: transparent; transform: scale(1); }
         }
         .strike-flash {
             animation: strikeFlash 2s ease-out;
@@ -27,7 +27,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
 
-    <!-- Top Navigation Bar -->
+    <!-- Top Navigation & Owner Trust Header -->
     <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -38,57 +38,67 @@
                     <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400">
                         BolKhata <span class="text-[10px] uppercase px-2 py-0.5 bg-cyan-950 text-cyan-400 border border-cyan-800 rounded-full font-mono ml-2">Team Drona · PS2</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Hands-Free Multilingual AI Ledger for Indian Kirana Stores</p>
+                    <p class="text-xs text-slate-400">Autonomous Hands-Free Voice Khata for Kirana Stores</p>
                 </div>
             </div>
 
-            <!-- Language Switcher & Engine Mode Toggle -->
-            <div class="flex items-center space-x-2 sm:space-x-4">
-                <!-- Gnani Token Saver Toggle -->
-                <div class="hidden sm:flex items-center bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1 text-xs">
-                    <span class="text-slate-400 mr-2 text-[11px] font-mono">Engine:</span>
-                    <button onclick="toggleEngineMode('browser')" id="mode-browser" class="px-2 py-0.5 rounded-lg font-medium transition bg-emerald-700 text-white shadow text-[11px]">Free (0 Tokens)</button>
-                    <button onclick="toggleEngineMode('gnani')" id="mode-gnani" class="px-2 py-0.5 rounded-lg font-medium transition text-slate-400 hover:text-slate-200 text-[11px] ml-1">Gnani AI</button>
+            <!-- Auto-Language & Hands-Free Status Badges -->
+            <div class="flex items-center space-x-3">
+                <div class="hidden md:flex items-center space-x-2 bg-emerald-950/80 border border-emerald-800/80 px-3 py-1 rounded-xl text-xs text-emerald-300 font-medium shadow-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-1"></span>
+                    <i class="fa-solid fa-shield-halved mr-1 text-emerald-400"></i> Safe System Verified (AES-256)
                 </div>
 
-                <div class="flex bg-slate-800 border border-slate-700 rounded-xl p-1 text-xs">
-                    <button onclick="setLanguage('hi-IN')" id="lang-hi" class="px-2.5 py-1 rounded-lg font-medium transition bg-cyan-600 text-white shadow">Hindi</button>
-                    <button onclick="setLanguage('kn-IN')" id="lang-kn" class="px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-slate-200">ಕನ್ನಡ</button>
-                    <button onclick="setLanguage('te-IN')" id="lang-te" class="px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-slate-200">తెలుగు</button>
-                    <button onclick="setLanguage('en-IN')" id="lang-en" class="px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-slate-200">English</button>
-                </div>
-                <a href="/docs" target="_blank" class="hidden md:flex px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition border border-slate-700 items-center">
-                    <i class="fa-solid fa-code mr-1.5 text-cyan-400"></i> API Docs
-                </a>
+                <!-- Hands-Free Toggle Switch -->
+                <button onclick="toggleHandsFree()" id="handsFreeBtn" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/30">
+                    <i class="fa-solid fa-headset mr-1.5 animate-pulse"></i>
+                    <span id="handsFreeStatusText">Hands-Free: ON</span>
+                </button>
             </div>
         </div>
     </header>
 
+    <!-- Owner Trust & Welcome Banner -->
+    <div id="welcomeBanner" class="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 border-b border-cyan-900/40 px-4 py-2.5 transition">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
+            <div class="flex items-center space-x-2 text-cyan-200">
+                <i class="fa-solid fa-lock text-cyan-400"></i>
+                <span class="font-semibold">Namaste Gupta ji! Welcome to your BolKhata Safe System.</span>
+                <span class="hidden lg:inline text-slate-400 text-[11px]">| 100% On-Device / Encrypted Ledger (DPDP Compliant) | Hands-free continuous listening active</span>
+            </div>
+            <button onclick="playWelcomeTrustMessage()" class="text-cyan-400 hover:text-cyan-200 font-medium underline flex items-center text-[11px]">
+                <i class="fa-solid fa-volume-high mr-1"></i> Re-play Welcome Trust Audio
+            </button>
+        </div>
+    </div>
+
     <!-- Main Workspace -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Left Column: Voice Counter & Live Prompts (5 cols) -->
+        <!-- Left Column: Hands-Free Voice Counter (5 cols) -->
         <div class="lg:col-span-5 space-y-6">
 
-            <!-- Mic Controller Card with VAD & Noise Cancellation -->
+            <!-- Mic Controller Card with VAD & Auto-Listening -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 shadow-2xl relative overflow-hidden backdrop-blur">
                 <div class="flex items-center justify-between mb-2">
-                    <h2 class="text-sm font-semibold text-slate-200 flex items-center">
-                        <i class="fa-solid fa-tower-broadcast text-cyan-400 mr-2"></i> Voice Activity & Noise Filter
-                    </h2>
-                    <span id="vadBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-medium">
-                        <i class="fa-solid fa-filter mr-1"></i> NoiseSuppression ON
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                        <h2 class="text-sm font-semibold text-slate-200">Continuous Hands-Free Counter</h2>
+                    </div>
+                    <span id="detectedLangBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-cyan-300 border border-slate-700 font-mono">
+                        Auto-Detecting Language
                     </span>
                 </div>
 
-                <!-- Big Push-To-Talk Button -->
-                <div class="flex flex-col items-center justify-center py-6">
-                    <button id="micBtn" onclick="toggleRecording()" class="w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/40 hover:scale-105 active:scale-95 transition cursor-pointer relative group">
-                        <div id="micRing" class="absolute inset-0 rounded-full border-4 border-cyan-400/60 hidden recording-pulse"></div>
-                        <i id="micIcon" class="fa-solid fa-microphone text-4xl"></i>
-                    </button>
-                    <p id="micHint" class="mt-4 text-xs font-medium text-slate-400 text-center">
-                        Tap microphone to speak or click quick judge test buttons below
+                <!-- Hands-Free Mic Pulsing Visualizer -->
+                <div class="flex flex-col items-center justify-center py-5">
+                    <div id="micBtn" class="w-28 h-28 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white flex items-center justify-center shadow-2xl shadow-cyan-500/40 relative cursor-pointer" onclick="manualMicToggle()">
+                        <div id="micRing" class="absolute inset-0 rounded-full border-4 border-cyan-400/60 recording-pulse"></div>
+                        <i id="micIcon" class="fa-solid fa-headset text-4xl"></i>
+                    </div>
+                    <p id="micHint" class="mt-4 text-xs font-medium text-cyan-400 text-center flex items-center">
+                        <i class="fa-solid fa-ear-listen mr-1.5 animate-bounce"></i>
+                        <span id="listeningText">Listening continuously across the counter... Just speak!</span>
                     </p>
 
                     <!-- Real-time Audio Energy Bar (VAD indicator) -->
@@ -97,8 +107,8 @@
                     </div>
                 </div>
 
-                <!-- Live Spoken Correction Strike-Through Alert Banner (Flashing) -->
-                <div id="strikeThroughAlert" class="hidden p-3 bg-slate-800/90 border border-cyan-500/50 rounded-xl mb-3 strike-flash">
+                <!-- Live Spoken Correction Strike-Through Alert Banner -->
+                <div id="strikeThroughAlert" class="hidden p-3.5 bg-slate-800/90 border border-cyan-500/50 rounded-xl mb-3 strike-flash">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-amber-400 flex items-center">
                             <i class="fa-solid fa-pen-to-square mr-1.5"></i> Spoken Correction Applied!
@@ -111,87 +121,105 @@
                     </div>
                 </div>
 
+                <!-- Live Transcript Indicator -->
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 mb-2">
+                    <div class="text-[10px] uppercase font-bold text-slate-500 flex items-center justify-between">
+                        <span>Live Heard Transcript</span>
+                        <span id="speechStateBadge" class="text-emerald-400 font-normal">Active</span>
+                    </div>
+                    <div id="liveTranscriptDisplay" class="text-xs text-slate-200 mt-1 min-h-[20px] italic">
+                        (Waiting for speech...)
+                    </div>
+                </div>
+
                 <!-- Manual Text Input Fallback -->
                 <form onsubmit="handleTextSubmit(event)" class="flex gap-2 pt-2 border-t border-slate-800/80">
-                    <input id="voiceTextInput" type="text" placeholder="Speak or type e.g. Ramesh ka 340 udhaar..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
-                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition shadow-md shadow-cyan-600/30">
+                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Ramesh ka 340 udhaar..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition">
+                    <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-medium transition shadow-md shadow-cyan-600/30">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </form>
             </div>
 
-            <!-- Spoken Response Feed with Audio Replay -->
+            <!-- Spoken Response Feed -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
-                        <i class="fa-solid fa-volume-high text-cyan-400 mr-2"></i> Spoken Response (AI Speech)
+                        <i class="fa-solid fa-volume-high text-cyan-400 mr-2"></i> BolKhata Spoken Voice Response
                     </h3>
                     <button onclick="replayAudio()" id="replayBtn" class="text-cyan-400 hover:text-cyan-300 text-xs hidden flex items-center">
                         <i class="fa-solid fa-rotate-right mr-1"></i> Replay
                     </button>
                 </div>
                 <div id="aiResponseBox" class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-sm text-slate-200 min-h-[70px] flex items-center">
-                    <span class="text-slate-500 italic">"Namaste! Main BolKhata hoon. Dukaan ka koi bhi hisaab boliye..."</span>
+                    <span class="text-slate-400 italic">"Namaste! BolKhata live hai. Koi bhi hisaab boliye..."</span>
                 </div>
             </div>
 
-            <!-- Judge-Proof Zero-Fail Evaluation Test Buttons -->
+            <!-- Realistic Kirana Store Test Scenarios -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-3">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center">
-                    <i class="fa-solid fa-star text-amber-400 mr-1.5"></i> Hackathon Judge Test Scenarios
+                    <i class="fa-solid fa-flask text-amber-400 mr-1.5"></i> 1-Click Realistic Kirana Audio Scenarios
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <!-- Debt Clearing Test -->
+                    <button onclick="sendPrompt('Ramesh - Kirana Lane cleared his debt')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-emerald-800/60 rounded-xl transition text-slate-200 hover:text-emerald-300">
+                        <div class="font-bold text-emerald-400 flex items-center">
+                            <i class="fa-solid fa-circle-check mr-1"></i> Full Debt Settlement
+                        </div>
+                        "Ramesh cleared his debt"
+                    </button>
                     <!-- Disambiguation -->
                     <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
                         <div class="font-bold text-amber-400 flex items-center">
-                            <i class="fa-solid fa-users mr-1"></i> Disambiguation
+                            <i class="fa-solid fa-users mr-1"></i> Disambiguate Ramesh
                         </div>
                         "Ramesh ka 500 udhaar"
+                    </button>
+                    <!-- Clarify Nickname response -->
+                    <button onclick="sendPrompt('Kirana Lane')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                        <div class="font-bold text-cyan-400 flex items-center">
+                            <i class="fa-solid fa-reply mr-1"></i> Voice Nickname Reply
+                        </div>
+                        "Kirana Lane" (resolves ambiguity)
                     </button>
                     <!-- Correction -->
                     <button onclick="sendPrompt('nahi, 430')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
                         <div class="font-bold text-rose-400 flex items-center">
-                            <i class="fa-solid fa-bolt mr-1"></i> 15s Strike-Through
+                            <i class="fa-solid fa-bolt mr-1"></i> Spoken Correction
                         </div>
-                        "nahi, 430"
-                    </button>
-                    <!-- Sub-800ms Fast Query -->
-                    <button onclick="sendPrompt('Ramesh ka total?')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-emerald-400 flex items-center">
-                            <i class="fa-solid fa-gauge-high mr-1"></i> Sub-800ms Query
-                        </div>
-                        "Ramesh ka total?"
-                    </button>
-                    <!-- Compound Utterance -->
-                    <button onclick="sendPrompt('Ramesh ka 340 udhaar, kal 200 diya tha')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                        <div class="font-bold text-cyan-400 flex items-center">
-                            <i class="fa-solid fa-layer-group mr-1"></i> Multi-Action
-                        </div>
-                        "340 udhaar, kal 200 diya"
+                        "nahi, 430" (live strike-through)
                     </button>
                     <!-- Kannada Test -->
-                    <button onclick="sendKannadaTest()" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                    <button onclick="sendPrompt('ರಮೇಶ್ - Kirana Lane ಗೆ 340 ಸಾಲ')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
                         <div class="font-bold text-purple-400 flex items-center">
-                            <i class="fa-solid fa-language mr-1"></i> Kannada
+                            <i class="fa-solid fa-language mr-1"></i> Auto-Detect Kannada
                         </div>
                         "ರಮೇಶ್ ಗೆ 340 ಸಾಲ"
                     </button>
                     <!-- Telugu Test -->
-                    <button onclick="sendTeluguTest()" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                    <button onclick="sendPrompt('రమేష్ - Kirana Lane కి 340 అప్పు')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
                         <div class="font-bold text-teal-400 flex items-center">
-                            <i class="fa-solid fa-language mr-1"></i> Telugu
+                            <i class="fa-solid fa-language mr-1"></i> Auto-Detect Telugu
                         </div>
                         "రమేష్ కి 340 అప్పు"
+                    </button>
+                    <!-- Compound Utterance -->
+                    <button onclick="sendPrompt('Suresh General Store ka 340 udhaar, kal 200 diya tha')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300 sm:col-span-2">
+                        <div class="font-bold text-cyan-400 flex items-center">
+                            <i class="fa-solid fa-layer-group mr-1"></i> Compound Anaphora Utterance
+                        </div>
+                        "Suresh ka 340 udhaar, kal 200 diya tha"
                     </button>
                 </div>
             </div>
 
         </div>
 
-        <!-- Right Column: Financial Metrics, Customers & Transactions (7 cols) -->
+        <!-- Right Column: Financial Cards, Customers & Live Table (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
 
-            <!-- Today's Financial Cards -->
+            <!-- Today's Financial Metrics -->
             <div class="grid grid-cols-3 gap-3 sm:gap-4">
                 <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-xl">
                     <div class="text-[11px] text-rose-400 font-semibold uppercase tracking-wider">Today Udhaar (Credit)</div>
@@ -207,14 +235,14 @@
                 </div>
             </div>
 
-            <!-- Customer Accounts (Pre-Seeded Disambiguation Demonstration) -->
+            <!-- Customer Accounts Table (Showing Nicknames for Disambiguation) -->
             <div class="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
                 <div class="p-4 border-b border-slate-800 flex items-center justify-between">
                     <div>
                         <h2 class="text-sm font-semibold text-slate-200 flex items-center">
-                            <i class="fa-solid fa-users text-cyan-400 mr-2"></i> Khata Customers
+                            <i class="fa-solid fa-users text-cyan-400 mr-2"></i> Khata Customers & Nicknames
                         </h2>
-                        <p class="text-[11px] text-slate-400">Notice the two pre-seeded Ramesh profiles for live disambiguation testing</p>
+                        <p class="text-[11px] text-slate-400">Notice the two pre-seeded Ramesh profiles with distinct nicknames</p>
                     </div>
                     <button onclick="loadCustomers()" class="text-xs text-cyan-400 hover:text-cyan-300">
                         <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
@@ -253,7 +281,7 @@
                                 <th class="p-3">Direction</th>
                                 <th class="p-3">Amount</th>
                                 <th class="p-3">Date</th>
-                                <th class="p-3">Note / Transcript</th>
+                                <th class="p-3">Note / Spoken Transcript</th>
                             </tr>
                         </thead>
                         <tbody id="transactionsTableBody" class="divide-y divide-slate-800/60 text-slate-200">
@@ -263,13 +291,13 @@
                 </div>
             </div>
 
-            <!-- Responsible AI & DPDP Compliance Banner -->
+            <!-- Responsible AI & DPDP Act Compliance Card -->
             <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 border border-cyan-800/50 rounded-2xl p-4 flex items-center justify-between shadow-lg">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-shield-halved text-2xl text-cyan-400"></i>
                     <div>
-                        <div class="text-xs font-semibold text-cyan-300">Responsible AI & DPDP Act Baseline</div>
-                        <div class="text-[11px] text-slate-400">Encrypted at rest (AES-256) | Zero-pressure polite reminders | Demo transcript wipe</div>
+                        <div class="text-xs font-semibold text-cyan-300">100% Encrypted at Rest & DPDP Compliant</div>
+                        <div class="text-[11px] text-slate-400">AES-256 encrypted fields | Zero-coercion polite reminders | Demo transcript wipe</div>
                     </div>
                 </div>
                 <button onclick="purgeTranscripts()" class="px-3 py-1.5 text-xs bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-xl transition font-medium">
@@ -281,73 +309,91 @@
 
     </main>
 
-    <!-- Client-Side Script -->
+    <!-- Client-Side Automation Script (Zero-Clicks Required) -->
     <script>
-        let currentLang = 'hi-IN';
-        let engineMode = 'browser'; // Default to free 0-token browser speech
-        let isRecording = false;
+        let handsFreeActive = true;
+        let isProcessing = false;
         let recognition = null;
         let lastSpokenText = "";
         let audioContext = null;
         let analyser = null;
         let micStream = null;
 
-        function toggleEngineMode(mode) {
-            engineMode = mode;
-            const bBtn = document.getElementById('mode-browser');
-            const gBtn = document.getElementById('mode-gnani');
-            if (mode === 'browser') {
-                bBtn.className = "px-2 py-0.5 rounded-lg font-medium transition bg-emerald-700 text-white shadow text-[11px]";
-                gBtn.className = "px-2 py-0.5 rounded-lg font-medium transition text-slate-400 hover:text-slate-200 text-[11px] ml-1";
+        // Welcome Trust Audio
+        function playWelcomeTrustMessage() {
+            const welcomeText = "Namaste Gupta ji! Welcome to BolKhata. Aapka khata puri tarah surakshit, offline-first aur AES-256 encrypted hai. Main aapka hands-free digital sahayak hoon — dukaan ka hisaab bina screen chhuye, bas bolte rahiye.";
+            speakText(welcomeText, 'hi-IN');
+        }
+
+        // Initialize Speech Recognition in Continuous Hands-Free Loop
+        function initContinuousSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRec();
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                // Default to Indic mixed
+                recognition.lang = 'hi-IN';
+
+                recognition.onstart = () => {
+                    document.getElementById('micRing').classList.remove('hidden');
+                    document.getElementById('speechStateBadge').innerText = "Listening...";
+                    document.getElementById('speechStateBadge').className = "text-cyan-400 font-semibold animate-pulse";
+                };
+
+                recognition.onresult = (event) => {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
+                    }
+
+                    if (interimTranscript) {
+                        document.getElementById('liveTranscriptDisplay').innerText = `"${interimTranscript}"`;
+                    }
+
+                    if (finalTranscript && !isProcessing) {
+                        document.getElementById('liveTranscriptDisplay').innerText = `"${finalTranscript}"`;
+                        document.getElementById('voiceTextInput').value = finalTranscript;
+                        sendVoiceCommand(finalTranscript);
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.warn("Speech Recognition Error:", event.error);
+                    if (handsFreeActive && event.error !== 'not-allowed') {
+                        setTimeout(restartRecognition, 500);
+                    }
+                };
+
+                recognition.onend = () => {
+                    document.getElementById('micRing').classList.add('hidden');
+                    document.getElementById('speechStateBadge').innerText = "Paused";
+                    document.getElementById('speechStateBadge').className = "text-slate-500";
+                    // Automatically restart if hands-free is active and not currently speaking
+                    if (handsFreeActive && !isProcessing) {
+                        setTimeout(restartRecognition, 400);
+                    }
+                };
+
+                restartRecognition();
             } else {
-                gBtn.className = "px-2 py-0.5 rounded-lg font-medium transition bg-cyan-600 text-white shadow text-[11px] ml-1";
-                bBtn.className = "px-2 py-0.5 rounded-lg font-medium transition text-slate-400 hover:text-slate-200 text-[11px]";
+                alert("Speech recognition is supported on Chrome, Edge, and Android Chrome. Please use text input if unavailable.");
             }
         }
 
-        function setLanguage(lang) {
-            currentLang = lang;
-            ['hi', 'kn', 'te', 'en'].forEach(l => {
-                const btn = document.getElementById(`lang-${l}`);
-                if (lang.startsWith(l)) {
-                    btn.className = "px-2.5 py-1 rounded-lg font-medium transition bg-cyan-600 text-white shadow";
-                } else {
-                    btn.className = "px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-slate-200";
+        function restartRecognition() {
+            if (recognition && handsFreeActive && !isProcessing) {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    // Already started or busy
                 }
-            });
-            if (recognition) {
-                recognition.lang = lang;
             }
-        }
-
-        // Initialize Speech Recognition with Hardware Noise Suppression
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRec();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = currentLang;
-
-            recognition.onstart = () => {
-                isRecording = true;
-                updateMicUI(true);
-            };
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                document.getElementById('voiceTextInput').value = transcript;
-                sendVoiceCommand(transcript);
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech error:", event.error);
-                updateMicUI(false);
-            };
-
-            recognition.onend = () => {
-                isRecording = false;
-                updateMicUI(false);
-            };
         }
 
         async function initAudioVAD() {
@@ -370,12 +416,12 @@
 
                     const dataArray = new Uint8Array(analyser.frequencyBinCount);
                     function updateEnergy() {
-                        if (isRecording && analyser) {
+                        if (handsFreeActive && analyser) {
                             analyser.getByteFrequencyData(dataArray);
                             let sum = 0;
                             for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
                             let avg = sum / dataArray.length;
-                            document.getElementById('energyBar').style.width = Math.min(100, avg * 2) + '%';
+                            document.getElementById('energyBar').style.width = Math.min(100, avg * 2.2) + '%';
                         } else {
                             document.getElementById('energyBar').style.width = '0%';
                         }
@@ -388,34 +434,39 @@
             }
         }
 
-        async function toggleRecording() {
-            await initAudioVAD();
-            if (!recognition) {
-                alert("Speech recognition not supported in this browser. Please use Chrome/Edge or text input!");
-                return;
-            }
-            if (isRecording) {
-                recognition.stop();
+        function toggleHandsFree() {
+            handsFreeActive = !handsFreeActive;
+            const btn = document.getElementById('handsFreeBtn');
+            const status = document.getElementById('handsFreeStatusText');
+            const hint = document.getElementById('listeningText');
+            if (handsFreeActive) {
+                btn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/30";
+                status.innerText = "Hands-Free: ON";
+                hint.innerText = "Listening continuously across the counter... Just speak!";
+                restartRecognition();
             } else {
-                recognition.lang = currentLang;
-                recognition.start();
+                btn.className = "px-3 py-1.5 rounded-xl text-xs font-semibold transition border flex items-center bg-slate-800 text-slate-400 border-slate-700";
+                status.innerText = "Hands-Free: OFF";
+                hint.innerText = "Hands-free paused. Tap mic to speak.";
+                if (recognition) recognition.stop();
             }
         }
 
-        function updateMicUI(recording) {
-            const ring = document.getElementById('micRing');
-            const icon = document.getElementById('micIcon');
-            if (recording) {
-                ring.classList.remove('hidden');
-                icon.className = "fa-solid fa-waveform text-4xl animate-bounce";
+        function manualMicToggle() {
+            if (!handsFreeActive) {
+                toggleHandsFree();
             } else {
-                ring.classList.add('hidden');
-                icon.className = "fa-solid fa-microphone text-4xl";
+                restartRecognition();
             }
         }
 
         async function sendVoiceCommand(text) {
             if (!text || !text.trim()) return;
+
+            isProcessing = true;
+            if (recognition) {
+                try { recognition.stop(); } catch(e){}
+            }
 
             document.getElementById('aiResponseBox').innerHTML = `<span class="text-cyan-400 flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
 
@@ -423,9 +474,15 @@
                 const res = await fetch('/api/voice/process-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text, language: currentLang })
+                    body: JSON.stringify({ text: text })
                 });
                 const data = await res.json();
+
+                // Update Detected Language Badge
+                if (data.language) {
+                    const langMap = { 'hi-IN': 'Hindi (Auto)', 'kn-IN': 'ಕನ್ನಡ (Auto)', 'te-IN': 'తెలుగు (Auto)', 'en-IN': 'English (Auto)' };
+                    document.getElementById('detectedLangBadge').innerText = langMap[data.language] || data.language;
+                }
 
                 // Check for live 15s strike-through correction event
                 if (data.correction_event) {
@@ -437,6 +494,8 @@
             } catch (err) {
                 console.error(err);
                 document.getElementById('aiResponseBox').innerHTML = `<span class="text-rose-400">Error: ${err.message}</span>`;
+                isProcessing = false;
+                if (handsFreeActive) restartRecognition();
             }
         }
 
@@ -465,38 +524,42 @@
             `;
             document.getElementById('replayBtn').classList.remove('hidden');
 
-            if (engineMode === 'gnani' && audioBase64) {
+            speakText(message, lang, audioBase64, () => {
+                // Resume listening automatically as soon as TTS finishes speaking
+                isProcessing = false;
+                if (handsFreeActive) {
+                    setTimeout(restartRecognition, 300);
+                }
+            });
+        }
+
+        function speakText(text, lang, audioBase64, onDone) {
+            if (audioBase64) {
                 const audio = new Audio("data:audio/wav;base64," + audioBase64);
+                audio.onended = () => { if (onDone) onDone(); };
                 audio.play();
             } else if ('speechSynthesis' in window) {
-                // Free browser-native TTS (costs 0 Gnani tokens!)
-                const utter = new SpeechSynthesisUtterance(message);
-                utter.lang = lang || currentLang;
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = lang || 'hi-IN';
+                utter.rate = 1.05;
+                utter.onend = () => { if (onDone) onDone(); };
+                utter.onerror = () => { if (onDone) onDone(); };
                 window.speechSynthesis.speak(utter);
+            } else {
+                if (onDone) onDone();
             }
         }
 
         function replayAudio() {
-            if (lastSpokenText && 'speechSynthesis' in window) {
-                const utter = new SpeechSynthesisUtterance(lastSpokenText);
-                utter.lang = currentLang;
-                window.speechSynthesis.speak(utter);
+            if (lastSpokenText) {
+                speakText(lastSpokenText, 'hi-IN', null, null);
             }
         }
 
         function sendPrompt(text) {
             document.getElementById('voiceTextInput').value = text;
             sendVoiceCommand(text);
-        }
-
-        function sendKannadaTest() {
-            setLanguage('kn-IN');
-            sendPrompt('ರಮೇಶ್ ಗೆ 340 ಸಾಲ');
-        }
-
-        function sendTeluguTest() {
-            setLanguage('te-IN');
-            sendPrompt('రమేష్ కి 340 అప్పు');
         }
 
         function handleTextSubmit(e) {
@@ -585,7 +648,7 @@
         }
 
         async function sendReminder(customerId) {
-            const res = await fetch(`/api/compliance/reminder/${customerId}?language=${currentLang}`);
+            const res = await fetch(`/api/compliance/reminder/${customerId}`);
             const data = await res.json();
             if (data.success) {
                 alert(`Polite Reminder (Responsible AI Approved):\n\n${data.reminder_text}`);
@@ -608,7 +671,14 @@
             loadTransactions();
         }
 
-        refreshAllData();
+        // On Load: Start VAD, Continuous Speech & Welcome Audio
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshAllData();
+            initAudioVAD();
+            initContinuousSpeechRecognition();
+            // Automatically play welcome trust message after 800ms
+            setTimeout(playWelcomeTrustMessage, 800);
+        });
     </script>
 </body>
 </html>

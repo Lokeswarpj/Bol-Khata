@@ -129,6 +129,16 @@ async def run_all_tests():
         assert compound_resp.success is True
         print(f"  ✓ Multi-Action Response: \"{compound_resp.message}\"")
 
+        # 3f. Debt Clearing Test: "Suresh cleared his debt"
+        print("\n[TEST 7] Full Debt Settlement & Clearing:")
+        clear_resp = await ledger.process_voice_command("Suresh cleared his debt", session_id="live_demo_session")
+        assert clear_resp.success is True
+        print(f"  ✓ Debt Clearing Response: \"{clear_resp.message}\"")
+        suresh_cust = await ledger.find_customer_exact("Suresh General Store")
+        suresh_bal = await ledger.get_customer_balance(suresh_cust.id)
+        assert suresh_bal == 0.0, f"Expected Suresh balance to be 0.0, got {suresh_bal}"
+        print(f"  ✓ Confirmed Suresh balance is ₹{suresh_bal} (Debt completely cleared!)")
+
         # 3f. Kannada Execution Test
         print("\n[TEST 7] Kannada Ledger Execution:")
         kn_exec_resp = await ledger.process_voice_command("Suresh ge 150 saala", session_id="live_demo_session", language="kn-IN")
