@@ -5,7 +5,10 @@ import { GlassCard } from '../components/GlassCard';
 import { LinkUnderline } from '../components/LinkUnderline';
 import { Reveal } from '../components/Reveal';
 import { CountUp } from '../components/CountUp';
-import { Blob } from '../components/Blob';
+import { BolKhataLogo } from '../components/BolKhataLogo';
+import { VoiceKhataBackground3D } from '../components/VoiceKhataBackground3D';
+import { HeroVoiceVisualizer3D } from '../components/HeroVoiceVisualizer3D';
+import { DemoModal } from '../components/DemoModal';
 import { useLedgerStore } from '../store/useLedgerStore';
 import {
   Terminal,
@@ -29,6 +32,7 @@ interface LandingPageProps {
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLedger, onOpenDemo }) => {
   const [scrolled, setScrolled] = useState(false);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const { benchmarkMetrics } = useLedgerStore();
   const heroRef = useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -84,25 +88,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLedger, onOpenDe
   ];
 
   return (
-    <div className="min-h-screen bg-ink text-paper selection:bg-emerald-500/20 selection:text-emerald-400 relative overflow-x-hidden">
-      {/* Background Morphing Blobs */}
-      <Blob />
+    <div className="min-h-screen bg-transparent text-paper selection:bg-emerald-500/20 selection:text-emerald-400 relative overflow-x-hidden">
+      {/* 3D Voice AI & Khata Perspective Hologram Background */}
+      <VoiceKhataBackground3D />
 
-      {/* Fixed Navbar */}
+      {/* Fixed Frosted Glass Navbar */}
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-          scrolled ? 'bg-black/80 backdrop-blur-md border-b border-white/10 py-3' : 'bg-transparent py-5'
+          scrolled
+            ? 'bg-black/20 backdrop-blur-xl border-b border-white/10 py-3.5 shadow-[0_8px_32px_rgba(0,0,0,0.25)]'
+            : 'bg-transparent py-5'
         }`}
       >
         <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
-          {/* Left: Command icon rotating 360deg on hover */}
+          {/* Left: BolKhata Emblem Logo */}
           <div
             className="flex items-center gap-3 cursor-pointer group"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
-            <div className="w-10 h-10 rounded-2xl bg-white text-ink flex items-center justify-center transition-transform duration-700 ease-weighted group-hover:rotate-[360deg] shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-              <Terminal className="w-5 h-5" />
-            </div>
+            <BolKhataLogo size="md" />
             <div>
               <span className="font-serif text-xl tracking-tight font-medium text-white block leading-none">
                 BolKhata
@@ -170,7 +174,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLedger, onOpenDe
                   Try the Live Ledger <ArrowRight className="w-4 h-4 text-emerald-600" />
                 </GlowPill>
 
-                <GlowPill variant="ghost" onClick={onOpenDemo} className="gap-2">
+                <GlowPill variant="ghost" onClick={() => setIsDemoModalOpen(true)} className="gap-2">
                   <Play className="w-4 h-4 fill-current ml-0.5" /> See the 5-step demo
                 </GlowPill>
               </div>
@@ -185,75 +189,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLedger, onOpenDe
             </Reveal>
           </div>
 
-          {/* Hero Right - Floating Mock Glass Cards */}
+          {/* Hero Right - 3D Interactive Voice AI & Holographic Khata Showcase */}
           <div className="lg:col-span-5 relative">
-            <div
-              className="relative w-full max-w-md mx-auto space-y-4"
-              style={{
-                transform: `translate(${mousePos.x}px, ${mousePos.y}px)`,
-                transition: 'transform 0.2s ease-out'
-              }}
-            >
-              {/* Sample Entry Card */}
-              <GlassCard
-                shimmer
-                className="p-5 border-emerald-500/30 shadow-[0_15px_35px_rgba(0,0,0,0.6)] animate-in fade-in zoom-in-95 duration-700"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <MonoLabel variant="emerald" pulseDot>
-                    CONFIRMED ENTRY
-                  </MonoLabel>
-                  <span className="text-[10px] text-white/30 font-mono">SAMPLE</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-lg text-white">Ramesh Kumar</h3>
-                    <p className="text-xs text-white/40 italic">"Ramesh ka 340 udhaar"</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-serif text-3xl text-rose-400 font-normal">
-                      +₹340
-                    </span>
-                    <span className="text-[10px] text-rose-300 block">Udhaar Recorded</span>
-                  </div>
-                </div>
-              </GlassCard>
-
-              {/* Live Waveform Mock */}
-              <GlassCard className="p-4 border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                    <Activity className="w-4 h-4 animate-pulse" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-white/80 font-medium">Gnani.ai Streaming STT</div>
-                    <div className="text-[10px] text-emerald-400 font-mono">16 kHz 16-bit PCM • Real-Time</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 h-6">
-                  {[12, 24, 18, 30, 22, 14, 28, 16].map((h, i) => (
-                    <span
-                      key={i}
-                      style={{ height: `${h}px` }}
-                      className="w-1 bg-emerald-400 rounded-full animate-pulse"
-                    />
-                  ))}
-                </div>
-              </GlassCard>
-
-              {/* Balance Summary Mock */}
-              <GlassCard className="p-5 border-white/10 flex items-center justify-between">
-                <div>
-                  <MonoLabel variant="muted">TODAY'S NET COLLECTION</MonoLabel>
-                  <div className="font-serif text-3xl text-emerald-400 mt-1">
-                    ₹14,820
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400">
-                  <TrendingUp className="w-5 h-5" />
-                </div>
-              </GlassCard>
-            </div>
+            <HeroVoiceVisualizer3D onOpenLedger={onOpenLedger} />
           </div>
         </div>
       </section>
@@ -302,6 +240,81 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLedger, onOpenDe
               </Reveal>
             );
           })}
+        </div>
+      </section>
+
+      {/* 5-Step Interactive Walkthrough Section */}
+      <section id="how-it-works" className="py-24 px-6 max-w-6xl mx-auto border-t border-white/5 relative">
+        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+          <MonoLabel variant="emerald" pulseDot>
+            STEP-BY-STEP WORKFLOW
+          </MonoLabel>
+          <h2 className="font-serif text-4xl sm:text-5xl tracking-tight text-white font-normal">
+            How BolKhata Works
+          </h2>
+          <p className="text-white/60 text-sm font-light">
+            Designed for busy retail counters: 5 natural conversational steps from initial utterance to zero paper.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[
+            {
+              step: '01',
+              title: 'Speak the Sale',
+              phrase: '"Ramesh ka 340 udhaar"',
+              desc: 'Code-mixed Indic speech is parsed in real time, identifying customer and amount.',
+              badge: 'VOICE STT'
+            },
+            {
+              step: '02',
+              title: 'Spoken Feedback',
+              phrase: '"Theek hai, 340 udhaar likha"',
+              desc: 'Speaks immediate confirmation back so the shopkeeper never needs to look down.',
+              badge: 'AUDIO CONFIRM'
+            },
+            {
+              step: '03',
+              title: '15s Correction',
+              phrase: '"Nahi, 430"',
+              desc: 'Mistakes amended in-place with animated strike-through without duplicate records.',
+              badge: 'STRIKE-THROUGH'
+            },
+            {
+              step: '04',
+              title: 'Disambiguation',
+              phrase: '"Kirana Lane wale"',
+              desc: 'Location-aware prompts clarify identical names instantly.',
+              badge: 'SMART RESOLVE'
+            },
+            {
+              step: '05',
+              title: 'Query & Settle',
+              phrase: '"Suresh debt clear"',
+              desc: 'Sub-2s balance retrieval and single-sentence zero debt settlement.',
+              badge: 'SETTLED'
+            }
+          ].map((item) => (
+            <GlassCard key={item.step} className="p-5 border-white/10 flex flex-col justify-between hover:border-emerald-500/40 transition-all group">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-emerald-400 font-bold text-sm">{item.step}</span>
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-white/50 border border-white/10">{item.badge}</span>
+                </div>
+                <h4 className="font-serif text-lg text-white font-normal group-hover:text-emerald-300 transition-colors">{item.title}</h4>
+                <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-white/80 font-serif italic">
+                  {item.phrase}
+                </div>
+                <p className="text-xs text-white/50 leading-relaxed font-light">{item.desc}</p>
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <GlowPill variant="primary" onClick={() => setIsDemoModalOpen(true)} className="gap-2">
+            <Play className="w-4 h-4 fill-current ml-0.5" /> Launch Interactive 5-Step Demo Viewer
+          </GlowPill>
         </div>
       </section>
 
@@ -395,6 +408,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLedger, onOpenDe
       <footer className="border-t border-white/5 py-8 px-6 text-center text-xs text-white/40 font-mono">
         BOLKHATA • TEAM DRONA • SJCIT • PS2 VOICE KHATA
       </footer>
+
+      {/* 5-Step Interactive Walkthrough Modal */}
+      <DemoModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+        onLaunchApp={onOpenLedger}
+      />
     </div>
   );
 };

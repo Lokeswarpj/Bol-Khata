@@ -19,8 +19,9 @@ export const SettingsModal: React.FC = () => {
           <label className="text-xs text-white/50 block mb-2 font-mono uppercase tracking-wider">
             Voice & UI Language
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             {[
+              { id: 'auto', label: 'Auto (Detect)' },
               { id: 'hi-IN', label: 'Hindi (हिंदी)' },
               { id: 'en-IN', label: 'English (Indian)' },
               { id: 'kn-IN', label: 'Kannada (ಕನ್ನಡ)' },

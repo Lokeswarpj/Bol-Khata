@@ -30,15 +30,15 @@ build/
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs & Cache
 *.log
+.audio_cache/
+*.pcm
+*.wav
 
-# Node (frontend - later)
+# Node (frontend)
 node_modules/
 .next/
-
-# Audio Cache
-.audio_cache/
-*.wav
+dist/
 *.mp3
 

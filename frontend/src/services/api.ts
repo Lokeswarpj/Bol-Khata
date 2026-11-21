@@ -190,7 +190,6 @@ export const api = {
     if (!res.ok) throw new Error('Failed to register store owner');
     return res.json();
   },
-
   // Voice Process REST Fallback
   async processTextVoice(text: string, language = 'hi-IN') {
     const res = await fetch(`${API_BASE}/voice/process-text`, {

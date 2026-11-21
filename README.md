@@ -15,19 +15,6 @@ BolKhata listens across the counter, parses code-mixed Indic-English shop speech
 
 ---
 
-## 🎯 Hackathon Criteria Alignment & What Makes It a Winner
-
-| Required Track Requirement | How BolKhata Solves It | Technical Implementation |
-|---|---|---|
-| **1. Numbers Under Noise** | Captures spoken numerals in any code-mixed format: `"340"`, `"teen sau chaalis"`, `"three-forty"`, and Indian Kirana idioms (`"dedh sau"`, `"dhai sau"`, `"sadhe teen sau"`). | Advanced hierarchical token stream parsing + colloquial English compound solver in `app/services/number_parser.py`. |
-| **2. Compound & Anaphora Ledger Logic** | Accurately processes `"Ramesh ka 340 udhaar, kal 200 diya tha"` by creating two ledger entries: ₹340 credit today, and ₹200 payment for yesterday (*kal*), inheriting the customer name across clauses. | Multi-clause tokenizer, anaphora resolver & temporal relative date engine in `app/services/nlu_parser.py`. |
-| **3. Spoken Corrections** | Spoken cues like `"nahi, 430"` instantly supersede and correct the previous erroneous transaction in session memory. | Contextual session state machine in `app/services/session_state.py` & atomic SQL correction replacement. |
-| **4. Spoken Disambiguation** | If two customers share a name (e.g. Ramesh Sharma vs. Ramesh Verma), asks: *"Kaun wale Ramesh?"* and waits for conversational resolution. | Stateful pending action queue in `session_manager` with fuzzy name prefix matching. |
-| **5. Sub-2s Voice Answers** | Instant answers to queries like `"Aaj kitna udhaar gaya?"` or `"Ramesh ka total?"`. | High-performance pre-aggregated async SQL queries + Gnani Timbre TTS streaming. |
-| **6. Responsible AI & DPDP Guardrails** | AI disclosure on 1st turn (`"Namaste! Main BolKhata hoon..."`), opt-in-only polite reminders with zero coercive/threat language, AES-256 encrypted fields, and one-click demo transcript purge. | Compliant rules engine in `app/services/reminder_service.py` & `app/routers/compliance.py`. |
-
----
-
 ## 🛠️ Architecture & Tech Stack
 
 ```

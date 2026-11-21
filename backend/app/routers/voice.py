@@ -191,6 +191,7 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
             if msg_type == "audio":
                 # Decode and transcribe audio
                 audio_b64 = message.get("data", "")
+                content_type = message.get("content_type", "audio/wav")
                 if not audio_b64:
                     await websocket.send_json({
                         "type": "error",
@@ -202,6 +203,7 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
                 stt_result = await stt_service.transcribe_audio(
                     audio_data=audio_data,
                     language=language,
+                    content_type=content_type,
                 )
                 
                 if not stt_result["success"] or not stt_result["transcript"]:

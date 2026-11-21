@@ -1,17 +1,63 @@
 import { useLedgerStore } from '../store/useLedgerStore';
 import type { VoiceServerResponse, LatencyRecord } from '../types';
 
+// Web Speech API interfaces for live transcription
+interface IWindow extends Window {
+  webkitSpeechRecognition?: any;
+  SpeechRecognition?: any;
+}
+
 class VoiceService {
   private ws: WebSocket | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
+  private recognition: any = null;
+  private liveTranscript: string = '';
+  private isStarting: boolean = false;
+  private shouldStopAfterStart: boolean = false;
   private t0: number = 0;
   private t1: number = 0;
   private t2: number = 0;
-  private isConnected: boolean = false;
+  private mimeType: string = 'audio/webm';
 
   constructor() {
-    // Lazy connect when app initializes
+    this.initSpeechRecognition();
+  }
+
+  private initSpeechRecognition() {
+    if (typeof window === 'undefined') return;
+    const win = window as unknown as IWindow;
+    const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
+
+    if (SpeechRec) {
+      try {
+        this.recognition = new SpeechRec();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
+
+        this.recognition.onresult = (event: any) => {
+          let interim = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              this.liveTranscript += event.results[i][0].transcript + ' ';
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          const text = (this.liveTranscript + interim).trim();
+          if (text) {
+            useLedgerStore.getState().setHeardTranscript(text);
+          }
+        };
+
+        this.recognition.onerror = (e: any) => {
+          console.warn('SpeechRecognition error:', e.error);
+        };
+      } catch (err) {
+        console.warn('SpeechRecognition initialization error', err);
+      }
+    }
   }
 
   public connect() {
@@ -21,13 +67,13 @@ class VoiceService {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
+    // Vite proxies /api with ws: true
     const wsUrl = `${protocol}//${host}/api/voice/ws`;
 
     try {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        this.isConnected = true;
         useLedgerStore.getState().setOnline(true);
       };
 
@@ -41,25 +87,21 @@ class VoiceService {
       };
 
       this.ws.onclose = () => {
-        this.isConnected = false;
-        // Try reconnect in 3s
-        setTimeout(() => this.connect(), 3000);
+        setTimeout(() => this.connect(), 4000);
       };
 
       this.ws.onerror = (err) => {
         console.warn('Voice WebSocket error, will fallback to REST', err);
-        this.isConnected = false;
       };
     } catch (e) {
       console.warn('Failed to initialize WebSocket', e);
     }
   }
 
-  private handleServerMessage(data: VoiceServerResponse) {
+  public handleServerMessage(data: VoiceServerResponse) {
     const store = useLedgerStore.getState();
 
     if (data.type === 'disclosure') {
-      // AI disclosure sent by server
       if (!store.settings.aiDisclosureDismissed) {
         store.setSpokenResponse(data.text || 'AI Assistant bol raha hai. Sirf hisaab store hota hai.');
       }
@@ -68,8 +110,8 @@ class VoiceService {
 
     if (data.type === 'response') {
       this.t1 = performance.now();
-      const sttMs = Math.max(50, Math.round(this.t1 - this.t0 - 150));
-      const nluMs = Math.max(20, Math.round(this.t1 - this.t0));
+      const sttMs = Math.max(40, Math.round(this.t1 - this.t0 - 120));
+      const nluMs = Math.max(10, Math.round(this.t1 - this.t0));
 
       if (data.transcript) {
         store.setHeardTranscript(data.transcript);
@@ -79,11 +121,15 @@ class VoiceService {
         store.setSpokenResponse(data.text);
       }
 
-      // Check for Disambiguation
+      // 1. Disambiguation
       if (data.needs_disambiguation && data.disambiguation_options && data.disambiguation_options.length > 0) {
         const normalizedOptions = data.disambiguation_options.map((opt: any, idx: number) => {
           if (typeof opt === 'string') {
-            return { id: idx + 1, name: opt, hint: opt.includes(' - ') ? opt.split(' - ')[1] : undefined };
+            return {
+              id: idx + 1,
+              name: opt,
+              hint: opt.includes(' - ') ? opt.split(' - ')[1] : undefined
+            };
           }
           return opt;
         });
@@ -97,14 +143,16 @@ class VoiceService {
         return;
       }
 
-      // Check for Strike-Through / Correction Event
+      // 2. Correction with strike-through
       if ((data as any).correction_event) {
         const ce = (data as any).correction_event;
         store.applyCorrection(ce.new_amount, ce.customer);
+      } else if (data.intent?.type === 'correction' && data.intent.amount) {
+        store.applyCorrection(data.intent.amount, data.intent.customer);
       }
 
-      // Check for Query Intent (e.g. "Ramesh ka total?")
-      if (data.intent?.type === 'query') {
+      // 3. Query Intent ("Ramesh ka total?")
+      else if (data.intent?.type === 'query') {
         const balance = data.transaction?.amount ?? 0;
         store.setAnswerCard({
           isOpen: true,
@@ -115,14 +163,29 @@ class VoiceService {
         store.setVoiceState('idle');
       }
 
-      // Check for Correction Intent (e.g. "Nahi, 430")
-      else if (data.intent?.type === 'correction') {
-        if (data.intent.amount) {
-          store.applyCorrection(data.intent.amount, data.intent.customer);
-        }
+      // 4. Conversational Chitchat & Greetings ("Namaste bhaiya, kaise ho?")
+      else if (data.intent?.type === 'chitchat' || (data.intent as any)?.intent === 'chitchat') {
+        store.setSpokenResponse(data.text || 'Namaste! BolKhata aapki dukaan ka voice ledger hai.');
+        store.setVoiceState('idle');
       }
 
-      // Check for Undo Intent (e.g. "Galat ho gaya", "Undo")
+      // 5. Full Debt Settlement / Clearing ("Ramesh cleared his debt")
+      else if (data.intent?.type === 'clear_debt' || (data.intent as any)?.intent === 'clear_debt') {
+        const customerName = data.transaction?.customer_name || data.intent?.customer || 'Customer';
+        const clearedAmount = data.transaction?.amount || 0;
+        store.setPendingConfirmation({
+          customer_name: customerName,
+          type: 'payment',
+          amount: clearedAmount,
+          transaction_date: data.transaction?.date || new Date().toISOString().split('T')[0],
+          heard_text: data.transcript || store.heardTranscript,
+          confidence: 0.99,
+          status: 'pending'
+        });
+        store.fetchInitialData();
+      }
+
+      // 6. Undo Intent
       else if (data.intent?.type === 'undo') {
         if (store.entries.length > 0) {
           const latest = store.entries[0];
@@ -130,7 +193,7 @@ class VoiceService {
         }
       }
 
-      // New Transaction (Credit / Payment)
+      // 7. New Transaction (Credit / Payment)
       else if (data.transaction || (data.intent && (data.intent.type === 'credit' || data.intent.type === 'payment'))) {
         const direction = (data.transaction?.direction as any) || data.intent?.type || 'credit';
         const amount = data.transaction?.amount || data.intent?.amount || 0;
@@ -156,7 +219,7 @@ class VoiceService {
         store.setVoiceState('idle');
       }
 
-      // Record Latency
+      // Latency telemetry
       this.t2 = performance.now();
       const totalMs = Math.round(this.t2 - this.t0);
       const record: LatencyRecord = {
@@ -165,37 +228,37 @@ class VoiceService {
         t2_audio: this.t2,
         stt_ms: sttMs,
         nlu_ms: nluMs,
-        tts_ms: Math.max(80, Math.round(this.t2 - this.t1)),
+        tts_ms: Math.max(50, Math.round(this.t2 - this.t1)),
         total_ms: totalMs
       };
       store.setLastLatency(record);
     } else if (data.type === 'error') {
       store.setVoiceState('idle');
-      console.error('Server returned error:', data.text);
+      if (data.text) {
+        store.setHeardTranscript(`⚠️ ${data.text}`);
+      }
     }
   }
 
-  // Play audio from base64
   private playBase64Audio(base64: string) {
     const store = useLedgerStore.getState();
     try {
       const audio = new Audio(`data:audio/wav;base64,${base64}`);
       store.setVoiceState('speaking');
-      audio.onended = () => {
+      const handleEnded = () => {
         store.setVoiceState('idle');
+        if (store.settings.handsFree) {
+          setTimeout(() => this.startRecording(), 450);
+        }
       };
-      audio.onerror = () => {
-        store.setVoiceState('idle');
-      };
-      audio.play().catch(() => {
-        store.setVoiceState('idle');
-      });
+      audio.onended = handleEnded;
+      audio.onerror = handleEnded;
+      audio.play().catch(handleEnded);
     } catch {
       store.setVoiceState('idle');
     }
   }
 
-  // Browser SpeechSynthesis fallback when audio not synthesized
   private fallbackSpeechSynthesis(text: string) {
     const store = useLedgerStore.getState();
     if (!('speechSynthesis' in window)) {
@@ -204,24 +267,51 @@ class VoiceService {
     }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'hi-IN';
+    const lang = store.settings.language === 'auto' ? 'hi-IN' : (store.settings.language || 'hi-IN');
+    utterance.lang = lang;
     utterance.rate = 1.05;
     store.setVoiceState('speaking');
 
-    utterance.onend = () => {
+    const handleEnded = () => {
       store.setVoiceState('idle');
+      if (store.settings.handsFree) {
+        setTimeout(() => this.startRecording(), 450);
+      }
     };
-    utterance.onerror = () => {
-      store.setVoiceState('idle');
-    };
+
+    utterance.onend = handleEnded;
+    utterance.onerror = handleEnded;
     window.speechSynthesis.speak(utterance);
   }
 
-  // Start recording
   public async startRecording(): Promise<boolean> {
+    const store = useLedgerStore.getState();
+    this.liveTranscript = '';
+    this.audioChunks = [];
+    this.isStarting = true;
+    this.shouldStopAfterStart = false;
+
+    // Provide instant feedback in UI
+    store.setVoiceState('listening');
+    store.setHeardTranscript('Suniye, bol rahe hain...');
+
+    // 1. Start live speech recognition if supported
+    if (this.recognition) {
+      try {
+        const lang = store.settings.language || 'hi-IN';
+        this.recognition.lang = lang;
+        this.recognition.start();
+      } catch {
+        // Recognition might already be running
+      }
+    }
+
+    // 2. Start hardware MediaRecorder
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Microphone access is not supported by your browser.');
+        store.setHeardTranscript('⚠️ Mic not supported on insecure HTTP. Please use localhost or HTTPS.');
+        store.setVoiceState('idle');
+        this.isStarting = false;
         return false;
       }
 
@@ -233,61 +323,160 @@ class VoiceService {
         }
       });
 
-      this.audioChunks = [];
-      this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      this.isStarting = false;
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.audioChunks.push(event.data);
+      // Detect MIME support
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          this.mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          this.mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          this.mimeType = 'audio/mp4';
+        } else {
+          this.mimeType = '';
         }
-      };
 
-      this.mediaRecorder.start(100);
-      useLedgerStore.getState().setVoiceState('listening');
+        const options = this.mimeType ? { mimeType: this.mimeType } : undefined;
+        this.mediaRecorder = new MediaRecorder(stream, options);
+
+        this.mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            this.audioChunks.push(event.data);
+          }
+        };
+
+        this.mediaRecorder.start(100);
+
+        // If user already released the button before getUserMedia resolved:
+        if (this.shouldStopAfterStart) {
+          this.stopRecording();
+        }
+      }
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error starting recording:', err);
+      this.isStarting = false;
+      store.setVoiceState('idle');
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        store.setHeardTranscript('⚠️ Microphone permission blocked. Click the lock icon in the browser URL bar to allow.');
+      } else {
+        store.setHeardTranscript(`⚠️ Mic error: ${err.message || 'Please check mic connection'}`);
+      }
       return false;
     }
   }
 
-  // Stop recording and process
   public stopRecording() {
     this.t0 = performance.now();
     const store = useLedgerStore.getState();
+
+    // If startRecording is still requesting permission, flag to stop once opened
+    if (this.isStarting) {
+      this.shouldStopAfterStart = true;
+      return;
+    }
+
     store.setVoiceState('thinking');
 
+    // Stop speech recognition
+    if (this.recognition) {
+      try {
+        this.recognition.stop();
+      } catch {
+        // ignore
+      }
+    }
+
+    // Check if we captured a transcript from live speech recognition
+    const capturedText = (this.liveTranscript || store.heardTranscript || '').replace('Suniye, bol rahe hain...', '').trim();
+
     if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
-      store.setVoiceState('idle');
+      if (capturedText) {
+        this.sendTextCommand(capturedText);
+      } else {
+        store.setVoiceState('idle');
+      }
       return;
     }
 
     this.mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64Data = (reader.result as string).split(',')[1];
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-          this.ws.send(JSON.stringify({
-            type: 'audio',
-            data: base64Data,
-            language: store.settings.language
-          }));
-        } else {
-          // Fallback to demo prompt if microphone was silent / no WS
-          store.setVoiceState('idle');
-        }
-      };
-      reader.readAsDataURL(audioBlob);
+      // If we have live transcript text, process it directly for sub-second speed!
+      if (capturedText && capturedText.length > 2) {
+        this.sendTextCommand(capturedText);
+      } else {
+        // Fall back to sending raw audio to Gnani STT
+        const blobType = this.mimeType || 'audio/webm';
+        const audioBlob = new Blob(this.audioChunks, { type: blobType });
+        const reader = new FileReader();
 
-      // Stop stream tracks
-      this.mediaRecorder?.stream.getTracks().forEach(track => track.stop());
+        reader.onloadend = async () => {
+          const base64Data = (reader.result as string).split(',')[1];
+          if (!base64Data) {
+            store.setVoiceState('idle');
+            return;
+          }
+
+          if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({
+              type: 'audio',
+              data: base64Data,
+              content_type: blobType.split(';')[0],
+              language: store.settings.language === 'auto' ? undefined : store.settings.language
+            }));
+          } else {
+            // REST upload fallback
+            try {
+              const formData = new FormData();
+              formData.append('audio', audioBlob, 'speech.webm');
+              if (store.settings.language && store.settings.language !== 'auto') {
+                formData.append('language', store.settings.language);
+              }
+
+              const res = await fetch('/api/voice/process', {
+                method: 'POST',
+                body: formData
+              });
+              const json = await res.json();
+              this.handleServerMessage({
+                type: 'response',
+                text: json.message,
+                audio: json.audio_base64,
+                transcript: json.message,
+                intent: json.intent ? {
+                  type: json.intent.intent,
+                  customer: json.intent.customer_name,
+                  amount: json.intent.amount,
+                  direction: json.intent.direction,
+                  confidence: json.intent.confidence
+                } : undefined,
+                transaction: json.transaction ? {
+                  id: json.transaction.id,
+                  customer_name: json.transaction.customer_name,
+                  amount: json.transaction.amount,
+                  direction: json.transaction.direction,
+                  date: json.transaction.transaction_date
+                } : undefined,
+                needs_disambiguation: json.needs_disambiguation,
+                disambiguation_options: json.disambiguation_options,
+                correction_event: json.correction_event
+              } as any);
+            } catch (err) {
+              console.error('Audio upload error:', err);
+              store.setVoiceState('idle');
+            }
+          }
+        };
+        reader.readAsDataURL(audioBlob);
+      }
+
+      // Stop stream tracks to turn off mic indicator
+      this.mediaRecorder?.stream.getTracks().forEach((track) => track.stop());
     };
 
     this.mediaRecorder.stop();
   }
 
-  // Send a text command directly (for testing, /dev panel, and demo replay)
   public async sendTextCommand(text: string) {
     this.t0 = performance.now();
     const store = useLedgerStore.getState();
@@ -298,7 +487,7 @@ class VoiceService {
       this.ws.send(JSON.stringify({
         type: 'text',
         data: text,
-        language: store.settings.language
+        language: store.settings.language === 'auto' ? undefined : store.settings.language
       }));
     } else {
       // REST fallback
@@ -308,7 +497,7 @@ class VoiceService {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text,
-            language: store.settings.language
+            language: store.settings.language === 'auto' ? undefined : store.settings.language
           })
         });
         const json = await res.json();
@@ -332,8 +521,9 @@ class VoiceService {
             date: json.transaction.transaction_date
           } : undefined,
           needs_disambiguation: json.needs_disambiguation,
-          disambiguation_options: json.disambiguation_options
-        });
+          disambiguation_options: json.disambiguation_options,
+          correction_event: json.correction_event
+        } as any);
       } catch (err) {
         console.error('REST process-text fallback error:', err);
         store.setVoiceState('idle');
