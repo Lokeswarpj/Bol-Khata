@@ -1,0 +1,37 @@
+# Core Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Database
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+
+# Data Validation
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Environment
+python-dotenv==1.0.1
+
+# HTTP Client (for Gnani API)
+httpx==0.28.1
+
+# WebSocket support
+websockets==14.1
+
+# Encryption (AES-256 for DPDP compliance)
+cryptography==44.0.0
+
+# Date parsing
+python-dateutil==2.9.0.post0
+
+# Audio processing
+soundfile==0.13.1
+numpy==2.2.1
+
+# Async file operations
+aiofiles==24.1.0
+
+# JSON handling
+orjson==3.10.14
