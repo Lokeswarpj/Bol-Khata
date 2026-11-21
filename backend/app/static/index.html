@@ -42,8 +42,15 @@
                 </div>
             </div>
 
-            <!-- Language Switcher & Badges -->
+            <!-- Language Switcher & Engine Mode Toggle -->
             <div class="flex items-center space-x-2 sm:space-x-4">
+                <!-- Gnani Token Saver Toggle -->
+                <div class="hidden sm:flex items-center bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1 text-xs">
+                    <span class="text-slate-400 mr-2 text-[11px] font-mono">Engine:</span>
+                    <button onclick="toggleEngineMode('browser')" id="mode-browser" class="px-2 py-0.5 rounded-lg font-medium transition bg-emerald-700 text-white shadow text-[11px]">Free (0 Tokens)</button>
+                    <button onclick="toggleEngineMode('gnani')" id="mode-gnani" class="px-2 py-0.5 rounded-lg font-medium transition text-slate-400 hover:text-slate-200 text-[11px] ml-1">Gnani AI</button>
+                </div>
+
                 <div class="flex bg-slate-800 border border-slate-700 rounded-xl p-1 text-xs">
                     <button onclick="setLanguage('hi-IN')" id="lang-hi" class="px-2.5 py-1 rounded-lg font-medium transition bg-cyan-600 text-white shadow">Hindi</button>
                     <button onclick="setLanguage('kn-IN')" id="lang-kn" class="px-2.5 py-1 rounded-lg font-medium transition text-slate-400 hover:text-slate-200">ಕನ್ನಡ</button>
@@ -277,12 +284,26 @@
     <!-- Client-Side Script -->
     <script>
         let currentLang = 'hi-IN';
+        let engineMode = 'browser'; // Default to free 0-token browser speech
         let isRecording = false;
         let recognition = null;
         let lastSpokenText = "";
         let audioContext = null;
         let analyser = null;
         let micStream = null;
+
+        function toggleEngineMode(mode) {
+            engineMode = mode;
+            const bBtn = document.getElementById('mode-browser');
+            const gBtn = document.getElementById('mode-gnani');
+            if (mode === 'browser') {
+                bBtn.className = "px-2 py-0.5 rounded-lg font-medium transition bg-emerald-700 text-white shadow text-[11px]";
+                gBtn.className = "px-2 py-0.5 rounded-lg font-medium transition text-slate-400 hover:text-slate-200 text-[11px] ml-1";
+            } else {
+                gBtn.className = "px-2 py-0.5 rounded-lg font-medium transition bg-cyan-600 text-white shadow text-[11px] ml-1";
+                bBtn.className = "px-2 py-0.5 rounded-lg font-medium transition text-slate-400 hover:text-slate-200 text-[11px]";
+            }
+        }
 
         function setLanguage(lang) {
             currentLang = lang;
@@ -444,10 +465,11 @@
             `;
             document.getElementById('replayBtn').classList.remove('hidden');
 
-            if (audioBase64) {
+            if (engineMode === 'gnani' && audioBase64) {
                 const audio = new Audio("data:audio/wav;base64," + audioBase64);
                 audio.play();
             } else if ('speechSynthesis' in window) {
+                // Free browser-native TTS (costs 0 Gnani tokens!)
                 const utter = new SpeechSynthesisUtterance(message);
                 utter.lang = lang || currentLang;
                 window.speechSynthesis.speak(utter);
