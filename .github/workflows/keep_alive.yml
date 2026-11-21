@@ -1,0 +1,28 @@
+name: Keep Render Service Active (Prevent Cold Starts)
+
+on:
+  schedule:
+    # Runs every 12 minutes (Render sleeps after 15 mins of inactivity)
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'URL of the Render app to ping (optional)'
+        required: false
+        default: 'https://bolkhata-counter.onrender.com'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping BolKhata Counter Health Endpoint
+        run: |
+          URL="${{ github.event.inputs.target_url || secrets.RENDER_APP_URL || 'https://bolkhata-counter.onrender.com' }}"
+          echo "Pinging ${URL}/health to prevent sleep..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${URL}/health" || echo "failed")
+          echo "Health check HTTP status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ BolKhata Counter is warm and active!"
+          else
+            echo "⚠️ Response was $STATUS (server might be waking up or URL needs adjustment)"
+          fi
