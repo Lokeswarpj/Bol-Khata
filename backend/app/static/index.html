@@ -1090,16 +1090,46 @@
         let isIntroPlaying = false;
         let isProcessing = false;
         let isSpeaking = false;
+        let echoGuardActive = false;
         let isStandby = false;
         let speechSilenceTimer = null;
         let lastHeardTranscript = '';
         let recognition = null;
         let currentAudioElement = null;
         let lastSpokenText = "";
+        let recentAISpokenPhrases = [];
         let audioContext = null;
         let analyser = null;
         let micStream = null;
         let storeOwner = null;
+
+        function registerSpokenTextForEchoFilter(text) {
+            if (!text) return;
+            const cleaned = text.toLowerCase().replace(/[^\w\s\u0900-\u0D7F]/gi, ' ');
+            const words = cleaned.split(/\s+/).filter(w => w.length >= 3);
+            recentAISpokenPhrases = words;
+            setTimeout(() => {
+                recentAISpokenPhrases = [];
+            }, 15000);
+        }
+
+        function isEchoOfAI(raw) {
+            if (!raw || recentAISpokenPhrases.length === 0) return false;
+            const cleaned = raw.toLowerCase().replace(/[^\w\s\u0900-\u0D7F]/gi, ' ');
+            const userWords = cleaned.split(/\s+/).filter(w => w.length >= 3);
+            if (userWords.length === 0) return false;
+
+            let matches = 0;
+            for (const uw of userWords) {
+                if (recentAISpokenPhrases.includes(uw)) {
+                    matches++;
+                }
+            }
+            if (matches >= 2 && matches >= userWords.length * 0.35) {
+                return true;
+            }
+            return false;
+        }
 
         function stopAllAudio() {
             if (currentAudioElement) {
@@ -1113,6 +1143,7 @@
                 try { window.speechSynthesis.cancel(); } catch(_) {}
             }
             isSpeaking = false;
+            echoGuardActive = false;
             isIntroPlaying = false;
             micLocked = false;
         }
@@ -1320,23 +1351,15 @@
             recognition.lang = currentLanguage === 'auto' ? 'hi-IN' : currentLanguage;
 
             recognition.onstart = () => {
-                if (!isIntroPlaying && !isSpeaking) {
+                if (!isSpeaking && !echoGuardActive) {
                     updateMicUIState(isStandby ? 'standby' : 'active');
                 }
             };
 
-            // Barge-in: if user starts speaking while audio is playing, cut off audio immediately!
-            recognition.onspeechstart = () => {
-                if (isIntroPlaying || isSpeaking) {
-                    stopAllAudio();
-                    updateMicUIState('active', 'Listening to you...');
-                }
-            };
-
             recognition.onresult = (event) => {
-                // If audio was playing, barge-in cuts it off immediately!
-                if (isSpeaking || isIntroPlaying) {
-                    stopAllAudio();
+                // HARD ECHO GUARD: If BolKhata is speaking or in acoustic cooldown, ignore mic output from speakers!
+                if (isSpeaking || echoGuardActive || isIntroPlaying) {
+                    return;
                 }
 
                 let rawFinal = '';
@@ -1353,6 +1376,12 @@
                 const finalTranscript = normalizeKiranaTranscript(rawFinal);
                 const currentTranscript = (finalTranscript || interimTranscript).trim();
 
+                // Self-Speech Filter: Drop if mic is hearing BolKhata's own generated phrases from the speaker!
+                if (isEchoOfAI(currentTranscript)) {
+                    console.log("[EchoGuard] Dropped self-hearing echo:", currentTranscript);
+                    return;
+                }
+
                 if (currentTranscript) {
                     lastHeardTranscript = currentTranscript;
                     document.getElementById('liveTranscriptDisplay').innerText = `"${currentTranscript}"`;
@@ -1360,14 +1389,14 @@
                 }
 
                 // Immediate execution if Chrome marks isFinal = true
-                if (finalTranscript && !isProcessing) {
+                if (finalTranscript && !isProcessing && !isSpeaking && !echoGuardActive) {
                     if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
                     handleSpokenUtterance(finalTranscript);
-                } else if (interimTranscript && !isProcessing) {
+                } else if (interimTranscript && !isProcessing && !isSpeaking && !echoGuardActive) {
                     // Silence Debounce: If user speaks and then pauses for 900ms, auto-commit the speech!
                     if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
                     speechSilenceTimer = setTimeout(() => {
-                        if (lastHeardTranscript && !isProcessing) {
+                        if (lastHeardTranscript && !isProcessing && !isSpeaking && !echoGuardActive) {
                             const toSend = lastHeardTranscript;
                             lastHeardTranscript = '';
                             handleSpokenUtterance(toSend);
@@ -1390,7 +1419,7 @@
             };
 
             recognition.onend = () => {
-                if (!isSpeaking && !isProcessing) {
+                if (!isSpeaking && !isProcessing && !echoGuardActive) {
                     setTimeout(restartRecognition, 200);
                 }
             };
@@ -1400,7 +1429,13 @@
 
         function handleSpokenUtterance(rawText) {
             const trimmed = rawText.trim();
-            if (!trimmed || isProcessing || isSpeaking) return;
+            if (!trimmed || isProcessing || isSpeaking || echoGuardActive) return;
+
+            // Extra safety: Check if text matches recent AI speech
+            if (isEchoOfAI(trimmed)) {
+                console.log("[EchoGuard] handleSpokenUtterance dropped self-echo:", trimmed);
+                return;
+            }
 
             const lower = trimmed.toLowerCase();
 
@@ -1427,7 +1462,7 @@
         }
 
         function restartRecognition() {
-            if (isSpeaking || isProcessing) return;
+            if (isSpeaking || isProcessing || echoGuardActive) return;
             if (!recognition) {
                 initContinuousSpeechRecognition();
                 return;
@@ -1444,7 +1479,7 @@
 
         // Continuous Heartbeat: Ensures continuous listening in Chrome never gets stuck
         setInterval(() => {
-            if (!isSpeaking && !isProcessing) {
+            if (!isSpeaking && !isProcessing && !echoGuardActive) {
                 restartRecognition();
             }
         }, 3500);
@@ -1501,6 +1536,7 @@
 
         function manualMicToggle() {
             stopAllAudio();
+            recentAISpokenPhrases = [];
             if (isStandby) {
                 wakeUpAssistant();
                 return;
@@ -1748,6 +1784,9 @@
         function speakText(text, lang, audioBase64, onDone) {
             stopAllAudio();
             isSpeaking = true;
+            echoGuardActive = true;
+            registerSpokenTextForEchoFilter(text);
+
             if (recognition) {
                 try { recognition.abort(); } catch(e){}
             }
@@ -1760,12 +1799,17 @@
                 doneCalled = true;
                 if (watchdogTimer) clearTimeout(watchdogTimer);
                 currentAudioElement = null;
-                isSpeaking = false;
-                if (onDone) onDone();
+
+                // 600ms Acoustic Reverb Cooldown: ensures laptop speaker audio has completely stopped ringing in room
+                setTimeout(() => {
+                    isSpeaking = false;
+                    echoGuardActive = false;
+                    if (onDone) onDone();
+                }, 600);
             };
 
             // Watchdog: ensures isSpeaking never permanently locks continuous recognition
-            const maxDuration = Math.min(14000, Math.max(3000, (text || '').length * 90));
+            const maxDuration = Math.min(15000, Math.max(3000, (text || '').length * 90));
             watchdogTimer = setTimeout(handleDone, maxDuration);
 
             if (audioBase64) {
