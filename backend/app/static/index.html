@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BolKhata — Futuristic AI Voice Ledger for Kirana Stores</title>
+    <title>BolKhata — AI Voice Ledger | Synapse Design System</title>
     
-    <!-- Synapse Design System Fonts: Instrument Serif, Inter, JetBrains Mono -->
+    <!-- Synapse Design System Typography: Instrument Serif & Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- Three.js for 3D Floating Particles -->
+    <!-- Three.js for 3D Background Galaxy Particles -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
@@ -66,14 +66,15 @@
             color: #ffffff;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
-            selection-background-color: #8B5CF6;
-            selection-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
         }
 
-        /* ── Typography Spec ── */
+        /* ── Instrument Serif Headings ── */
         .font-serif-synapse {
             font-family: 'Instrument Serif', Georgia, serif;
-            letter-spacing: -0.035em;
+            letter-spacing: -0.03em;
         }
 
         /* ── Text Shimmer Animation ── */
@@ -90,23 +91,23 @@
             100% { background-position: 200% center; }
         }
 
-        /* ── Floating Ambient Glow Orbs ── */
+        /* ── Floating Glow Orbs ── */
         @keyframes floatOrb1 {
             0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-24px) scale(1.06); }
+            50% { transform: translateY(-20px) scale(1.05); }
         }
         @keyframes floatOrb2 {
             0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(28px) scale(0.95); }
+            50% { transform: translateY(22px) scale(0.96); }
         }
         .ambient-orb-violet {
-            animation: floatOrb1 9s ease-in-out infinite;
+            animation: floatOrb1 10s ease-in-out infinite;
         }
         .ambient-orb-cyan {
-            animation: floatOrb2 13s ease-in-out infinite;
+            animation: floatOrb2 14s ease-in-out infinite;
         }
 
-        /* ── Glassmorphism ── */
+        /* ── Synapse Glassmorphism ── */
         .synapse-glass {
             background: rgba(10, 10, 10, 0.7);
             backdrop-filter: blur(16px);
@@ -114,7 +115,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* ── Interactive Feature Cards with Snappy Hover ── */
+        /* ── Interactive Feature Cards with Snappy Lift ── */
         .synapse-card {
             border-radius: 1.5rem;
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -124,9 +125,9 @@
             transition: transform 0.4s var(--ease-snappy), border-color 0.4s var(--ease-snappy), box-shadow 0.4s var(--ease-snappy), background 0.4s ease;
         }
         .synapse-card:hover {
-            transform: translateY(-12px);
+            transform: translateY(-8px);
             border-color: rgba(139, 92, 246, 0.4);
-            box-shadow: 0 0 25px -10px rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 25px -10px rgba(139, 92, 246, 0.45);
             background: rgba(255, 255, 255, 0.04);
         }
         .synapse-card:hover .card-icon-box {
@@ -189,7 +190,7 @@
         .ticker-track {
             display: flex;
             width: max-content;
-            animation: tickerScroll 38s linear infinite;
+            animation: tickerScroll 36s linear infinite;
         }
         .ticker-track:hover {
             animation-play-state: paused;
@@ -198,25 +199,25 @@
         /* ── Microphone State Pulses ── */
         @keyframes synPulse {
             0% { transform: scale(0.94); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
-            50% { transform: scale(1.06); box-shadow: 0 0 30px 15px rgba(6, 182, 212, 0.3); }
+            50% { transform: scale(1.06); box-shadow: 0 0 30px 15px rgba(6, 182, 212, 0.35); }
             100% { transform: scale(0.94); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
         }
         .syn-mic-listening {
-            animation: synPulse 1.9s infinite var(--ease-snappy);
+            animation: synPulse 1.8s infinite var(--ease-snappy);
         }
 
         /* ── Strike-Through Correction Banner ── */
         @keyframes strikeFlash {
             0% { opacity: 0; transform: translateY(-8px); }
-            20% { opacity: 1; transform: translateY(0); }
-            80% { opacity: 1; }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; }
             100% { opacity: 0; }
         }
         .strike-flash-anim {
             animation: strikeFlash 6s var(--ease-snappy) forwards;
         }
 
-        /* ── Canvas Layers ── */
+        /* ── Three.js Canvas Backdrop ── */
         #synapse3dCanvas {
             position: fixed;
             top: 0;
@@ -225,13 +226,22 @@
             height: 100vh;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.85;
+            opacity: 0.8;
         }
 
         #audioWaveCanvas {
             width: 100%;
             height: 36px;
             display: block;
+        }
+
+        /* Page View Transition */
+        .page-view {
+            animation: pageFadeIn 0.3s var(--ease-snappy) forwards;
+        }
+        @keyframes pageFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Scrollbar */
@@ -246,293 +256,237 @@
     <!-- 3D Three.js Synapse Background Galaxy -->
     <canvas id="synapse3dCanvas"></canvas>
 
-    <!-- Ambient Glowing Orbs -->
-    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-violet-500/20 blur-[130px] pointer-events-none ambient-orb-violet -z-10"></div>
-    <div class="fixed top-1/3 left-10 w-[500px] h-[400px] rounded-full bg-cyan-500/10 blur-[140px] pointer-events-none ambient-orb-cyan -z-10"></div>
+    <!-- Synapse Floating Glow Orbs -->
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[700px] h-[380px] rounded-full bg-violet-500/20 blur-[130px] pointer-events-none ambient-orb-violet -z-10"></div>
+    <div class="fixed top-1/3 left-10 w-[500px] h-[380px] rounded-full bg-cyan-500/10 blur-[130px] pointer-events-none ambient-orb-cyan -z-10"></div>
     <div class="fixed bottom-10 right-10 w-[450px] h-[350px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none -z-10"></div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         1. FIXED NAVIGATION PILL (Synapse Spec)
+         1. FIXED NAVIGATION PILL (Synapse Spec: No Long Scroll)
          ═══════════════════════════════════════════════════════════ -->
-    <nav class="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[720px] rounded-full synapse-glass px-4 py-2.5 flex items-center justify-between shadow-2xl border border-white/10 transition-all duration-300">
+    <nav class="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[672px] rounded-full synapse-glass px-4 py-2 flex items-center justify-between shadow-2xl border border-white/10 transition-all duration-300">
         
         <!-- Left: Logo (4px gradient circle + 'Instrument Serif' text) -->
-        <div class="flex items-center space-x-2.5 pl-2 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <div class="flex items-center space-x-2.5 pl-2 cursor-pointer" onclick="navigatePage('counter')">
             <div class="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-violet-500 via-cyan-400 to-emerald-400 animate-pulse"></div>
             <span class="font-serif-synapse text-2xl font-normal tracking-tight text-white flex items-center">
                 BolKhata
             </span>
         </div>
 
-        <!-- Center: Links (12px uppercase Inter, neutral-400) -->
-        <div class="hidden sm:flex items-center space-x-6 text-[12px] font-sans font-medium uppercase tracking-[0.1em] text-neutral-400">
-            <a href="#counter" class="hover:text-white transition">Counter</a>
-            <a href="#ledger" class="hover:text-white transition">Ledger</a>
-            <a href="#customers" class="hover:text-white transition">Customers</a>
-            <a href="#engine" class="hover:text-white transition">Engine</a>
+        <!-- Center: Discrete Page Navigation Links (12px uppercase Inter, neutral-400) -->
+        <div class="flex items-center space-x-5 text-[11px] sm:text-[12px] font-sans font-medium uppercase tracking-[0.1em] text-neutral-400">
+            <button onclick="navigatePage('counter')" id="navBtn-counter" class="text-white font-semibold border-b border-violet-400 pb-0.5 transition">
+                Counter
+            </button>
+            <button onclick="navigatePage('ledger')" id="navBtn-ledger" class="hover:text-white transition pb-0.5">
+                Ledger
+            </button>
+            <button onclick="navigatePage('customers')" id="navBtn-customers" class="hover:text-white transition pb-0.5">
+                Customers
+            </button>
+            <button onclick="navigatePage('engine')" id="navBtn-engine" class="hover:text-white transition pb-0.5">
+                Engine
+            </button>
         </div>
 
-        <!-- Right: CTA Button (White background, black text, rounded-full) -->
+        <!-- Right: Store CTA (White background, black text, rounded-full) -->
         <div class="flex items-center space-x-2">
-            <button onclick="openMerchantModal()" class="px-4 py-1.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition shadow-lg flex items-center gap-1.5" title="Switch Store Profile">
-                <i class="fa-solid fa-store text-[11px] text-neutral-800"></i>
-                <span id="navStoreName">Sri Balaji</span>
+            <button onclick="openMerchantModal()" class="px-3.5 py-1 rounded-full bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition shadow-lg flex items-center gap-1.5" title="Switch Store Profile">
+                <i class="fa-solid fa-store text-[10px] text-neutral-800"></i>
+                <span id="navStoreName" class="truncate max-w-[90px]">Sri Balaji</span>
             </button>
         </div>
     </nav>
 
-    <!-- First Gesture Click Banner (Ensures Chrome audio permission) -->
-    <div id="clickToStartBanner" onclick="startHandsFreeDirect()" class="fixed top-20 inset-x-0 z-40 mx-auto max-w-xl bg-gradient-to-r from-violet-900/90 via-black to-cyan-900/90 text-neutral-200 text-xs py-2 px-4 rounded-full border border-violet-500/40 text-center cursor-pointer shadow-2xl flex items-center justify-center space-x-2">
+    <!-- First Gesture Click Banner (Ensures Chrome audio autoplay permission) -->
+    <div id="clickToStartBanner" onclick="startHandsFreeDirect()" class="fixed top-20 inset-x-0 z-40 mx-auto max-w-lg bg-gradient-to-r from-violet-950/90 via-black to-cyan-950/90 text-neutral-200 text-xs py-2 px-4 rounded-full border border-violet-500/40 text-center cursor-pointer shadow-2xl flex items-center justify-center space-x-2">
         <i class="fa-solid fa-hand-pointer text-cyan-400 animate-bounce"></i>
         <span>Welcome to BolKhata. Click anywhere to activate hands-free Kirana counter audio.</span>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         2. MASSIVE HERO SECTION (Synapse Spec)
+         PERSISTENT INFINITE METRICS TICKER
          ═══════════════════════════════════════════════════════════ -->
-    <section class="pt-36 pb-16 px-4 sm:px-6 max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center">
-        
-        <!-- Telemetry Pill Header -->
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-md text-[11px] font-mono text-neutral-400 mb-6 uppercase tracking-widest">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            <span>Gnani Timbre Neural Active</span>
-            <span class="text-neutral-600">/</span>
-            <span class="text-cyan-400">100% Hands-Free</span>
-        </div>
-
-        <!-- Massive Editorial Heading: 'Instrument Serif' with Text Shimmer on Last Word -->
-        <h1 class="font-serif-synapse text-6xl sm:text-8xl lg:text-9xl leading-[0.92] text-white tracking-[-0.04em] max-w-4xl">
-            Autonomous voice ledger for <span class="text-shimmer italic font-normal">retail.</span>
-        </h1>
-
-        <!-- Subtext: max-w-2xl, Inter font, neutral-400, text-lg -->
-        <p class="mt-6 max-w-2xl text-neutral-400 font-sans text-base sm:text-lg leading-relaxed font-light">
-            Engineered for high-noise Indian Kirana stores. Speaks fluent Hindi, Kannada, Telugu, and English. Zero screens touched across the counter.
-        </p>
-
-        <!-- Interactive Centerpiece: Shiny Border Button & Mic Dome -->
-        <div class="mt-10 flex flex-col items-center gap-6" id="counter">
-            
-            <!-- Shiny Border Conic Rotating Button -->
-            <button onclick="manualMicToggle()" class="shiny-border-btn">
-                <div class="shiny-border-btn-inner">
-                    <div id="micStatusDot" class="w-2.5 h-2.5 rounded-full bg-violet-400 animate-ping"></div>
-                    <span id="heroCtaText" class="text-sm font-medium tracking-wide text-white uppercase font-mono">
-                        Initializing Safe Intro...
-                    </span>
-                    <i id="heroCtaIcon" class="fa-solid fa-lock text-xs text-neutral-400 ml-1"></i>
-                </div>
-            </button>
-
-            <!-- Language Dial Bar -->
-            <div class="flex items-center gap-1.5 p-1 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-xl text-xs">
-                <button onclick="setVoiceLanguage('en-IN')" id="langBtn-en" class="px-3 py-1 rounded-full text-white font-medium bg-violet-600/60 border border-violet-400/40 text-[11px] font-mono transition">
-                    EN
-                </button>
-                <button onclick="setVoiceLanguage('kn-IN')" id="langBtn-kn" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition">
-                    ಕನ್ನಡ
-                </button>
-                <button onclick="setVoiceLanguage('te-IN')" id="langBtn-te" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition">
-                    తెలుగు
-                </button>
-                <button onclick="setVoiceLanguage('hi-IN')" id="langBtn-hi" class="px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition">
-                    हिंदी
-                </button>
-                <button onclick="setVoiceLanguage('auto')" id="langBtn-auto" class="px-3 py-1 rounded-full text-neutral-500 hover:text-cyan-300 text-[11px] font-mono transition">
-                    AUTO
-                </button>
-            </div>
-
-            <!-- Wake-Word Helper / Secondary Link -->
-            <div class="flex items-center gap-3 text-xs text-neutral-400 font-mono">
-                <span class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-ear-listen text-violet-400 text-[11px]"></i>
-                    <span>Say <strong class="text-white font-semibold">"BolKhata"</strong> to wake</span>
-                </span>
-                <span class="text-neutral-700">·</span>
-                <span class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-moon text-cyan-400 text-[11px]"></i>
-                    <span>Say <strong class="text-neutral-300 font-semibold">"Stop"</strong> to sleep</span>
-                </span>
-                <span class="text-neutral-700">·</span>
-                <button onclick="toggleStandbyMode()" id="standbyQuickBtn" class="text-cyan-400 hover:underline">
-                    Toggle Sleep
-                </button>
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         3. INFINITE METRICS TICKER (Synapse Spec)
-         ═══════════════════════════════════════════════════════════ -->
-    <div class="w-full h-[60px] bg-black/40 border-y border-white/5 overflow-hidden flex items-center relative z-20">
+    <div class="fixed bottom-0 inset-x-0 z-40 w-full h-[50px] bg-black/60 backdrop-blur-xl border-t border-white/5 overflow-hidden flex items-center">
         <div class="ticker-track">
             <!-- Ticker Items Repeated for Seamless Loop -->
             <div class="flex items-center space-x-12 px-6">
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY UDHAAR</span>
-                    <span id="tickerTodayCredit" class="text-sm font-mono text-rose-400 font-semibold">₹0</span>
+                    <span id="tickerTodayCredit" class="text-xs font-mono text-rose-400 font-semibold">₹0</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY JAMA</span>
-                    <span id="tickerTodayPayment" class="text-sm font-mono text-emerald-400 font-semibold">₹0</span>
+                    <span id="tickerTodayPayment" class="text-xs font-mono text-emerald-400 font-semibold">₹0</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">NET OUTSTANDING</span>
-                    <span id="tickerNetOutstanding" class="text-sm font-mono text-cyan-300 font-semibold">₹0</span>
+                    <span id="tickerNetOutstanding" class="text-xs font-mono text-cyan-300 font-semibold">₹0</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">GNANI TTS</span>
-                    <span class="text-sm font-mono text-violet-400">timbre-v2.5 (Token-Saver Active)</span>
+                    <span class="text-xs font-mono text-violet-400">timbre-v2.5 (Token-Saver)</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
-                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">ACTIVE STORE</span>
-                    <span id="tickerStoreName" class="text-sm font-mono text-white">Sri Balaji Kirana</span>
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">STORE</span>
+                    <span id="tickerStoreName" class="text-xs font-mono text-white">Sri Balaji Kirana</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">SECURITY</span>
-                    <span class="text-sm font-mono text-emerald-400">AES-256 DPDP Compliant</span>
+                    <span class="text-xs font-mono text-emerald-400">AES-256 DPDP</span>
                 </div>
             </div>
 
-            <!-- Repeated Chunk for 100% Smooth Infinite Loop -->
+            <!-- Repeated Chunk for 100% Seamless Loop -->
             <div class="flex items-center space-x-12 px-6">
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY UDHAAR</span>
-                    <span id="tickerTodayCredit2" class="text-sm font-mono text-rose-400 font-semibold">₹0</span>
+                    <span id="tickerTodayCredit2" class="text-xs font-mono text-rose-400 font-semibold">₹0</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">TODAY JAMA</span>
-                    <span id="tickerTodayPayment2" class="text-sm font-mono text-emerald-400 font-semibold">₹0</span>
+                    <span id="tickerTodayPayment2" class="text-xs font-mono text-emerald-400 font-semibold">₹0</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">NET OUTSTANDING</span>
-                    <span id="tickerNetOutstanding2" class="text-sm font-mono text-cyan-300 font-semibold">₹0</span>
+                    <span id="tickerNetOutstanding2" class="text-xs font-mono text-cyan-300 font-semibold">₹0</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">GNANI TTS</span>
-                    <span class="text-sm font-mono text-violet-400">timbre-v2.5 (Token-Saver Active)</span>
+                    <span class="text-xs font-mono text-violet-400">timbre-v2.5 (Token-Saver)</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
-                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">ACTIVE STORE</span>
-                    <span id="tickerStoreName2" class="text-sm font-mono text-white">Sri Balaji Kirana</span>
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">STORE</span>
+                    <span id="tickerStoreName2" class="text-xs font-mono text-white">Sri Balaji Kirana</span>
                 </div>
-                <div class="flex items-center space-x-2.5">
+                <div class="flex items-center space-x-2">
                     <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500">SECURITY</span>
-                    <span class="text-sm font-mono text-emerald-400">AES-256 DPDP Compliant</span>
+                    <span class="text-xs font-mono text-emerald-400">AES-256 DPDP</span>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         4. FEATURE GRID (Synapse Spec: 3-column cards with lift)
+         PAGE 1: LIVE VOICE COUNTER (No Scroll, Full Viewport)
          ═══════════════════════════════════════════════════════════ -->
-    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-16 relative z-10">
+    <div id="page-counter" class="page-view flex-1 flex flex-col justify-center max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-20 relative z-10">
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- Card 1: Today Udhaar (Credit) -->
-            <div class="synapse-card p-8 flex flex-col justify-between relative overflow-hidden group">
-                <div>
-                    <div class="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 card-icon-box mb-6">
-                        <i class="fa-solid fa-arrow-up-right-from-square text-lg"></i>
-                    </div>
-                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">
-                        DAILY CREDIT
-                    </span>
-                    <h3 class="font-serif-synapse text-5xl font-normal text-white mt-1 mb-2 tracking-tight">
-                        <span id="statTodayCredit">₹0</span>
-                    </h3>
-                </div>
-                <p class="text-neutral-400 text-xs font-light mt-4 leading-relaxed">
-                    Total groceries and supplies taken on credit by neighborhood customers today.
-                </p>
+        <div class="text-center mb-6">
+            <!-- Telemetry Pill -->
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.02] backdrop-blur-md text-[10px] font-mono text-neutral-400 mb-3 uppercase tracking-widest">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Gnani Timbre Active</span>
+                <span class="text-neutral-600">/</span>
+                <span class="text-cyan-400">Hands-Free Terminal</span>
             </div>
 
-            <!-- Card 2: Today Jama (Payments) with 1-Click Reset -->
-            <div class="synapse-card p-8 flex flex-col justify-between relative overflow-hidden group">
-                <div>
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 card-icon-box">
-                            <i class="fa-solid fa-arrow-down-left-and-up-right-to-center text-lg"></i>
-                        </div>
-                        <button onclick="triggerResetPayments()" class="text-[11px] font-mono text-amber-400 hover:text-amber-300 underline font-medium" title="Clear and reset today's cash payments to ₹0">
-                            Reset Today
-                        </button>
-                    </div>
-                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">
-                        CASH SETTLEMENTS
-                    </span>
-                    <h3 class="font-serif-synapse text-5xl font-normal text-emerald-400 mt-1 mb-2 tracking-tight">
-                        <span id="statTodayPayment">₹0</span>
-                    </h3>
-                </div>
-                <p class="text-neutral-400 text-xs font-light mt-4 leading-relaxed">
-                    Cash received and debts cleared. Automatically updates credit ledger balances.
-                </p>
-            </div>
+            <!-- Massive Editorial Heading: 'Instrument Serif' with Text Shimmer on Last Word -->
+            <h1 class="font-serif-synapse text-5xl sm:text-7xl lg:text-8xl leading-[0.92] text-white tracking-[-0.04em]">
+                Autonomous voice ledger for <span class="text-shimmer italic font-normal">retail.</span>
+            </h1>
 
-            <!-- Card 3: Net Outstanding Portfolio -->
-            <div class="synapse-card p-8 flex flex-col justify-between relative overflow-hidden group">
-                <div>
-                    <div class="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 card-icon-box mb-6">
-                        <i class="fa-solid fa-scale-balanced text-lg"></i>
-                    </div>
-                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">
-                        TOTAL PORTFOLIO
-                    </span>
-                    <h3 class="font-serif-synapse text-5xl font-normal text-white mt-1 mb-2 tracking-tight">
-                        <span id="statTotalNet">₹0</span>
-                    </h3>
-                </div>
-                <p class="text-neutral-400 text-xs font-light mt-4 leading-relaxed">
-                    Total unpaid balance across all customer accounts registered in your store database.
-                </p>
-            </div>
-
+            <p class="mt-3 max-w-xl mx-auto text-neutral-400 font-sans text-xs sm:text-sm font-light">
+                Understands Hindi, Kannada, Telugu, and English under loud grocery noise. 100% hands-free.
+            </p>
         </div>
 
-        <!-- ─────────────────────────────────────────────────────────
-             LIVE SPEECH & AUDIO STAGE (Synapse Glass Experience)
-             ───────────────────────────────────────────────────────── -->
-        <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-            <!-- Left: Interactive Mic & Live Heard Speech (5 Cols) -->
-            <div class="lg:col-span-5 synapse-card p-6 flex flex-col justify-between space-y-4">
-                
-                <div class="flex items-center justify-between border-b border-white/5 pb-3">
+        <!-- Central Interactive Hardware Stage -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+            
+            <!-- Left Console: Mic Dome & Speech (5 Cols) -->
+            <div class="md:col-span-5 synapse-card p-5 flex flex-col justify-between space-y-3">
+                <div class="flex items-center justify-between border-b border-white/5 pb-2">
                     <div class="flex items-center space-x-2">
                         <span id="micPingDot" class="w-2 h-2 rounded-full bg-violet-400 animate-ping"></span>
                         <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                            VOICE HARDWARE
+                            VOICE TERMINAL
                         </span>
                     </div>
-                    <span id="speechStateBadge" class="text-[11px] font-mono text-amber-400">
+                    <span id="speechStateBadge" class="text-[10px] font-mono text-amber-400">
                         🔒 Mic Locked (Intro Playing)
                     </span>
                 </div>
 
-                <!-- Central 3D Glowing Mic Dome -->
-                <div class="flex flex-col items-center justify-center py-4">
-                    <div id="micBtn" class="w-24 h-24 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 flex items-center justify-center text-white cursor-pointer shadow-2xl relative transition-all duration-300" onclick="manualMicToggle()">
-                        <div id="micRing" class="absolute inset-0 rounded-full border-2 border-cyan-400/50"></div>
-                        <i id="micIcon" class="fa-solid fa-lock text-3xl"></i>
+                <!-- Central 3D Mic Dome with Shiny Conic Border Wrapper -->
+                <div class="flex flex-col items-center justify-center py-2">
+                    <div class="shiny-border-btn cursor-pointer" onclick="manualMicToggle()">
+                        <div class="shiny-border-btn-inner p-3 w-28 h-28 rounded-full flex flex-col items-center justify-center">
+                            <i id="micIcon" class="fa-solid fa-lock text-3xl text-white"></i>
+                            <span id="listeningText" class="text-[10px] font-mono text-neutral-400 text-center mt-1 truncate max-w-[90px]">
+                                Safe Intro...
+                            </span>
+                        </div>
                     </div>
-                    <p id="micHint" class="mt-3 text-xs text-neutral-400 font-mono text-center">
-                        <span id="listeningText">Playing welcome trust message...</span>
-                    </p>
-                    
+
                     <!-- Oscilloscope Visualizer -->
-                    <div class="w-full max-w-[240px] mt-2">
+                    <div class="w-full max-w-[200px] mt-2">
                         <canvas id="audioWaveCanvas"></canvas>
                     </div>
                 </div>
 
-                <!-- Strike-Through Spoken Correction Reveal -->
-                <div id="strikeThroughAlert" class="hidden p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs strike-flash-anim">
+                <!-- Multilingual Language Selector Dial -->
+                <div class="flex items-center justify-between gap-1 p-1 rounded-full border border-white/10 bg-white/[0.02] text-xs">
+                    <button onclick="setVoiceLanguage('en-IN')" id="langBtn-en" class="px-2.5 py-0.5 rounded-full text-white font-medium bg-violet-600/60 border border-violet-400/40 text-[10px] font-mono transition">
+                        EN
+                    </button>
+                    <button onclick="setVoiceLanguage('kn-IN')" id="langBtn-kn" class="px-2.5 py-0.5 rounded-full text-neutral-400 hover:text-white text-[10px] font-mono transition">
+                        ಕನ್ನಡ
+                    </button>
+                    <button onclick="setVoiceLanguage('te-IN')" id="langBtn-te" class="px-2.5 py-0.5 rounded-full text-neutral-400 hover:text-white text-[10px] font-mono transition">
+                        తెలుగు
+                    </button>
+                    <button onclick="setVoiceLanguage('hi-IN')" id="langBtn-hi" class="px-2.5 py-0.5 rounded-full text-neutral-400 hover:text-white text-[10px] font-mono transition">
+                        हिंदी
+                    </button>
+                    <button onclick="setVoiceLanguage('auto')" id="langBtn-auto" class="px-2.5 py-0.5 rounded-full text-neutral-500 hover:text-cyan-300 text-[10px] font-mono transition">
+                        AUTO
+                    </button>
+                </div>
+
+                <!-- Live Heard Speech Pill -->
+                <div class="p-2.5 rounded-xl bg-black/60 border border-white/5">
+                    <div class="text-[9px] font-mono uppercase tracking-widest text-neutral-500 mb-0.5">
+                        HEARD SPEECH
+                    </div>
+                    <div id="liveTranscriptDisplay" class="text-xs text-neutral-200 italic font-mono min-h-[18px] truncate">
+                        (Microphone locked during welcome introduction...)
+                    </div>
+                </div>
+
+                <!-- Manual Command Input -->
+                <form onsubmit="handleTextSubmit(event)" class="flex gap-2">
+                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Stop..." class="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-violet-500 transition font-mono">
+                    <button type="submit" class="px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Console: Spoken Response & 1-Click Judge Scenarios (7 Cols) -->
+            <div class="md:col-span-7 synapse-card p-5 flex flex-col justify-between space-y-3">
+                
+                <!-- BolKhata Spoken Response Feed -->
+                <div>
+                    <div class="flex items-center justify-between border-b border-white/5 pb-2 mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-volume-high text-cyan-400 text-xs"></i>
+                            <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
+                                NEURAL AUDIO RESPONSE
+                            </span>
+                        </div>
+                        <button onclick="replayAudio()" id="replayBtn" class="text-[10px] font-mono text-cyan-400 hover:underline hidden">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Replay
+                        </button>
+                    </div>
+                    <div id="aiResponseBox" class="p-3.5 rounded-2xl bg-black/60 border border-white/5 text-xs text-neutral-100 min-h-[56px] flex items-center leading-relaxed">
+                        <span class="text-neutral-500 italic">"Namaste! BolKhata live hai. Boliye kya hisaab likhna hai..."</span>
+                    </div>
+                </div>
+
+                <!-- Live Spoken Correction Strike-Through Alert -->
+                <div id="strikeThroughAlert" class="hidden p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs strike-flash-anim">
                     <div class="flex items-center justify-between">
                         <span class="text-amber-300 font-semibold flex items-center gap-1.5">
                             <i class="fa-solid fa-bolt text-amber-400"></i> Correction Applied
@@ -545,52 +499,11 @@
                     </div>
                 </div>
 
-                <!-- Live Heard Speech Pill -->
-                <div class="p-3 rounded-2xl bg-black/60 border border-white/5">
-                    <div class="text-[9px] font-mono uppercase tracking-widest text-neutral-500 mb-1">
-                        LIVE HEARD TRANSCRIPT
-                    </div>
-                    <div id="liveTranscriptDisplay" class="text-xs text-neutral-200 italic font-mono min-h-[20px]">
-                        (Microphone locked during welcome introduction...)
-                    </div>
-                </div>
-
-                <!-- Manual Command Input -->
-                <form onsubmit="handleTextSubmit(event)" class="flex gap-2 pt-2">
-                    <input id="voiceTextInput" type="text" placeholder="Or type e.g. Ramesh cleared his debt / Reset today's payment..." class="flex-1 bg-black/60 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-violet-500 transition font-mono">
-                    <button type="submit" class="px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition">
-                        <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                </form>
-
-            </div>
-
-            <!-- Right: Spoken Response & 1-Click Judge Scenarios (7 Cols) -->
-            <div class="lg:col-span-7 synapse-card p-6 flex flex-col justify-between space-y-4">
-                
-                <!-- BolKhata Neural Response -->
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between border-b border-white/5 pb-2">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-volume-high text-cyan-400 text-xs"></i>
-                            <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-                                BOLKHATA SPOKEN RESPONSE
-                            </span>
-                        </div>
-                        <button onclick="replayAudio()" id="replayBtn" class="text-[11px] font-mono text-cyan-400 hover:underline hidden">
-                            <i class="fa-solid fa-rotate-right mr-1"></i> Replay
-                        </button>
-                    </div>
-                    <div id="aiResponseBox" class="p-4 rounded-2xl bg-black/60 border border-white/5 text-sm text-neutral-100 min-h-[64px] flex items-center leading-relaxed">
-                        <span class="text-neutral-500 italic">"Namaste! BolKhata live hai. Boliye kya hisaab likhna hai..."</span>
-                    </div>
-                </div>
-
                 <!-- 1-Click Realistic Kirana Audio Scenarios -->
-                <div class="space-y-2.5 pt-2">
-                    <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
                         <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-500">
-                            1-CLICK REALISTIC KIRANA AUDIO SCENARIOS
+                            1-CLICK REALISTIC KIRANA SCENARIOS
                         </span>
                         <span class="text-[9px] font-mono text-violet-400 uppercase">
                             Zero Halucination
@@ -598,189 +511,198 @@
                     </div>
                     
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                        <button onclick="sendPrompt('Ramesh cleared his debt')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition">
+                        <button onclick="sendPrompt('Ramesh cleared his debt')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-emerald-500/40 hover:bg-emerald-500/10 text-left transition">
                             <div class="font-semibold text-emerald-400 text-[11px] truncate">Debt Cleared</div>
-                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Ramesh cleared his debt"</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"cleared debt"</div>
                         </button>
 
-                        <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/10 text-left transition">
+                        <button onclick="sendPrompt('Ramesh ka 500 udhaar')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/10 text-left transition">
                             <div class="font-semibold text-violet-400 text-[11px] truncate">Disambiguate</div>
-                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Ramesh ka 500 udhaar"</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"500 udhaar"</div>
                         </button>
 
-                        <button onclick="sendPrompt('Kirana Lane')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/40 hover:bg-cyan-500/10 text-left transition">
-                            <div class="font-semibold text-cyan-400 text-[11px] truncate">Nickname Reply</div>
+                        <button onclick="sendPrompt('Kirana Lane')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/40 hover:bg-cyan-500/10 text-left transition">
+                            <div class="font-semibold text-cyan-400 text-[11px] truncate">Nickname</div>
                             <div class="text-[9px] font-mono text-neutral-500 truncate">"Kirana Lane"</div>
                         </button>
 
-                        <button onclick="sendPrompt('nahi, 430')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-rose-500/40 hover:bg-rose-500/10 text-left transition">
+                        <button onclick="sendPrompt('nahi, 430')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-rose-500/40 hover:bg-rose-500/10 text-left transition">
                             <div class="font-semibold text-rose-400 text-[11px] truncate">Correction</div>
                             <div class="text-[9px] font-mono text-neutral-500 truncate">"nahi, 430"</div>
                         </button>
 
-                        <button onclick="sendPrompt('Reset today\'s payment')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-amber-500/40 hover:bg-amber-500/10 text-left transition">
+                        <button onclick="sendPrompt('Reset today\'s payment')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-amber-500/40 hover:bg-amber-500/10 text-left transition">
                             <div class="font-semibold text-amber-400 text-[11px] truncate">Reset Jama</div>
-                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Reset today's payment"</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"Reset payment"</div>
                         </button>
 
-                        <button onclick="sendPrompt('Stop')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-neutral-500/40 hover:bg-neutral-500/10 text-left transition">
+                        <button onclick="sendPrompt('Stop')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-neutral-500/40 hover:bg-neutral-500/10 text-left transition">
                             <div class="font-semibold text-neutral-300 text-[11px] truncate">Standby Sleep</div>
                             <div class="text-[9px] font-mono text-neutral-500 truncate">"Stop" / "Ruko"</div>
                         </button>
 
-                        <button onclick="sendPrompt('ರಮೇಶ್ ಗೆ 340 ಸಾಲ')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/40 hover:bg-cyan-500/10 text-left transition">
+                        <button onclick="sendPrompt('ರಮೇಶ್ ಗೆ 340 ಸಾಲ')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-cyan-500/40 hover:bg-cyan-500/10 text-left transition">
                             <div class="font-semibold text-cyan-300 text-[11px] truncate">🟡 Kannada Voice</div>
-                            <div class="text-[9px] font-mono text-neutral-500 truncate">"ರಮೇಶ್ ಗೆ 340 ಸಾಲ"</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"340 ಸಾಲ"</div>
                         </button>
 
-                        <button onclick="sendPrompt('రమేష్ కి 340 అప్పు')" class="p-2.5 rounded-xl border border-white/5 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/10 text-left transition">
+                        <button onclick="sendPrompt('రమేష్ కి 340 అప్పు')" class="p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:border-violet-500/40 hover:bg-violet-500/10 text-left transition">
                             <div class="font-semibold text-violet-300 text-[11px] truncate">🟣 Telugu Voice</div>
-                            <div class="text-[9px] font-mono text-neutral-500 truncate">"రమేష్ కి 340 అప్పు"</div>
+                            <div class="text-[9px] font-mono text-neutral-500 truncate">"340 అప్పు"</div>
                         </button>
                     </div>
                 </div>
 
+                <!-- Wake-Word Guidance Bar -->
+                <div class="p-2.5 rounded-xl border border-white/5 bg-black/40 flex items-center justify-between text-[11px] font-mono text-neutral-400">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-ear-listen text-violet-400"></i>
+                        <span>Wake-Word: Say <strong class="text-white">"BolKhata"</strong> to speak, <strong class="text-neutral-300">"Stop"</strong> to sleep</span>
+                    </span>
+                    <button onclick="toggleStandbyMode()" class="text-cyan-400 hover:underline">
+                        Toggle
+                    </button>
+                </div>
+
             </div>
 
         </div>
 
-    </section>
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         5. MASTER LEDGER VIEW (Synapse Spec: Tabbed Dark Ledger)
+         PAGE 2: DUAL LEDGER (Udhaar vs Jama, Separate Screen)
          ═══════════════════════════════════════════════════════════ -->
-    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-8 relative z-10" id="ledger">
+    <div id="page-ledger" class="page-view flex-1 flex flex-col justify-start max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-20 relative z-10 hidden">
         
-        <div class="synapse-card overflow-hidden">
-            
-            <!-- Tab Headers -->
-            <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between flex-wrap gap-3">
+        <!-- Metrics Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+            <div class="synapse-card p-5">
+                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">TODAY UDHAAR (CREDIT)</span>
+                <div id="statTodayCredit" class="font-serif-synapse text-4xl text-rose-400 mt-1">₹0</div>
+            </div>
+            <div class="synapse-card p-5 relative">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">TODAY JAMA (PAYMENT)</span>
+                    <button onclick="triggerResetPayments()" class="text-[10px] font-mono text-amber-400 hover:underline">Reset</button>
+                </div>
+                <div id="statTodayPayment" class="font-serif-synapse text-4xl text-emerald-400 mt-1">₹0</div>
+            </div>
+            <div class="synapse-card p-5">
+                <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-500 font-bold">NET PORTFOLIO</span>
+                <div id="statTotalNet" class="font-serif-synapse text-4xl text-cyan-300 mt-1">₹0</div>
+            </div>
+        </div>
+
+        <!-- Ledger Table Card -->
+        <div class="synapse-card overflow-hidden flex-1 flex flex-col">
+            <div class="px-5 py-3 border-b border-white/5 flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                    <button onclick="switchLedgerTab('udhaar')" id="ledgerTab-udhaar" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-rose-500/40 bg-rose-500/10 text-rose-400 transition">
-                        🔴 UDHAAR (DEBT)
+                    <button onclick="switchLedgerSubTab('udhaar')" id="subTab-udhaar" class="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-rose-500/40 bg-rose-500/10 text-rose-400 transition">
+                        🔴 Udhaar (Debt) Ledger
                     </button>
-                    <button onclick="switchLedgerTab('jama')" id="ledgerTab-jama" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
-                        🟢 JAMA (PAYMENTS)
-                    </button>
-                    <button onclick="switchLedgerTab('customers')" id="ledgerTab-customers" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
-                        👥 CUSTOMERS
-                    </button>
-                    <button onclick="switchLedgerTab('all')" id="ledgerTab-all" class="px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
-                        📑 AUDIT TRAIL
+                    <button onclick="switchLedgerSubTab('jama')" id="subTab-jama" class="px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition">
+                        🟢 Jama (Payments) Ledger
                     </button>
                 </div>
-
                 <button onclick="refreshAllData()" class="text-xs font-mono text-neutral-400 hover:text-white transition">
-                    <i class="fa-solid fa-arrows-rotate mr-1 text-cyan-400"></i> REFRESH
+                    <i class="fa-solid fa-arrows-rotate mr-1 text-cyan-400"></i> Refresh
                 </button>
             </div>
 
-            <!-- Tab 1: 🔴 Udhaar (Debt) Ledger -->
-            <div id="ledgerView-udhaar" class="p-6">
-                <div class="overflow-x-auto max-h-80">
-                    <table class="w-full text-left text-xs font-mono">
-                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th class="pb-3">Debtor</th>
-                                <th class="pb-3">Amount</th>
-                                <th class="pb-3">Date</th>
-                                <th class="pb-3">Spoken Grocery Transcript</th>
-                                <th class="pb-3 text-right">Quick Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="udhaarTableBody" class="divide-y divide-white/5 text-neutral-200">
-                            <tr><td colspan="5" class="py-6 text-center text-neutral-500">Loading credit entries...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <!-- SubTab: Udhaar -->
+            <div id="subView-udhaar" class="p-5 flex-1 overflow-y-auto max-h-[420px]">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="pb-2.5">Debtor</th>
+                            <th class="pb-2.5">Balance</th>
+                            <th class="pb-2.5">Date</th>
+                            <th class="pb-2.5">Grocery Note</th>
+                            <th class="pb-2.5 text-right">Instant Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="udhaarTableBody" class="divide-y divide-white/5 text-neutral-200">
+                        <tr><td colspan="5" class="py-6 text-center text-neutral-500">Loading credit entries...</td></tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Tab 2: 🟢 Jama (Payment) Ledger -->
-            <div id="ledgerView-jama" class="p-6 hidden">
-                <div class="overflow-x-auto max-h-80">
-                    <table class="w-full text-left text-xs font-mono">
-                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th class="pb-3">Customer</th>
-                                <th class="pb-3">Payment</th>
-                                <th class="pb-3">Date</th>
-                                <th class="pb-3">Confirmation Note</th>
-                            </tr>
-                        </thead>
-                        <tbody id="jamaTableBody" class="divide-y divide-white/5 text-neutral-200">
-                            <tr><td colspan="4" class="py-6 text-center text-neutral-500">Loading payment entries...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
+            <!-- SubTab: Jama -->
+            <div id="subView-jama" class="p-5 flex-1 overflow-y-auto max-h-[420px] hidden">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="pb-2.5">Customer</th>
+                            <th class="pb-2.5">Payment</th>
+                            <th class="pb-2.5">Date</th>
+                            <th class="pb-2.5">Confirmation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jamaTableBody" class="divide-y divide-white/5 text-neutral-200">
+                        <tr><td colspan="4" class="py-6 text-center text-neutral-500">Loading payment entries...</td></tr>
+                    </tbody>
+                </table>
             </div>
-
-            <!-- Tab 3: 👥 Customers Directory -->
-            <div id="ledgerView-customers" class="p-6 hidden">
-                <div class="overflow-x-auto max-h-80">
-                    <table class="w-full text-left text-xs font-mono">
-                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th class="pb-3">Customer & Nickname</th>
-                                <th class="pb-3">Balance</th>
-                                <th class="pb-3 text-center">DPDP Opt-In</th>
-                                <th class="pb-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customersTableBody" class="divide-y divide-white/5 text-neutral-200">
-                            <tr><td colspan="4" class="py-6 text-center text-neutral-500">Loading customers...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab 4: 📑 Audit Trail -->
-            <div id="ledgerView-all" class="p-6 hidden">
-                <div class="overflow-x-auto max-h-80">
-                    <table class="w-full text-left text-xs font-mono">
-                        <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th class="pb-3">Customer</th>
-                                <th class="pb-3">Type</th>
-                                <th class="pb-3">Amount</th>
-                                <th class="pb-3">Timestamp</th>
-                                <th class="pb-3">Transcript</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionsTableBody" class="divide-y divide-white/5 text-neutral-200">
-                            <tr><td colspan="5" class="py-6 text-center text-neutral-500">No transactions recorded yet.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
 
-    </section>
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════
-         6. CODE INTEGRATION BLOCK (Synapse Spec: Dark IDE Window)
+         PAGE 3: CUSTOMERS & DISAMBIGUATION (Separate Screen)
          ═══════════════════════════════════════════════════════════ -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 relative z-10" id="engine">
+    <div id="page-customers" class="page-view flex-1 flex flex-col justify-start max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-20 relative z-10 hidden">
         
-        <div class="rounded-3xl border border-white/10 bg-[#080808]/90 backdrop-blur-xl shadow-2xl overflow-hidden">
-            
-            <!-- IDE Toolbar -->
+        <div class="synapse-card p-6 flex-1 flex flex-col">
+            <div class="flex items-center justify-between border-b border-white/5 pb-3 mb-4">
+                <div>
+                    <h2 class="font-serif-synapse text-3xl text-white">Customer Directory</h2>
+                    <p class="text-xs text-neutral-400 font-light">Nicknames for spoken disambiguation and DPDP consent controls.</p>
+                </div>
+                <button onclick="refreshAllData()" class="text-xs font-mono text-cyan-400 hover:underline">
+                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
+                </button>
+            </div>
+
+            <div class="overflow-y-auto max-h-[460px]">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="pb-3">Customer & Disambiguation Nickname</th>
+                            <th class="pb-3">Balance</th>
+                            <th class="pb-3 text-center">DPDP Opt-In</th>
+                            <th class="pb-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody" class="divide-y divide-white/5 text-neutral-200">
+                        <tr><td colspan="4" class="py-6 text-center text-neutral-500">Loading customer directory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PAGE 4: ENGINE & AUDIT TRAIL (Separate Screen)
+         ═══════════════════════════════════════════════════════════ -->
+    <div id="page-engine" class="page-view flex-1 flex flex-col justify-start max-w-5xl w-full mx-auto px-4 sm:px-6 pt-24 pb-20 relative z-10 hidden">
+        
+        <!-- IDE Code Integration Block -->
+        <div class="rounded-3xl border border-white/10 bg-[#080808]/90 backdrop-blur-xl shadow-2xl overflow-hidden mb-6">
             <div class="px-5 py-3 border-b border-white/10 bg-black/40 flex items-center justify-between">
                 <div class="flex items-center space-x-2">
                     <div class="w-3 h-3 rounded-full bg-rose-500/70"></div>
                     <div class="w-3 h-3 rounded-full bg-amber-500/70"></div>
                     <div class="w-3 h-3 rounded-full bg-emerald-500/70"></div>
                 </div>
-                <div class="text-[11px] font-mono text-neutral-400">
-                    bolkhata_voice_stream.py
-                </div>
-                <button class="text-neutral-500 hover:text-white transition text-xs" title="Copy Integration Spec">
-                    <i class="fa-regular fa-copy"></i>
+                <div class="text-[11px] font-mono text-neutral-400">bolkhata_voice_stream.py</div>
+                <button onclick="purgeTranscripts()" class="text-xs font-mono text-rose-400 hover:underline">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Purge Demo Transcripts
                 </button>
             </div>
 
-            <!-- Code with Syntax Highlighting -->
-            <div class="p-6 font-mono text-xs leading-relaxed overflow-x-auto">
+            <div class="p-5 font-mono text-xs leading-relaxed overflow-x-auto">
                 <pre class="text-neutral-300"><code><span class="text-violet-400">from</span> bolkhata <span class="text-violet-400">import</span> <span class="text-cyan-400">HandsFreeLedger</span>, <span class="text-cyan-400">GnaniNeuralEngine</span>
 
 <span class="text-neutral-500"># Low-token streaming voice pipeline with local audio caching</span>
@@ -793,85 +715,36 @@
     <span class="text-violet-400">if</span> intent.is_debt_cleared:
         <span class="text-violet-400">await</span> engine.speak_confirmation(<span class="text-emerald-400">f"{intent.customer} ka hisaab poora chukta hua. ₹0 baaki."</span>)</code></pre>
             </div>
-
         </div>
 
-    </section>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         7. FOOTER (Synapse Spec: 4-column grid + Status Indicator)
-         ═══════════════════════════════════════════════════════════ -->
-    <footer class="bg-[#050505] border-t border-white/5 pt-16 pb-12 px-4 sm:px-6 relative z-10 mt-auto">
-        <div class="max-w-6xl mx-auto">
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-                <!-- Col 1: Brand -->
-                <div class="col-span-2 md:col-span-1 space-y-3">
-                    <span class="font-serif-synapse text-3xl text-white">
-                        BolKhata
-                    </span>
-                    <p class="text-xs text-neutral-500 font-sans leading-relaxed">
-                        Hands-Free AI Voice Ledger for Informal Retail. Built for Build Bengaluru 2.0 Hackathon.
-                    </p>
-                </div>
-
-                <!-- Col 2: Capabilities -->
-                <div class="space-y-2">
-                    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
-                        CAPABILITIES
-                    </div>
-                    <ul class="text-xs text-neutral-500 space-y-1.5 font-sans">
-                        <li>Numbers Under Noise</li>
-                        <li>Spoken Corrections</li>
-                        <li>Spoken Disambiguation</li>
-                        <li>Debt Settlement</li>
-                    </ul>
-                </div>
-
-                <!-- Col 3: Languages -->
-                <div class="space-y-2">
-                    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
-                        VOICE TIMBRE
-                    </div>
-                    <ul class="text-xs text-neutral-500 space-y-1.5 font-sans">
-                        <li>Hindi (hi-IN)</li>
-                        <li>Kannada (kn-IN)</li>
-                        <li>Telugu (te-IN)</li>
-                        <li>Indian English (en-IN)</li>
-                    </ul>
-                </div>
-
-                <!-- Col 4: Compliance -->
-                <div class="space-y-2">
-                    <div class="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
-                        COMPLIANCE
-                    </div>
-                    <ul class="text-xs text-neutral-500 space-y-1.5 font-sans">
-                        <li>DPDP Act 2023</li>
-                        <li>Zero-Coercion Reminders</li>
-                        <li>AES-256 Storage</li>
-                        <li>
-                            <button onclick="purgeTranscripts()" class="text-rose-400 hover:underline">
-                                Purge Demo Logs
-                            </button>
-                        </li>
-                    </ul>
-                </div>
+        <!-- Consolidated Transactions Audit Trail -->
+        <div class="synapse-card p-5">
+            <div class="flex items-center justify-between border-b border-white/5 pb-2.5 mb-3">
+                <span class="text-[10px] font-mono uppercase tracking-widest text-neutral-400 font-bold">
+                    CONSOLIDATED DOUBLE-ENTRY AUDIT TRAIL
+                </span>
+                <span class="text-xs font-mono text-emerald-400">DPDP Act Compliant</span>
             </div>
 
-            <!-- Bottom Bar -->
-            <div class="border-t border-white/5 pt-8 flex items-center justify-between text-xs font-mono text-neutral-500">
-                <div>
-                    © 2026 Team Drona (SJCIT) · BolKhata
-                </div>
-                <div class="flex items-center space-x-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-emerald-400 font-medium">All Systems Operational</span>
-                </div>
+            <div class="overflow-y-auto max-h-[220px]">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="text-neutral-500 border-b border-white/5 uppercase tracking-wider text-[10px]">
+                        <tr>
+                            <th class="pb-2">Customer</th>
+                            <th class="pb-2">Type</th>
+                            <th class="pb-2">Amount</th>
+                            <th class="pb-2">Timestamp</th>
+                            <th class="pb-2">Transcript / Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody" class="divide-y divide-white/5 text-neutral-200">
+                        <tr><td colspan="5" class="py-4 text-center text-neutral-500">No transactions recorded yet.</td></tr>
+                    </tbody>
+                </table>
             </div>
-
         </div>
-    </footer>
+
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════
          STORE OWNER PROFILE MODAL (Synapse Glass)
@@ -962,6 +835,46 @@
          SYNAPSE 3D PARTICLES & FULL ENGINE JAVASCRIPT
          ═══════════════════════════════════════════════════════════ -->
     <script>
+        // ── Discrete Page Navigation (Zero Endless Scroll) ─────────
+        function navigatePage(pageName) {
+            const pages = ['counter', 'ledger', 'customers', 'engine'];
+            pages.forEach(p => {
+                const el = document.getElementById(`page-${p}`);
+                const navBtn = document.getElementById(`navBtn-${p}`);
+                if (el && navBtn) {
+                    if (p === pageName) {
+                        el.classList.remove('hidden');
+                        navBtn.className = "text-white font-semibold border-b border-violet-400 pb-0.5 transition";
+                    } else {
+                        el.classList.add('hidden');
+                        navBtn.className = "text-neutral-400 hover:text-white transition pb-0.5";
+                    }
+                }
+            });
+            if (pageName === 'ledger' || pageName === 'customers' || pageName === 'engine') {
+                refreshAllData();
+            }
+        }
+
+        function switchLedgerSubTab(subTab) {
+            const udhaarView = document.getElementById('subView-udhaar');
+            const jamaView = document.getElementById('subView-jama');
+            const udhaarBtn = document.getElementById('subTab-udhaar');
+            const jamaBtn = document.getElementById('subTab-jama');
+
+            if (subTab === 'udhaar') {
+                udhaarView.classList.remove('hidden');
+                jamaView.classList.add('hidden');
+                udhaarBtn.className = "px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-rose-500/40 bg-rose-500/10 text-rose-400 transition";
+                jamaBtn.className = "px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition";
+            } else {
+                jamaView.classList.remove('hidden');
+                udhaarView.classList.add('hidden');
+                jamaBtn.className = "px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 transition";
+                udhaarBtn.className = "px-3.5 py-1.5 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition";
+            }
+        }
+
         // ── Three.js Ambient Particle Field ────────────────────────
         function initSynapseThreeJS() {
             const canvas = document.getElementById('synapse3dCanvas');
@@ -975,7 +888,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            const particleCount = 500;
+            const particleCount = 450;
             const geometry = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
             const colors = new Float32Array(particleCount * 3);
@@ -1067,9 +980,9 @@
             for (const [code, btn] of Object.entries(buttons)) {
                 if (!btn) continue;
                 if (code === langCode) {
-                    btn.className = "px-3 py-1 rounded-full text-white font-medium bg-violet-600/60 border border-violet-400/40 text-[11px] font-mono transition";
+                    btn.className = "px-2.5 py-0.5 rounded-full text-white font-medium bg-violet-600/60 border border-violet-400/40 text-[10px] font-mono transition";
                 } else {
-                    btn.className = "px-3 py-1 rounded-full text-neutral-400 hover:text-white text-[11px] font-mono transition";
+                    btn.className = "px-2.5 py-0.5 rounded-full text-neutral-400 hover:text-white text-[10px] font-mono transition";
                 }
             }
 
@@ -1083,31 +996,6 @@
             }
         }
 
-        function switchLedgerTab(tab) {
-            const tabs = ['udhaar', 'jama', 'customers', 'all'];
-            tabs.forEach(t => {
-                const view = document.getElementById(`ledgerView-${t}`);
-                const btn = document.getElementById(`ledgerTab-${t}`);
-                if (view && btn) {
-                    if (t === tab) {
-                        view.classList.remove('hidden');
-                        if (t === 'udhaar') {
-                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-rose-500/40 bg-rose-500/10 text-rose-400 transition";
-                        } else if (t === 'jama') {
-                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 transition";
-                        } else if (t === 'customers') {
-                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-cyan-500/40 bg-cyan-500/10 text-cyan-400 transition";
-                        } else {
-                            btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-violet-500/40 bg-violet-500/10 text-violet-400 transition";
-                        }
-                    } else {
-                        view.classList.add('hidden');
-                        btn.className = "px-4 py-2 rounded-full text-xs font-mono font-medium border border-transparent text-neutral-400 hover:text-white transition";
-                    }
-                }
-            });
-        }
-
         function toggleStandbyMode() {
             if (isStandby) {
                 wakeUpAssistant();
@@ -1119,70 +1007,50 @@
         function putAssistantToSleep() {
             isStandby = true;
             updateMicUIState('standby', 'Standby 🌙 — Ambient chatter ignored. Say "BolKhata" to wake up');
-            const quickBtn = document.getElementById('standbyQuickBtn');
-            if (quickBtn) quickBtn.innerText = "Wake Up";
         }
 
         function wakeUpAssistant() {
             isStandby = false;
             updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
-            const quickBtn = document.getElementById('standbyQuickBtn');
-            if (quickBtn) quickBtn.innerText = "Toggle Sleep";
         }
 
         function updateMicUIState(state, customText) {
-            const micBtn = document.getElementById('micBtn');
             const micIcon = document.getElementById('micIcon');
-            const micRing = document.getElementById('micRing');
             const listeningText = document.getElementById('listeningText');
             const speechBadge = document.getElementById('speechStateBadge');
-            const heroCtaText = document.getElementById('heroCtaText');
-            const heroCtaIcon = document.getElementById('heroCtaIcon');
-            const micStatusDot = document.getElementById('micStatusDot');
+            const micPingDot = document.getElementById('micPingDot');
 
             if (state === 'locked') {
-                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-amber-700 to-amber-900 flex items-center justify-center text-white cursor-pointer shadow-2xl relative border-2 border-amber-400/40";
-                if (micIcon) micIcon.className = "fa-solid fa-lock text-3xl";
-                if (listeningText) listeningText.innerText = customText || "Playing welcome trust message... Mic locked";
+                if (micIcon) micIcon.className = "fa-solid fa-lock text-3xl text-amber-400";
+                if (listeningText) listeningText.innerText = customText || "Intro playing... Mic locked";
                 if (speechBadge) {
                     speechBadge.innerText = "🔒 Mic Locked (Intro Playing)";
-                    speechBadge.className = "text-[11px] font-mono text-amber-400";
+                    speechBadge.className = "text-[10px] font-mono text-amber-400";
                 }
-                if (heroCtaText) heroCtaText.innerText = "Initializing Safe Intro...";
-                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-lock text-xs text-amber-400 ml-1";
-                if (micStatusDot) micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping";
+                if (micPingDot) micPingDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
             } else if (state === 'standby') {
-                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-950 to-neutral-900 text-amber-300 flex items-center justify-center shadow-2xl relative border-2 border-indigo-500/40";
                 if (micIcon) micIcon.className = "fa-solid fa-moon text-3xl text-amber-300 animate-pulse";
-                if (listeningText) listeningText.innerText = customText || "Standby 🌙 — Ambient noise ignored. Say 'BolKhata' to wake";
+                if (listeningText) listeningText.innerText = customText || "Standby (Say 'BolKhata')";
                 if (speechBadge) {
                     speechBadge.innerText = "🌙 Standby (Waiting for 'BolKhata')";
-                    speechBadge.className = "text-[11px] font-mono text-indigo-400";
+                    speechBadge.className = "text-[10px] font-mono text-indigo-400";
                 }
-                if (heroCtaText) heroCtaText.innerText = "Standby (Say 'BolKhata')";
-                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-moon text-xs text-amber-300 ml-1";
-                if (micStatusDot) micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-indigo-400";
+                if (micPingDot) micPingDot.className = "w-2 h-2 rounded-full bg-indigo-400";
             } else if (state === 'active') {
-                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-500 text-white flex items-center justify-center shadow-2xl shadow-violet-500/40 relative syn-mic-listening border-2 border-cyan-400/60";
-                if (micIcon) micIcon.className = "fa-solid fa-headset text-3xl";
-                if (listeningText) listeningText.innerText = customText || "Listening continuously across the counter... Just speak!";
+                if (micIcon) micIcon.className = "fa-solid fa-headset text-3xl text-emerald-400";
+                if (listeningText) listeningText.innerText = customText || "Listening continuously...";
                 if (speechBadge) {
                     speechBadge.innerText = "Active (Continuous Listening)";
-                    speechBadge.className = "text-[11px] font-mono text-emerald-400 font-semibold";
+                    speechBadge.className = "text-[10px] font-mono text-emerald-400 font-semibold";
                 }
-                if (heroCtaText) heroCtaText.innerText = "Hands-Free Active";
-                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-microphone text-xs text-emerald-400 ml-1";
-                if (micStatusDot) micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
+                if (micPingDot) micPingDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-ping";
             } else if (state === 'speaking') {
-                if (micBtn) micBtn.className = "w-24 h-24 rounded-full bg-gradient-to-tr from-teal-500 to-cyan-600 text-white flex items-center justify-center shadow-2xl relative border-2 border-cyan-400 animate-pulse";
-                if (micIcon) micIcon.className = "fa-solid fa-volume-high text-3xl";
-                if (listeningText) listeningText.innerText = "BolKhata is speaking... Echo cancellation active.";
+                if (micIcon) micIcon.className = "fa-solid fa-volume-high text-3xl text-cyan-400 animate-pulse";
+                if (listeningText) listeningText.innerText = "BolKhata speaking...";
                 if (speechBadge) {
                     speechBadge.innerText = "Speaking (Echo Guard Active)";
-                    speechBadge.className = "text-[11px] font-mono text-cyan-400";
+                    speechBadge.className = "text-[10px] font-mono text-cyan-400";
                 }
-                if (heroCtaText) heroCtaText.innerText = "Speaking Response...";
-                if (heroCtaIcon) heroCtaIcon.className = "fa-solid fa-volume-high text-xs text-cyan-400 ml-1";
             }
         }
 
@@ -1195,7 +1063,7 @@
                 try { recognition.abort(); } catch(e){}
             }
 
-            updateMicUIState('locked', 'Playing welcome trust intro... Mic locked');
+            updateMicUIState('locked', 'Intro playing... Mic locked');
             document.getElementById('liveTranscriptDisplay').innerText = "(Microphone locked while welcome intro is playing...)";
 
             const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
@@ -1204,7 +1072,7 @@
                 if (langKey.startsWith('kn')) {
                     welcomeText = `ನಮಸ್ಕಾರ ${storeOwner.owner_name} ಅವರೇ! ${storeOwner.store_name} ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಸಂಪೂರ್ಣ ಲೆಡ್ಜರ್ 100% ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದೆ. ನಾನು ನಿಮ್ಮ ಹ್ಯಾಂಡ್ಸ್-ಫ್ರೀ ಸಹಾಯಕ — ಪರದೆ ಮುಟ್ಟದೆಯೇ ಸಹಜವಾಗಿ ಮಾತನಾಡಿ.`;
                 } else if (langKey.startsWith('te')) {
-                    welcomeText = `నమస్కారం ${storeOwner.owner_name} గారు! ${storeOwner.store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురಕ್ಷితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి.`;
+                    welcomeText = `నమస్కారం ${storeOwner.owner_name} గారు! ${storeOwner.store_name} బోల్ ఖాతాకు స్వాగతం. మీ ఖాతా వివరాలన్నీ 100% సురక్షితం. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మాట్లాడండి.`;
                 } else if (langKey.startsWith('hi')) {
                     welcomeText = `Namaste ${storeOwner.owner_name} ji! ${storeOwner.store_name} ke BolKhata mein aapka swagat hai. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — bina screen ko chhue aam bolchaal mein baat kijiye.`;
                 } else {
@@ -1227,7 +1095,7 @@
             const banner = document.getElementById('clickToStartBanner');
             if (banner) banner.style.display = 'none';
 
-            updateMicUIState('active', 'Listening continuously across the counter... Just speak!');
+            updateMicUIState('active', 'Listening continuously across counter...');
             document.getElementById('liveTranscriptDisplay').innerText = '(Listening... say "BolKhata" or record any entry)';
 
             initAudioOscilloscope();
@@ -1570,9 +1438,12 @@
                 const paymentFormatted = `₹${Math.round(data.today_payments).toLocaleString('en-IN')}`;
                 const netFormatted = `₹${Math.round(data.net_outstanding).toLocaleString('en-IN')}`;
 
-                document.getElementById('statTodayCredit').innerText = creditFormatted;
-                document.getElementById('statTodayPayment').innerText = paymentFormatted;
-                document.getElementById('statTotalNet').innerText = netFormatted;
+                const sc = document.getElementById('statTodayCredit');
+                if (sc) sc.innerText = creditFormatted;
+                const sp = document.getElementById('statTodayPayment');
+                if (sp) sp.innerText = paymentFormatted;
+                const sn = document.getElementById('statTotalNet');
+                if (sn) sn.innerText = netFormatted;
 
                 document.getElementById('tickerTodayCredit').innerText = creditFormatted;
                 document.getElementById('tickerTodayCredit2').innerText = creditFormatted;
@@ -1591,6 +1462,7 @@
                 const res = await fetch(`/api/customers/${ownerParam}`);
                 const data = await res.json();
                 const tbody = document.getElementById('customersTableBody');
+                if (!tbody) return;
                 if (data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-neutral-500 font-mono">No customers registered.</td></tr>`;
                     return;
@@ -1638,55 +1510,61 @@
                 const payments = data.filter(t => t.direction === 'payment');
 
                 // All Transactions Table
-                if (data.length === 0) {
-                    allTbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-neutral-500 font-mono">No transactions recorded yet.</td></tr>`;
-                } else {
-                    allTbody.innerHTML = data.map(t => `
-                        <tr class="hover:bg-white/[0.02] transition font-mono">
-                            <td class="py-3 font-medium text-white">${t.customer_name}</td>
-                            <td class="py-3">
-                                <span class="px-2 py-0.5 rounded-full text-[9px] ${t.direction === 'credit' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'}">
-                                    ${t.direction === 'credit' ? 'Udhaar' : 'Jama'}
-                                </span>
-                            </td>
-                            <td class="py-3 font-semibold text-white">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                            <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
-                            <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || '-'}</td>
-                        </tr>
-                    `).join('');
+                if (allTbody) {
+                    if (data.length === 0) {
+                        allTbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-neutral-500 font-mono">No transactions recorded yet.</td></tr>`;
+                    } else {
+                        allTbody.innerHTML = data.map(t => `
+                            <tr class="hover:bg-white/[0.02] transition font-mono">
+                                <td class="py-3 font-medium text-white">${t.customer_name}</td>
+                                <td class="py-3">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] ${t.direction === 'credit' ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'}">
+                                        ${t.direction === 'credit' ? 'Udhaar' : 'Jama'}
+                                    </span>
+                                </td>
+                                <td class="py-3 font-semibold text-white">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                                <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
+                                <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || '-'}</td>
+                            </tr>
+                        `).join('');
+                    }
                 }
 
                 // Udhaar Table
-                if (credits.length === 0) {
-                    udhaarTbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-neutral-500 font-mono">No credit entries.</td></tr>`;
-                } else {
-                    udhaarTbody.innerHTML = credits.map(t => `
-                        <tr class="hover:bg-white/[0.02] transition font-mono">
-                            <td class="py-3 font-medium text-white">${t.customer_name}</td>
-                            <td class="py-3 font-semibold text-rose-400">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                            <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
-                            <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || '-'}</td>
-                            <td class="py-3 text-right">
-                                <button onclick="sendPrompt('${t.customer_name} cleared his debt')" class="px-2.5 py-1 rounded-full text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20">
-                                    Settle Debt
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
+                if (udhaarTbody) {
+                    if (credits.length === 0) {
+                        udhaarTbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-neutral-500 font-mono">No credit entries.</td></tr>`;
+                    } else {
+                        udhaarTbody.innerHTML = credits.map(t => `
+                            <tr class="hover:bg-white/[0.02] transition font-mono">
+                                <td class="py-3 font-medium text-white">${t.customer_name}</td>
+                                <td class="py-3 font-semibold text-rose-400">₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                                <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
+                                <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || '-'}</td>
+                                <td class="py-3 text-right">
+                                    <button onclick="sendPrompt('${t.customer_name} cleared his debt')" class="px-2.5 py-1 rounded-full text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20">
+                                        Settle Debt
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
                 }
 
                 // Jama Table
-                if (payments.length === 0) {
-                    jamaTbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-neutral-500 font-mono">No payment entries.</td></tr>`;
-                } else {
-                    jamaTbody.innerHTML = payments.map(t => `
-                        <tr class="hover:bg-white/[0.02] transition font-mono">
-                            <td class="py-3 font-medium text-white">${t.customer_name}</td>
-                            <td class="py-3 font-semibold text-emerald-400">+₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
-                            <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
-                            <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || 'Payment Received'}</td>
-                        </tr>
-                    `).join('');
+                if (jamaTbody) {
+                    if (payments.length === 0) {
+                        jamaTbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-neutral-500 font-mono">No payment entries.</td></tr>`;
+                    } else {
+                        jamaTbody.innerHTML = payments.map(t => `
+                            <tr class="hover:bg-white/[0.02] transition font-mono">
+                                <td class="py-3 font-medium text-white">${t.customer_name}</td>
+                                <td class="py-3 font-semibold text-emerald-400">+₹${Math.round(t.amount).toLocaleString('en-IN')}</td>
+                                <td class="py-3 text-neutral-500 text-[11px]">${t.transaction_date}</td>
+                                <td class="py-3 text-neutral-400 truncate max-w-xs">${t.note || 'Payment Received'}</td>
+                            </tr>
+                        `).join('');
+                    }
                 }
             } catch (e) {
                 console.error(e);
