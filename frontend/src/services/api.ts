@@ -108,6 +108,88 @@ export const api = {
     return res.json();
   },
 
+  // Store Owner Profile & Multi-Store Management
+  async getOwnerProfile(): Promise<{
+    registered: boolean;
+    owner?: {
+      id: number;
+      store_name: string;
+      owner_name: string;
+      phone?: string;
+      language_preference: string;
+    };
+    total_credit: number;
+    total_payments: number;
+    net_outstanding: number;
+    customer_count: number;
+  }> {
+    const res = await fetch(`${API_BASE}/owner/profile`);
+    if (!res.ok) throw new Error('Failed to fetch store owner profile');
+    return res.json();
+  },
+
+  async getAllOwners() {
+    const res = await fetch(`${API_BASE}/owner/all`);
+    if (!res.ok) throw new Error('Failed to fetch all store owners');
+    return res.json();
+  },
+
+  async signupOwner(data: {
+    store_name: string;
+    owner_name: string;
+    phone: string;
+    pin?: string;
+    language_preference?: string;
+  }) {
+    const res = await fetch(`${API_BASE}/owner/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to sign up store owner');
+    return res.json();
+  },
+
+  async loginOwner(data: { phone: string; pin?: string }) {
+    const res = await fetch(`${API_BASE}/owner/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to log in store owner');
+    return res.json();
+  },
+
+  async switchOwner(ownerId: number) {
+    const res = await fetch(`${API_BASE}/owner/switch/${ownerId}`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error('Failed to switch store owner');
+    return res.json();
+  },
+
+  async resetTodayPayments() {
+    const res = await fetch(`${API_BASE}/owner/reset-today-payments`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error('Failed to reset today payments');
+    return res.json();
+  },
+
+  async registerOwner(data: {
+    store_name: string;
+    owner_name: string;
+    phone?: string;
+    language_preference?: string;
+  }) {
+    const res = await fetch(`${API_BASE}/owner/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to register store owner');
+    return res.json();
+  },
   // Voice Process REST Fallback
   async processTextVoice(text: string, language = 'hi-IN') {
     const res = await fetch(`${API_BASE}/voice/process-text`, {

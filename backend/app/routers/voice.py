@@ -120,23 +120,24 @@ async def process_text(
             message="Koi text nahi mila. (No text received.)",
         )
     
-    session_id = str(uuid.uuid4())
-    ledger = LedgerEngine(db)
+    session_id = input_data.session_id or "default_counter"
+    ledger = LedgerEngine(db, owner_id=input_data.owner_id)
     response = await ledger.process_voice_command(
         input_data.text,
         session_id=session_id,
         language=input_data.language,
     )
     
-    # Optionally generate TTS
-    if input_data.audio_base64 is not None and response.message:
+    # Automatically generate Gnani Neural TTS (Cached on disk for 0 token reuse!)
+    if input_data.generate_audio and response.message:
+        target_lang = response.language or input_data.language or "hi-IN"
         tts_result = await tts_service.synthesize(
             text=response.message,
-            language=input_data.language,
+            language=target_lang,
             session_id=session_id,
         )
-        if tts_result["success"]:
-            response.audio_base64 = tts_result["audio_base64"]
+        if tts_result.get("success"):
+            response.audio_base64 = tts_result.get("audio_base64")
     
     return response
 
@@ -175,7 +176,7 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
     }
     """
     await websocket.accept()
-    session_id = str(uuid.uuid4())
+    session_id = "ws_" + str(uuid.uuid4())[:8]
     ledger = LedgerEngine(db)
     
     logger.info(f"WebSocket connected: session={session_id}")
@@ -253,16 +254,17 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
             # Process the command through ledger engine with selected language
             response = await ledger.process_voice_command(transcript, session_id=session_id, language=language)
             
-            # Generate TTS response
+            # Generate TTS response with Gnani Neural Voice
             audio_b64 = None
             if response.message:
+                target_lang = response.language or language or "hi-IN"
                 tts_result = await tts_service.synthesize(
                     text=response.message,
-                    language=language,
+                    language=target_lang,
                     session_id=session_id,
                 )
-                if tts_result["success"]:
-                    audio_b64 = tts_result["audio_base64"]
+                if tts_result.get("success"):
+                    audio_b64 = tts_result.get("audio_base64")
             
             # Send response
             response_data = {
@@ -273,6 +275,8 @@ async def voice_websocket(websocket: WebSocket, db: AsyncSession = Depends(get_d
                 "transcript": transcript,
                 "needs_disambiguation": response.needs_disambiguation,
                 "disambiguation_options": response.disambiguation_options,
+                "correction_event": response.correction_event,
+                "language": response.language or language,
             }
             
             if response.intent:

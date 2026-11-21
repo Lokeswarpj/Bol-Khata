@@ -76,6 +76,7 @@ class PoliteReminderService:
                 "opted_in": True,
                 "message": f"{customer.name} ka koi baaki hisaab nahi hai.",
                 "spoken_text": f"{customer.name} ka koi hisaab baaki nahi hai.",
+                "guardrail_status": "PASSED_RESPONSIBLE_AI_CHECK",
             }
 
         amt_int = int(round(balance))

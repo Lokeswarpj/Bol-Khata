@@ -17,7 +17,8 @@ import { VoiceKhataBackground3D } from '../components/VoiceKhataBackground3D';
 import { getTranslation } from '../utils/i18n';
 import { CustomersView } from './CustomersView';
 import { CustomerDetailView } from './CustomerDetailView';
-import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff } from 'lucide-react';
+import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff, Mic } from 'lucide-react';
+import { api } from '../services/api';
 import type { Customer } from '../types';
 
 export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavigateLanding }) => {
@@ -39,10 +40,19 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
 
   const [currentView, setCurrentView] = useState<'home' | 'customers' | 'customer_detail'>('home');
   const [selectedCust, setSelectedCust] = useState<Customer | null>(null);
+  const [storeOwner, setStoreOwner] = useState<{ store_name: string; owner_name: string } | null>(null);
 
   useEffect(() => {
     fetchInitialData();
     voiceService.connect();
+    api.getOwnerProfile().then(data => {
+      if (data.registered && data.owner) {
+        setStoreOwner({
+          store_name: data.owner.store_name,
+          owner_name: data.owner.owner_name,
+        });
+      }
+    }).catch(console.warn);
   }, [fetchInitialData]);
 
   const handleMicPressStart = () => {
@@ -101,13 +111,19 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
                 BolKhata
               </span>
               <MonoLabel variant="emerald" className="text-[9px] tracking-[0.25em]">
-                {getTranslation('voiceLedger', settings.language)}
+                {storeOwner ? `${storeOwner.store_name} · ${storeOwner.owner_name}` : getTranslation('voiceLedger', settings.language)}
               </MonoLabel>
             </div>
           </div>
 
           {/* Action Chips */}
           <div className="flex items-center gap-2">
+            {/* Gnani Voice Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono border bg-violet-500/10 border-violet-500/30 text-violet-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping"></span>
+              <span>GNANI TIMBRE</span>
+            </div>
+
             {/* Connectivity chip */}
             <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono border ${
               isOnline
@@ -148,9 +164,19 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
         </div>
       </header>
 
-      {/* Main App Container */}
-      <main className="max-w-md mx-auto w-full px-4 pt-4 space-y-4 flex-1">
-        {/* Today's Totals Grid */}
+      {/* Main Content Area */}
+      <main className="max-w-md w-full mx-auto px-4 pt-4 flex-1 flex flex-col gap-5">
+        {/* Real-time Voice Transcript Strip */}
+        {heardTranscript && (
+          <div className="glass px-4 py-2.5 rounded-2xl border border-white/10 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <p className="text-xs text-paper/80 font-mono truncate">
+              "{heardTranscript}"
+            </p>
+          </div>
+        )}
+
+        {/* Big Balance Hero Cards */}
         <div className="grid grid-cols-2 gap-3">
           {/* Udhaar Given (Rose) */}
           <div className="glass rounded-3xl p-4 border border-white/10 relative overflow-hidden group">
@@ -160,7 +186,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
               </span>
             </div>
             <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-rose-400">
-              ₹{todayCredit.toLocaleString('en-IN')}
+              ₹{Math.round(todayCredit).toLocaleString('en-IN')}
             </div>
             <span className="text-[10px] text-white/40 block mt-1">{getTranslation('givenToCustomers', settings.language)}</span>
           </div>
@@ -173,7 +199,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
               </span>
             </div>
             <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-emerald-400">
-              ₹{todayPayment.toLocaleString('en-IN')}
+              ₹{Math.round(todayPayment).toLocaleString('en-IN')}
             </div>
             <span className="text-[10px] text-white/40 block mt-1">{getTranslation('collectedPayment', settings.language)}</span>
           </div>
@@ -199,10 +225,11 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
 
           <button
             onClick={() => setManualEntryOpen(true)}
-            className="p-1.5 rounded-xl glass border border-white/10 hover:border-emerald-500/50 text-white/60 hover:text-white shrink-0"
+            className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white glass px-3 py-1.5 rounded-full border border-white/10 hover:border-white/20 transition-all font-mono"
             title={getTranslation('manualEntry', settings.language)}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 h-3 text-emerald-400" />
+            <span>MANUAL ENTRY</span>
           </button>
         </div>
 
@@ -215,12 +242,12 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
         </div>
 
         {/* Recent Entries List */}
-        <div className="space-y-2">
+        <div className="space-y-2 pb-6">
           {entries.slice(0, 15).map((entry, idx) => (
             <EntryCard
               key={entry.id || idx}
               entry={entry}
-              onUndo={() => undoEntry(entry.id!, entry.remote_id)}
+              onUndo={() => undoEntry(entry.id, entry.remote_id)}
             />
           ))}
 

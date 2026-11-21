@@ -73,7 +73,7 @@ interface LedgerState {
   fetchInitialData: () => Promise<void>;
   confirmPendingEntry: () => Promise<void>;
   cancelPendingEntry: () => void;
-  undoEntry: (id: number, remoteId?: number) => Promise<void>;
+  undoEntry: (id?: number, remoteId?: number) => Promise<void>;
   applyCorrection: (newAmount: number, newCustomer?: string) => Promise<void>;
   addManualEntry: (data: { customer_name: string; amount: number; direction: 'credit' | 'payment'; note?: string }) => Promise<void>;
 }
@@ -332,7 +332,7 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
     }
   },
 
-  undoEntry: async (id: number, remoteId?: number) => {
+  undoEntry: async (id?: number, remoteId?: number) => {
     try {
       if (remoteId) {
         await api.undoTransaction(remoteId);

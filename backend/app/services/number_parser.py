@@ -242,24 +242,47 @@ def parse_spoken_number(text: str) -> Optional[float]:
     return final_val if found_any else None
 
 
+UNIT_PATTERNS = re.compile(
+    r'\b(?:packet|packets|pkt|pkts|kilo|kg|kgs|kilogram|gram|grams|gm|gms|litre|litres|liter|liters|ltr|l|'
+    r'dabba|dhabba|dappe|bori|boriyan|bag|bags|pouch|pouches|piece|pieces|pc|pcs|bottle|bottles|'
+    r'dozen|darjan|tin|tins|can|cans|cup|plate|patte|patti)\b',
+    re.IGNORECASE
+)
+
+CURRENCY_PATTERNS = re.compile(
+    r'(?:₹|rs\.?\s*|rupaye|rupayee|rupees|roopayi|roopaayi|rupai|rupaiya|rupaiye)',
+    re.IGNORECASE
+)
+
+
 def extract_amounts(text: str) -> List[Tuple[float, str]]:
     results: List[Tuple[float, str]] = []
     text_lower = text.lower().replace("-", " ")
+
+    # Identify numbers that are quantities of grocery items (e.g. "2 packet", "5 kilo")
+    qty_matches = set()
+    for qm in re.finditer(rf'(\b\d+(?:\.\d+)?\b)\s*{UNIT_PATTERNS.pattern}', text_lower):
+        qty_matches.add(qm.group(1))
 
     # 1. Digits
     digit_pattern = r'(?:₹|rs\.?\s*)?(\b\d+(?:,\d{3})*(?:\.\d{1,2})?\b)'
     for m in re.finditer(digit_pattern, text_lower):
         try:
-            val = float(m.group(1).replace(",", ""))
+            raw_num_str = m.group(1).replace(",", "")
+            val = float(raw_num_str)
             if 0 < val <= 50_00_000:
-                results.append((val, m.group(0)))
+                # If this number was specifically qualifying a unit (e.g. "2 packet")
+                # and there are other numbers or currency in the sentence, treat it as quantity
+                is_unit_qty = raw_num_str in qty_matches
+                is_curr_marked = bool(re.search(CURRENCY_PATTERNS, m.group(0))) or bool(re.search(rf'{raw_num_str}\s*(?:rupaye|rupees|rs|₹|roopayi)', text_lower))
+                results.append((val, m.group(0), is_curr_marked, is_unit_qty))
         except ValueError:
             pass
 
     # 2. Fractions
     for phrase, val in INDIC_FRACTIONS.items():
         if phrase in text_lower:
-            results.append((val, phrase))
+            results.append((val, phrase, True, False))
 
     # 3. Words
     vocab = set(ALL_ONES.keys()) | set(ALL_TENS.keys()) | set(ALL_MULTIPLIERS.keys())
@@ -276,12 +299,29 @@ def extract_amounts(text: str) -> List[Tuple[float, str]]:
             amt = parse_spoken_number(phrase)
             if amt is not None and 0 < amt <= 50_00_000:
                 if not any(abs(existing[0] - amt) < 0.01 for existing in results):
-                    results.append((amt, phrase))
+                    is_curr = bool(re.search(CURRENCY_PATTERNS, phrase)) or bool(re.search(rf'{re.escape(phrase)}\s*(?:rupaye|rupees|rs|₹|roopayi)', text_lower))
+                    is_qty = bool(re.search(rf'{re.escape(phrase)}\s*{UNIT_PATTERNS.pattern}', text_lower))
+                    results.append((amt, phrase, is_curr, is_qty))
             i = j
         else:
             i += 1
 
-    return results
+    # Prioritize:
+    # 1st: Currency-marked numbers (e.g. "60 rupaye", "₹340")
+    # 2nd: Non-unit standalone numbers
+    # 3rd: Unit quantities (only if no other number exists)
+    if len(results) > 1:
+        # Check if any currency-marked number exists
+        currency_marked = [r for r in results if r[2] and not r[3]]
+        if currency_marked:
+            sorted_res = currency_marked
+        else:
+            non_units = [r for r in results if not r[3]]
+            sorted_res = non_units if non_units else results
+    else:
+        sorted_res = results
+
+    return [(r[0], r[1]) for r in sorted_res]
 
 
 def extract_first_amount(text: str) -> Optional[float]:
