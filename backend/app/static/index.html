@@ -1085,12 +1085,14 @@
 
         // ── Voice, State Machine & Backend Integration ─────────────
         let currentLanguage = 'en-IN';
-        let handsFreeActive = false;
-        let micLocked = true;
-        let isIntroPlaying = true;
+        let handsFreeActive = true;
+        let micLocked = false;
+        let isIntroPlaying = false;
         let isProcessing = false;
         let isSpeaking = false;
         let isStandby = false;
+        let speechSilenceTimer = null;
+        let lastHeardTranscript = '';
         let recognition = null;
         let lastSpokenText = "";
         let audioContext = null;
@@ -1289,8 +1291,6 @@
         }
 
         function initContinuousSpeechRecognition() {
-            if (micLocked || isIntroPlaying) return;
-
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 if (!recognition) {
                     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1300,13 +1300,11 @@
                     recognition.lang = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
 
                     recognition.onstart = () => {
-                        if (!micLocked && !isSpeaking) {
-                            updateMicUIState(isStandby ? 'standby' : 'active');
-                        }
+                        updateMicUIState(isStandby ? 'standby' : 'active');
                     };
 
                     recognition.onresult = (event) => {
-                        if (micLocked || isSpeaking || isIntroPlaying) return;
+                        if (isSpeaking) return;
 
                         let rawFinal = '';
                         let rawInterim = '';
@@ -1320,58 +1318,82 @@
 
                         const interimTranscript = normalizeKiranaTranscript(rawInterim);
                         const finalTranscript = normalizeKiranaTranscript(rawFinal);
+                        const currentTranscript = (finalTranscript || interimTranscript).trim();
 
-                        if (interimTranscript) {
-                            document.getElementById('liveTranscriptDisplay').innerText = `"${interimTranscript}"`;
+                        if (currentTranscript) {
+                            lastHeardTranscript = currentTranscript;
+                            document.getElementById('liveTranscriptDisplay').innerText = `"${currentTranscript}"`;
+                            document.getElementById('voiceTextInput').value = currentTranscript;
                         }
 
-                        if (finalTranscript && !isProcessing && !micLocked && !isSpeaking) {
-                            const trimmed = finalTranscript.trim();
-                            const lower = trimmed.toLowerCase();
-
-                            // Standby Ambient Drop Filter (wakes on BolKhata in any language)
-                            const wakeMatch = lower.includes('bolkhata') || lower.includes('बोल खाता') || lower.includes('ಬೋಲ್ ಖಾತಾ') || lower.includes('బోల్ ఖాతా');
-
-                            if (isStandby) {
-                                if (!wakeMatch) {
-                                    document.getElementById('liveTranscriptDisplay').innerText = `(Ambient noise dropped: "${trimmed}". Say "BolKhata" to wake)`;
-                                    return;
-                                } else {
-                                    wakeUpAssistant();
+                        // Immediate execution if Chrome marks isFinal = true
+                        if (finalTranscript && !isProcessing && !isSpeaking) {
+                            if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+                            handleSpokenUtterance(finalTranscript);
+                        } else if (interimTranscript && !isProcessing && !isSpeaking) {
+                            // Silence Debounce: If user speaks and then pauses for 1200ms, auto-commit the speech!
+                            if (speechSilenceTimer) clearTimeout(speechSilenceTimer);
+                            speechSilenceTimer = setTimeout(() => {
+                                if (lastHeardTranscript && !isProcessing && !isSpeaking) {
+                                    const toSend = lastHeardTranscript;
+                                    lastHeardTranscript = '';
+                                    handleSpokenUtterance(toSend);
                                 }
-                            }
-
-                            const isStopWord = lower === 'stop' || lower === 'ruko' || lower === 'bas' || lower === 'chup' || lower === 'sleep' || lower === 'standby' || lower.includes('stop listening');
-                            if (isStopWord) {
-                                putAssistantToSleep();
-                            }
-
-                            document.getElementById('liveTranscriptDisplay').innerText = `"${finalTranscript}"`;
-                            document.getElementById('voiceTextInput').value = finalTranscript;
-                            sendVoiceCommand(finalTranscript);
+                            }, 1200);
                         }
                     };
 
                     recognition.onerror = (event) => {
                         console.warn("Speech error:", event.error);
-                        if (handsFreeActive && !micLocked && !isSpeaking && event.error !== 'not-allowed') {
-                            setTimeout(restartRecognition, 400);
+                        if (event.error !== 'not-allowed') {
+                            setTimeout(restartRecognition, 300);
                         }
                     };
 
                     recognition.onend = () => {
-                        if (!micLocked && !isSpeaking && handsFreeActive && !isProcessing) {
-                            setTimeout(restartRecognition, 300);
+                        if (!isSpeaking && !isProcessing) {
+                            setTimeout(restartRecognition, 250);
                         }
                     };
                 }
 
                 restartRecognition();
+            } else {
+                console.warn("Web Speech API not supported in this browser.");
+                document.getElementById('liveTranscriptDisplay').innerText = "(Browser doesn't support Web Speech. Please use Chrome or type below.)";
             }
         }
 
+        function handleSpokenUtterance(rawText) {
+            const trimmed = rawText.trim();
+            if (!trimmed || isProcessing || isSpeaking) return;
+
+            const lower = trimmed.toLowerCase();
+
+            // Standby Ambient Drop Filter (wakes on BolKhata in any language)
+            const wakeMatch = lower.includes('bolkhata') || lower.includes('बोल खाता') || lower.includes('ಬೋಲ್ ಖಾತಾ') || lower.includes('బోల్ ఖాతా');
+
+            if (isStandby) {
+                if (!wakeMatch) {
+                    document.getElementById('liveTranscriptDisplay').innerText = `(Ambient noise dropped: "${trimmed}". Say "BolKhata" to wake)`;
+                    return;
+                } else {
+                    wakeUpAssistant();
+                }
+            }
+
+            const isStopWord = lower === 'stop' || lower === 'ruko' || lower === 'bas' || lower === 'chup' || lower === 'sleep' || lower === 'standby' || lower.includes('stop listening');
+            if (isStopWord) {
+                putAssistantToSleep();
+            }
+
+            document.getElementById('liveTranscriptDisplay').innerText = `"${trimmed}"`;
+            document.getElementById('voiceTextInput').value = trimmed;
+            sendVoiceCommand(trimmed, true);
+        }
+
         function restartRecognition() {
-            if (!recognition || !handsFreeActive || micLocked || isSpeaking || isProcessing) return;
+            if (!recognition || isSpeaking || isProcessing) return;
             try {
                 recognition.start();
             } catch (e) {
@@ -1379,18 +1401,18 @@
                     try { recognition.abort(); } catch(_) {}
                     setTimeout(() => {
                         try {
-                            if (!micLocked && !isSpeaking && !isProcessing && handsFreeActive) {
+                            if (!isSpeaking && !isProcessing) {
                                 recognition.start();
                             }
                         } catch(_) {}
-                    }, 150);
+                    }, 100);
                 }
             }
         }
 
         // Continuous Heartbeat: Ensures continuous listening in Chrome never gets stuck
         setInterval(() => {
-            if (handsFreeActive && !micLocked && !isSpeaking && !isProcessing) {
+            if (!isSpeaking && !isProcessing) {
                 restartRecognition();
             }
         }, 3500);
@@ -1446,10 +1468,6 @@
         }
 
         function manualMicToggle() {
-            if (micLocked) {
-                playWelcomeTrustMessage();
-                return;
-            }
             if (isStandby) {
                 wakeUpAssistant();
                 return;
@@ -2162,19 +2180,28 @@
             initSynapseThreeJS();
             await loadOwnerProfile();
             refreshAllData();
-            updateMicUIState('locked', 'Preparing Safe System Welcome Intro...');
-            
+
+            handsFreeActive = true;
+            micLocked = false;
+            isIntroPlaying = false;
+            isSpeaking = false;
+            isProcessing = false;
+
+            const clickBanner = document.getElementById('clickToStartBanner');
+            if (clickBanner) clickBanner.style.display = 'none';
+
+            initAudioOscilloscope();
+            initContinuousSpeechRecognition();
+
             const handleFirstGesture = () => {
                 document.removeEventListener('click', handleFirstGesture);
-                if (isIntroPlaying) {
-                    playWelcomeTrustMessage();
+                document.removeEventListener('keydown', handleFirstGesture);
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
                 }
             };
-            document.addEventListener('click', handleFirstGesture);
-
-            setTimeout(() => {
-                playWelcomeTrustMessage();
-            }, 600);
+            document.addEventListener('click', handleFirstGesture, { once: true });
+            document.addEventListener('keydown', handleFirstGesture, { once: true });
         });
     </script>
 </body>
