@@ -258,3 +258,4 @@ class VoiceResponse(BaseModel):
     disambiguation_options: List[str] = []
     language: str = "hi-IN"
     correction_event: Optional[dict] = None  # UI strike-through: {old_amount, new_amount, customer}
+    calculation_event: Optional[dict] = None  # Live table math: {customer, old_balance, change, new_balance, action, equation}
