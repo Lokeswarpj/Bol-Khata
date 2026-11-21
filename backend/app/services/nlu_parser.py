@@ -83,11 +83,12 @@ QUERY_KEYWORDS = {
     # Telugu
     "mottam", "మొత్తం", "entha", "ఎంత", "lekka", "లెక్క",
     # English
-    "total", "balance", "how much", "what is",
+    "total", "balance", "how", "much", "what", "owe", "owes", "due", "dues", "account", "show", "tell",
 }
 
 TODAY_QUERY_KEYWORDS = {
-    "aaj", "आज", "today", "abhi tak", "ivattu", "ಇವತ್ತು", "eeroju", "ఈరోజు",
+    "aaj", "आज", "today", "today's", "abhi tak", "ivattu", "ಇವತ್ತು", "eeroju", "ఈరోజు",
+    "dukaan", "store", "shop", "overall", "all",
 }
 
 LIST_KEYWORDS = {
@@ -112,6 +113,9 @@ SKIP_WORDS = {
     "the", "a", "an", "is", "are", "was", "were", "has", "have", "his", "her",
     "packet", "kilo", "kg", "gram", "rupaye", "rupees", "rs", "debt", "account",
     "bhaiya", "ji", "babu", "sahab", "anna", "garu", "sir", "madam", "namaste", "hello", "hi",
+    "how", "much", "what", "give", "show", "tell", "check", "me", "you", "does", "can", "please",
+    "dukaan", "store", "shop", "total", "balance", "all", "owe", "owes",
+    "aaj", "kal", "parso", "today", "yesterday", "ninne", "ninna", "ivattu", "eeroju", "abhi",
     # Indic script greetings & polite words
     "ನಮಸ್ಕಾರ", "ನಮಸ್ಕಾರಗಳು", "ಹೇಗಿದ್ದೀರಾ", "ಹೇಗಿದ್ದೀರಿ", "ಧನ್ಯವಾದ", "ಧನ್ಯವಾದಗಳು",
     "నమస్కారం", "నమస్కారాలు", "ఎలా", "ఉన్నారు", "బాగున్నారా", "ధన్యవాదాలు",
@@ -133,10 +137,16 @@ CHITCHAT_PATTERNS = {
         r'(?:कैसे\s*हो|कैसे\s*हैं|क्या\s*हाल|सब\s*ठीक)',
     ],
     "identity": [
-        r'\b(?:tum\s+kaun\s+ho|aap\s+kaun\s+ho|kaun\s+ho|who\s+are\s+you|what\s+is\s+your\s+name|tumhara\s+naam|aapka\s+naam|neevu\s+yaaru|nimma\s+hesaru|nuvvu\s+evaru|mee\s+peru|what\s+do\s+you\s+do|kya\s+karte\s+ho|bolkhata\s+kya\s+hai)\b',
+        r'\b(?:tum\s+kaun\s+ho|aap\s+kaun\s+ho|kaun\s+ho|who\s+are\s+you|what\s+is\s+your\s+name|tumhara\s+naam|aapka\s+naam|neevu\s+yaaru|nimma\s+hesaru|nuvvu\s+evaru|mee\s+peru|what\s+do\s+you\s+do|kya\s+karte\s+ho|bolkhata\s+kya\s+hai|what\s+is\s+bolkhata|about\s+bolkhata|who\s+made\s+you)\b',
         r'(?:ನೀವು\s*ಯಾರು|ನಿಮ್ಮ\s*ಹೆಸರು)',
         r'(?:మీరు\s*ఎవరు|నువ్వు\s*ఎవరు|మీ\s*పేరు)',
         r'(?:तुम\s*कौन\s*हो|आप\s*कौन\s*हो|आपका\s*नाम)',
+    ],
+    "help": [
+        r'\b(?:help|can\s+you\s+help|help\s+me|what\s+can\s+you\s+do|how\s+to\s+use|how\s+do\s+you\s+work|kaise\s+use\s+kare|madad|features|commands|guide)\b',
+        r'(?:ಸಹಾಯ|ಏನು\s*ಮಾಡಬಹುದು)',
+        r'(?:సహాయం|ఏమి\s*చేయగలరు)',
+        r'(?:मदद|क्या\s*कर\s*सकते\s*हो)',
     ],
     "safety": [
         r'\b(?:safe\s+hai|surakshit|is\s+it\s+safe|data\s+safe|secure|leak|privacy|guarantee|bhadravagiya|surakshitama)\b',
@@ -170,14 +180,16 @@ def detect_chitchat(text: str) -> Optional[str]:
 
 
 NAME_PATTERNS = [
+    # English queries: "how much does ramesh owe", "what is ramesh balance", "show me ramesh total"
+    r'(?:how\s+much\s+(?:does\s+)?|what\s+is\s+|show\s+(?:me\s+)?|check\s+|tell\s+(?:me\s+)?|give\s+(?:me\s+)?)([a-zA-Z]+)(?:\'s|\s+owe|\s+balance|\s+total|\s+account)',
     # Hyphenated descriptor names: 'Ramesh - Kirana Lane', 'Ramesh - Milk Dairy'
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ka|ke|ki|ko|ne|ge|ku|ki)\s',
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ka|ke|ki|ko|ne|ge|ku|ki)\s',
     # "Ramesh cleared his debt", "Ramesh ne hisaab clear kar diya"
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ne|cleared|settled|paid|ka|ki)\s',
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ne|cleared|settled|paid|ka|ki)\s',
     # Direct "Ramesh ka 340"
-    r'(?:^|\s)([A-Z][a-z]+)\s+(?:ka|ke|ki|ge|ku|ki)\s',
-    # Query: "Ramesh total", "Ramesh ka total"
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s*(?:ka|ke|ki|ge|ku|ki)?\s*(?:total|hisaab|balance|kitna|ottu|mottam|eshtu|entha)',
+    r'(?:^|\s)([a-zA-Z]+)\s+(?:ka|ke|ki|ge|ku|ki)\s',
+    # Query: "Ramesh total", "Ramesh ka total", "ramesh balance", "ramesh's balance"
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s*(?:ka|ke|ki|ge|ku|ki|\'s)?\s*(?:total|hisaab|balance|kitna|ottu|mottam|eshtu|entha|dues|account|owe|owes)',
 ]
 
 
@@ -212,27 +224,33 @@ def detect_language(text: str) -> str:
         "kya", "ye", "yeh", "hai", "hain", "kaisa", "chahiye", "batao", "bataiye", "bata"
     }
 
-    kn_score = len(tokens & kn_vocab)
-    te_score = len(tokens & te_vocab)
-    hi_score = len(tokens & hi_vocab)
-
-    if kn_score > te_score and kn_score > hi_score:
-        return "kn-IN"
-    if te_score > kn_score and te_score > hi_score:
-        return "te-IN"
-    if hi_score > 0:
-        return "hi-IN"
-
-    # English check
     en_vocab = {
         "cleared", "debt", "credit", "paid", "total", "balance", "yesterday",
         "today", "three", "forty", "hello", "hi", "how", "you", "who", "safe",
-        "thanks", "thank", "good", "morning"
+        "thanks", "thank", "good", "morning", "what", "is", "are", "does", "do",
+        "can", "help", "owe", "owes", "due", "dues", "tell", "show", "give", "me",
+        "much", "why", "where", "name", "customer", "account", "please", "my",
+        "your", "store", "shop", "khata", "ledger", "bolkhata", "secure", "about",
+        "sale", "sales", "check", "no", "yes", "all", "everyone"
     }
-    if len(tokens & en_vocab) > 0:
+
+    kn_score = len(tokens & kn_vocab)
+    te_score = len(tokens & te_vocab)
+    hi_score = len(tokens & hi_vocab)
+    en_score = len(tokens & en_vocab)
+
+    if kn_score > te_score and kn_score > hi_score and kn_score > en_score:
+        return "kn-IN"
+    if te_score > kn_score and te_score > hi_score and te_score > en_score:
+        return "te-IN"
+    if en_score > hi_score and en_score > kn_score and en_score > te_score:
+        return "en-IN"
+    if hi_score > 0:
+        return "hi-IN"
+    if en_score > 0:
         return "en-IN"
 
-    return "hi-IN"
+    return "en-IN"
 
 
 def _tokenize_clause(text: str) -> set:
@@ -249,7 +267,7 @@ def _has_name(text: str) -> bool:
 def _extract_customer_name(text: str) -> Optional[str]:
     # 1. Regex patterns
     for pattern in NAME_PATTERNS:
-        m = re.search(pattern, text)
+        m = re.search(pattern, text, re.IGNORECASE)
         if m:
             cand = m.group(1).strip()
             if cand.lower() not in SKIP_WORDS:
@@ -300,26 +318,29 @@ def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]
     if _is_debt_clearing_utterance(clause_text):
         return IntentType.CLEAR_DEBT, None
 
-    # 3. Queries
-    if tokens & QUERY_KEYWORDS:
-        if (tokens & TODAY_QUERY_KEYWORDS) and not _has_name(clause_text):
+    # 3. Conversational Small-Talk & Chitchat (Greetings, How are you, Identity, Help, Safety)
+    chitchat_topic = detect_chitchat(clause_text)
+    if chitchat_topic and extract_first_amount(clause_text) is None:
+        return IntentType.CHITCHAT, chitchat_topic
+
+    # 4. Queries (English & Indic)
+    has_query_kw = bool(tokens & QUERY_KEYWORDS)
+    is_question = bool(re.search(r'\b(?:how\s+much|what\s+is|what\'s|show|tell|check|balance|total|kitna|eshtu|entha|dues|account)\b', clause_text, re.IGNORECASE))
+
+    if has_query_kw or is_question:
+        if (tokens & TODAY_QUERY_KEYWORDS) and not _extract_customer_name(clause_text):
             return IntentType.QUERY_TODAY, None
         if tokens & LIST_KEYWORDS:
             return IntentType.LIST_DUES, None
         return IntentType.QUERY_BALANCE, None
 
-    # 4. Payment
+    # 5. Payment
     if tokens & PAYMENT_KEYWORDS:
         return IntentType.ADD_PAYMENT, None
 
-    # 5. Credit
+    # 6. Credit
     if tokens & CREDIT_KEYWORDS:
         return IntentType.ADD_CREDIT, None
-
-    # 6. Conversational Small-Talk & Chitchat (BEFORE default credit / unknown)
-    chitchat_topic = detect_chitchat(clause_text)
-    if chitchat_topic and extract_first_amount(clause_text) is None:
-        return IntentType.CHITCHAT, chitchat_topic
 
     # Default to credit if an amount is present
     if extract_first_amount(clause_text) is not None:

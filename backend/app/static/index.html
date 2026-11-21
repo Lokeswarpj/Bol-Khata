@@ -91,9 +91,33 @@
                         <span id="micPingDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
                         <h2 class="text-sm font-semibold text-slate-200">Continuous Hands-Free Counter</h2>
                     </div>
-                    <span id="detectedLangBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-cyan-300 border border-slate-700 font-mono">
-                        Auto-Detecting Language
+                    <span id="detectedLangBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono">
+                        🌐 English (en-IN)
                     </span>
+                </div>
+
+                <!-- Instant Voice Language Switcher Bar -->
+                <div class="mb-3 p-1.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between gap-1 text-[11px]">
+                    <span class="text-slate-400 font-medium pl-1 flex items-center text-[10px]">
+                        <i class="fa-solid fa-language text-cyan-400 mr-1"></i> Lang:
+                    </span>
+                    <div class="flex items-center gap-1 flex-wrap justify-end">
+                        <button onclick="setVoiceLanguage('en-IN')" id="langBtn-en" class="px-2 py-0.5 rounded-lg font-semibold transition border bg-cyan-600 text-white border-cyan-400 shadow-sm shadow-cyan-600/30">
+                            🇬🇧 English
+                        </button>
+                        <button onclick="setVoiceLanguage('kn-IN')" id="langBtn-kn" class="px-2 py-0.5 rounded-lg font-semibold transition border bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500">
+                            🟡 ಕನ್ನಡ
+                        </button>
+                        <button onclick="setVoiceLanguage('te-IN')" id="langBtn-te" class="px-2 py-0.5 rounded-lg font-semibold transition border bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500">
+                            🟣 తెలుగు
+                        </button>
+                        <button onclick="setVoiceLanguage('hi-IN')" id="langBtn-hi" class="px-2 py-0.5 rounded-lg font-semibold transition border bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500">
+                            🔴 हिंदी
+                        </button>
+                        <button onclick="setVoiceLanguage('auto')" id="langBtn-auto" class="px-2 py-0.5 rounded-lg font-medium transition border bg-slate-800 text-slate-400 border-slate-700 hover:text-cyan-300">
+                            ⚡ Auto
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Hands-Free Mic Pulsing Visualizer -->
@@ -170,9 +194,17 @@
                     <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center mb-2">
                         <i class="fa-solid fa-comments text-cyan-400 mr-1.5"></i> Conversational Chitchat (Normal Person Talk)
                     </h3>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                        <button onclick="sendPrompt('Hello, how are you?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-sky-400">English Greeting</div>
+                            "Hello, how are you?"
+                        </button>
+                        <button onclick="sendPrompt('Can you help me?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-cyan-400">Help & Capabilities</div>
+                            "Can you help me?"
+                        </button>
                         <button onclick="sendPrompt('Namaste bhaiya, kaise ho?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
-                            <div class="font-bold text-cyan-400">Greeting & Status</div>
+                            <div class="font-bold text-cyan-400">Hindi Greeting</div>
                             "Namaste bhaiya, kaise ho?"
                         </button>
                         <button onclick="sendPrompt('Tum kaun ho?')" class="p-2 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
@@ -196,6 +228,20 @@
                         <i class="fa-solid fa-flask text-amber-400 mr-1.5"></i> 1-Click Realistic Kirana Audio Scenarios
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <!-- English Query Ramesh Balance -->
+                        <button onclick="sendPrompt('How much does Ramesh owe?')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-sky-400 flex items-center">
+                                <i class="fa-solid fa-question mr-1"></i> English Balance Query
+                            </div>
+                            "How much does Ramesh owe?"
+                        </button>
+                        <!-- English Store Total -->
+                        <button onclick="sendPrompt('What is the total balance?')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-slate-800 rounded-xl transition text-slate-300 hover:text-cyan-300">
+                            <div class="font-bold text-emerald-400 flex items-center">
+                                <i class="fa-solid fa-calculator mr-1"></i> Dukaan Store Summary
+                            </div>
+                            "What is the total balance?"
+                        </button>
                         <!-- Debt Clearing Test -->
                         <button onclick="sendPrompt('Ramesh - Kirana Lane cleared his debt')" class="p-2.5 text-left bg-slate-950 hover:bg-slate-800/80 border border-emerald-800/60 rounded-xl transition text-slate-200 hover:text-emerald-300">
                             <div class="font-bold text-emerald-400 flex items-center">
@@ -347,6 +393,7 @@
 
     <!-- Client-Side Automation Script (Zero-Clicks Required) -->
     <script>
+        let currentLanguage = 'en-IN'; // Default: English / multilingual
         let handsFreeActive = false;
         let micLocked = true;
         let isIntroPlaying = true;
@@ -358,7 +405,53 @@
         let analyser = null;
         let micStream = null;
 
-        const WELCOME_TRUST_TEXT = "Namaste! Welcome to BolKhata. You are experiencing a safe and trusted AI ledger system built specifically for your store. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — aap bina screen ko chhue, aam bolchaal mein baat kar sakte hain.";
+        const WELCOME_TRUST_MESSAGES = {
+            'en-IN': "Namaste! Welcome to BolKhata. You are experiencing a safe and trusted AI ledger system built specifically for your store. All your ledger data is 100% encrypted, secure, and DPDP compliant. I am your hands-free assistant — you can talk naturally across the counter without touching the screen.",
+            'hi-IN': "Namaste! BolKhata mein aapka swagat hai. Aap ek surakshit aur vishwasniya AI ledger system ka anubhav kar rahe hain. Aapka saara hisaab 100% surakshit aur encrypted hai. Main aapka hands-free sahayak hoon — aap bina screen ko chhue, aam bolchaal mein baat kar sakte hain.",
+            'kn-IN': "ನಮಸ್ಕಾರ! ಬೋಲ್ ಖಾತಾಗೆ ಸುಸ್ವಾಗತ. ನಿಮ್ಮ ಅಂಗಡಿಗೆ ಸಂಪೂರ್ಣ ಸುರಕ್ಷಿತ ಮತ್ತು ನಂಬಿಕಸ್ಥ ಎಐ ಲೆಡ್ಜರ್ ವ್ಯವಸ್ಥೆ ಇಲ್ಲಿದೆ. ನಿಮ್ಮ ಎಲ್ಲಾ ಲೆಕ್ಕಗಳು ಸುರಕ್ಷಿತ ಮತ್ತು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿವೆ. ನಾನು ನಿಮ್ಮ ವಾಯ್ಸ್ ಸಹಾಯಕ — ಪರದೆಯನ್ನು ಮುಟ್ಟದೆಯೇ ನೀವು ಸಹಜವಾಗಿ ಮಾತನಾಡಬಹುದು.",
+            'te-IN': "నమస్కారం! బోల్ ఖాతాకు స్వాగతం. మీ కిరాణా దుకాణం కోసం ఇది అత్యంత సురక్షితమైన మరియు నమ్మకమైన AI లెడ్జర్ సిస్టమ్. మీ లెక్కలన్నీ 100% సురక్షితంగా మరియు ఎన్‌క్రిప్ట్ చేయబడి ఉన్నాయి. నేను మీ హ్యాండ్స్-ఫ్రీ సహాయకుడిని — స్క్రీన్‌ను తాకకుండా మీరు సహజంగా మాట్లాడవచ్చు."
+        };
+
+        // Language Switcher Handler
+        function setVoiceLanguage(langCode) {
+            currentLanguage = langCode;
+            const buttons = {
+                'en-IN': document.getElementById('langBtn-en'),
+                'kn-IN': document.getElementById('langBtn-kn'),
+                'te-IN': document.getElementById('langBtn-te'),
+                'hi-IN': document.getElementById('langBtn-hi'),
+                'auto': document.getElementById('langBtn-auto')
+            };
+
+            for (const [code, btn] of Object.entries(buttons)) {
+                if (!btn) continue;
+                if (code === langCode) {
+                    btn.className = "px-2 py-0.5 rounded-lg font-semibold transition border bg-cyan-600 text-white border-cyan-400 shadow-sm shadow-cyan-600/30";
+                } else {
+                    btn.className = "px-2 py-0.5 rounded-lg font-medium transition border bg-slate-800 text-slate-300 border-slate-700 hover:border-cyan-500";
+                }
+            }
+
+            const badge = document.getElementById('detectedLangBadge');
+            const langLabels = {
+                'en-IN': '🌐 English (en-IN)',
+                'kn-IN': '🟡 ಕನ್ನಡ (kn-IN)',
+                'te-IN': '🟣 తెలుగు (te-IN)',
+                'hi-IN': '🔴 हिंदी (hi-IN)',
+                'auto': '⚡ Auto-Detect'
+            };
+            if (badge) badge.innerText = langLabels[langCode] || langCode;
+
+            // Re-configure speech recognition acoustic model if initialized
+            if (recognition) {
+                const targetModel = langCode === 'auto' ? 'en-IN' : langCode;
+                recognition.lang = targetModel;
+                if (handsFreeActive && !micLocked && !isSpeaking && !isProcessing) {
+                    try { recognition.stop(); } catch(e){}
+                    setTimeout(restartRecognition, 200);
+                }
+            }
+        }
 
         // UI State Manager
         function updateMicUIState(state, customText) {
@@ -441,7 +534,10 @@
             updateMicUIState('locked', 'Playing Welcome Trust Audio... Microphone is locked');
             document.getElementById('liveTranscriptDisplay').innerText = "(Microphone locked while welcome intro is playing...)";
 
-            speakText(WELCOME_TRUST_TEXT, 'hi-IN', null, () => {
+            const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
+            const welcomeText = WELCOME_TRUST_MESSAGES[langKey] || WELCOME_TRUST_MESSAGES['en-IN'];
+
+            speakText(welcomeText, langKey, null, () => {
                 // Intro is completely finished! Unlock microphone
                 finishIntroAndUnlockMic();
             });
@@ -482,7 +578,7 @@
                     recognition = new SpeechRec();
                     recognition.continuous = true;
                     recognition.interimResults = true;
-                    recognition.lang = 'hi-IN';
+                    recognition.lang = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
 
                     recognition.onstart = () => {
                         if (!micLocked && !isSpeaking) {
@@ -623,16 +719,20 @@
             document.getElementById('aiResponseBox').innerHTML = `<span class="text-cyan-400 flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing: "${text}"...</span>`;
 
             try {
+                const payload = { text: text };
+                if (currentLanguage && currentLanguage !== 'auto') {
+                    payload.language = currentLanguage;
+                }
                 const res = await fetch('/api/voice/process-text', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
 
                 // Update Detected Language Badge
-                if (data.language) {
-                    const langMap = { 'hi-IN': 'Hindi (Auto)', 'kn-IN': 'ಕನ್ನಡ (Auto)', 'te-IN': 'తెలుగు (Auto)', 'en-IN': 'English (Auto)' };
+                if (data.language && (currentLanguage === 'auto' || !currentLanguage)) {
+                    const langMap = { 'hi-IN': '🔴 Hindi (Auto)', 'kn-IN': '🟡 ಕನ್ನಡ (Auto)', 'te-IN': '🟣 తెలుగు (Auto)', 'en-IN': '🌐 English (Auto)' };
                     document.getElementById('detectedLangBadge').innerText = langMap[data.language] || data.language;
                 }
 
@@ -744,7 +844,8 @@
 
         function replayAudio() {
             if (lastSpokenText) {
-                speakText(lastSpokenText, 'hi-IN', null, null);
+                const langKey = currentLanguage === 'auto' ? 'en-IN' : currentLanguage;
+                speakText(lastSpokenText, langKey, null, null);
             }
         }
 

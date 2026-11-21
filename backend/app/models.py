@@ -90,7 +90,7 @@ class VoiceInput(BaseModel):
     """Raw voice input (audio bytes sent via WebSocket or REST)."""
     audio_base64: Optional[str] = None
     text: Optional[str] = None  # Pre-transcribed text (for testing)
-    language: str = Field(default="hi-IN")
+    language: Optional[str] = None
 
 
 class ManualTransactionCreate(BaseModel):
