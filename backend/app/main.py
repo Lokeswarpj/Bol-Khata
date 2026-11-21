@@ -12,7 +12,8 @@ from fastapi.responses import JSONResponse, HTMLResponse
 import os
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, async_session
+from app.services.seed import seed_demo_data
 
 # ── Logging Setup ─────────────────────────────────────────────
 logging.basicConfig(
@@ -33,6 +34,11 @@ async def lifespan(app: FastAPI):
     # Initialize SQLite schema
     await init_db()
     logger.info("✅ Database schema initialized & ready")
+
+    # Pre-seed hackathon demo customers (Ramesh - Kirana Lane & Ramesh - Milk Dairy)
+    async with async_session() as session:
+        await seed_demo_data(session)
+    logger.info("✅ Demo customer seeds verified")
     
     # Check Gnani.ai credentials
     if settings.gnani_api_key and settings.gnani_api_key != "your_gnani_api_key_here":

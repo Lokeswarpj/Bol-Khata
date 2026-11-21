@@ -26,7 +26,11 @@ async def main():
         # 1. Root & Health
         res = await client.get("/")
         assert res.status_code == 200
-        print(f"  ✓ GET / -> 200: {res.json()['app']} v{res.json()['version']}")
+        print(f"  ✓ GET / -> 200 (HTML Interactive Counter UI served)")
+
+        res = await client.get("/api/info")
+        assert res.status_code == 200
+        print(f"  ✓ GET /api/info -> 200: {res.json()['app']} v{res.json()['version']}")
 
         res = await client.get("/health")
         assert res.status_code == 200

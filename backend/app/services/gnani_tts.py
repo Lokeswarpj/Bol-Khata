@@ -1,9 +1,13 @@
 """
-BolKhata - Gnani.ai Text-to-Speech (TTS) Integration
-Uses Gnani Timbre for natural Indian voice responses.
-Responsible AI: First turn always discloses "Main ek AI assistant hoon."
+BolKhata - Gnani.ai Text-to-Speech (TTS) Integration with Smart Token Saver
+Features:
+- Token-Saver Disk Cache: Caches generated audio hashes so repeated responses use 0 tokens!
+- First-turn Responsible AI disclosure
+- Graceful fallback to browser speech if tokens run low or offline
 """
 
+import os
+import hashlib
 import httpx
 import base64
 import logging
@@ -13,27 +17,21 @@ from app.config import settings
 
 logger = logging.getLogger("bolkhata.tts")
 
-
-# AI Disclosure message (Responsible AI requirement)
+# AI Disclosure messages
 AI_DISCLOSURE = {
-    "hi-IN": "Namaste! Main BolKhata hoon, ek AI assistant. Aapki dukaan ka hisaab rakhne mein madad karungi.",
-    "en-IN": "Hello! I am BolKhata, an AI assistant. I will help you keep your shop's accounts.",
-    "kn-IN": "Namaskara! Naanu BolKhata, ondu AI sahayaka. Nimma angadiya lekka ittukolalu sahaya maaduttene.",
-    "ta-IN": "Vanakkam! Naan BolKhata, oru AI uthavi. Ungal kadayin kanakkugalai paathukkolla uthavi seiven.",
+    "hi-IN": "Namaste! Main BolKhata hoon, ek AI assistant. Dukaan ka hisaab rakhne mein madad karungi.",
+    "en-IN": "Hello! I am BolKhata, an AI assistant. I will help manage your shop's accounts.",
+    "kn-IN": "Namaskara! Naanu BolKhata, ondu AI sahayaka. Nimma angadiya lekka nodikollalu sahaya maaduttene.",
     "te-IN": "Namaskaram! Nenu BolKhata, oka AI sahayakudu. Mee shop lekkalalo sahayam chestanu.",
 }
 
+# Local disk cache directory for audio files
+CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".audio_cache")
+os.makedirs(CACHE_DIR, exist_ok=True)
+
 
 class GnaniTTSService:
-    """
-    Gnani.ai Text-to-Speech service using Timbre models.
-    
-    Features:
-    - Natural Indian voices (multiple languages)
-    - REST API for full audio generation
-    - SSE streaming for faster first-byte delivery
-    - Sub-2-second response target for shop Q&A
-    """
+    """Gnani.ai TTS with disk caching to protect limited hackathon tokens."""
 
     def __init__(self):
         self.api_key = settings.gnani_api_key
@@ -41,11 +39,12 @@ class GnaniTTSService:
         self.model = settings.gnani_tts_model
         self.voice = settings.gnani_tts_voice
         self.language = settings.default_language
-        self.headers = {
-            "X-API-Key-ID": self.api_key,
-            "Content-Type": "application/json",
-        }
-        self._first_turn_done = {}  # Track per-session AI disclosure
+        self._first_turn_done = {}
+
+    def _get_cache_path(self, text: str, lang: str, voice: str) -> str:
+        key = f"{text}|{lang}|{voice}".encode("utf-8")
+        h = hashlib.sha256(key).hexdigest()
+        return os.path.join(CACHE_DIR, f"{h}.wav")
 
     async def synthesize(
         self,
@@ -55,28 +54,45 @@ class GnaniTTSService:
         speed: float = 1.0,
         session_id: Optional[str] = None,
     ) -> dict:
-        """
-        Convert text to speech using Gnani TTS REST API.
-        
-        Args:
-            text: Text to speak
-            language: Language code
-            voice: Voice name (e.g., "Nalini")
-            speed: Speech speed (0.5 to 2.0)
-            session_id: Session ID for tracking AI disclosure
-        
-        Returns:
-            Dict with 'audio_base64', 'content_type', 'success'
-        """
         lang = language or self.language
         voice_name = voice or self.voice
 
-        # Responsible AI: Prepend AI disclosure on first turn
+        # Responsible AI disclosure on session start
         if session_id and session_id not in self._first_turn_done:
             disclosure = AI_DISCLOSURE.get(lang, AI_DISCLOSURE["en-IN"])
             text = f"{disclosure} {text}"
             self._first_turn_done[session_id] = True
 
+        # Check local cache first (Saves 100% of Gnani tokens for cached sentences!)
+        cache_file = self._get_cache_path(text, lang, voice_name)
+        if os.path.exists(cache_file):
+            try:
+                with open(cache_file, "rb") as f:
+                    cached_bytes = f.read()
+                logger.info(f"⚡ [Token Saver] Served from cache (0 tokens consumed): {text[:40]}...")
+                return {
+                    "audio_base64": base64.b64encode(cached_bytes).decode("utf-8"),
+                    "cached": True,
+                    "text_spoken": text,
+                    "success": True,
+                }
+            except Exception as e:
+                logger.warning(f"Failed to read audio cache: {e}")
+
+        # If no API key configured, return success=False so frontend uses browser WebSpeech (0 tokens)
+        if not self.api_key or self.api_key == "your_gnani_api_key_here":
+            return {
+                "audio_base64": "",
+                "cached": False,
+                "text_spoken": text,
+                "success": False,
+                "message": "Gnani API key not set - falling back to browser speech.",
+            }
+
+        headers = {
+            "X-API-Key-ID": self.api_key,
+            "Content-Type": "application/json",
+        }
         payload = {
             "text": text,
             "voice": voice_name,
@@ -86,58 +102,39 @@ class GnaniTTSService:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(
                     f"{self.base_url}/api/v1/tts/inference",
                     json=payload,
-                    headers=self.headers,
+                    headers=headers,
                 )
                 response.raise_for_status()
-                
-                # Response is raw audio bytes
                 audio_data = response.content
-                audio_b64 = base64.b64encode(audio_data).decode("utf-8")
-                
-                content_type = response.headers.get("content-type", "audio/wav")
-                
-                logger.info(f"TTS generated {len(audio_data)} bytes for: {text[:50]}...")
-                
+
+                # Cache audio to disk to save future tokens
+                with open(cache_file, "wb") as f:
+                    f.write(audio_data)
+
+                logger.info(f"🔊 Gnani TTS generated & cached ({len(audio_data)} bytes)")
                 return {
-                    "audio_base64": audio_b64,
-                    "audio_bytes": audio_data,
-                    "content_type": content_type,
+                    "audio_base64": base64.b64encode(audio_data).decode("utf-8"),
+                    "cached": False,
                     "text_spoken": text,
                     "success": True,
                 }
-
-        except httpx.HTTPStatusError as e:
-            logger.error(f"Gnani TTS HTTP error: {e.response.status_code} - {e.response.text}")
-            return {
-                "audio_base64": "",
-                "content_type": "audio/wav",
-                "text_spoken": text,
-                "success": False,
-                "error": f"TTS API error: {e.response.status_code}",
-            }
         except Exception as e:
-            logger.error(f"Gnani TTS error: {str(e)}")
+            logger.error(f"Gnani TTS error: {e}")
             return {
                 "audio_base64": "",
-                "content_type": "audio/wav",
+                "cached": False,
                 "text_spoken": text,
                 "success": False,
                 "error": str(e),
             }
 
     def get_ai_disclosure(self, language: Optional[str] = None) -> str:
-        """Get the AI disclosure message for a given language."""
         lang = language or self.language
         return AI_DISCLOSURE.get(lang, AI_DISCLOSURE["en-IN"])
 
-    def reset_session(self, session_id: str):
-        """Reset AI disclosure tracking for a session."""
-        self._first_turn_done.pop(session_id, None)
 
-
-# Singleton instance
 tts_service = GnaniTTSService()
