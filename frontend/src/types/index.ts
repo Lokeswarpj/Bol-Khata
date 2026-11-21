@@ -43,7 +43,7 @@ export interface OutboxEntry {
 export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking';
 
 export interface VoiceIntent {
-  type: 'credit' | 'payment' | 'query' | 'correction' | 'undo' | 'unknown';
+  type: 'credit' | 'payment' | 'query' | 'correction' | 'undo' | 'clear_debt' | 'chitchat' | 'unknown';
   customer?: string;
   amount?: number;
   direction?: 'credit' | 'payment';
@@ -96,9 +96,11 @@ export interface BenchmarkRow {
 export type EffectsMode = 'auto' | 'full' | 'lite';
 
 export interface AppSettings {
-  language: string;
+  language: string; // 'auto' | 'hi-IN' | 'en-IN' | 'kn-IN' | 'te-IN'
   effectsMode: EffectsMode;
   aiDisclosureDismissed: boolean;
   hapticFeedback: boolean;
-  wakeWordEnabled: boolean; // Disabled with ROADMAP label
+  wakeWordEnabled: boolean;
+  handsFree: boolean;
+  engineMode: 'gnani' | 'browser';
 }

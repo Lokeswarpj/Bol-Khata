@@ -19,8 +19,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ onBack, onSelectCu
 
   return (
     <div className="min-h-screen bg-ink text-paper pb-24">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 bg-ink/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
+      {/* Top Bar - Frosted Glass */}
+      <header className="sticky top-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10 px-4 py-3 flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}

@@ -20,12 +20,12 @@ export const Sheet: React.FC<SheetProps> = ({
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/45 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
       {/* Sheet Container */}
-      <div className="relative z-10 w-full max-w-lg mx-auto bg-[#0a0a0a]/95 glass rounded-t-3xl border-t border-white/20 p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-weighted">
+      <div className="relative z-10 w-full max-w-lg mx-auto bg-[#080d12]/95 glass rounded-t-3xl border-t border-white/20 p-6 shadow-2xl animate-in slide-in-from-bottom duration-300 ease-weighted">
         {/* Handle */}
         <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4" />
 

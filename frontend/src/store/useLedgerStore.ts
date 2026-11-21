@@ -159,11 +159,13 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
   setManualEntryOpen: (isManualEntryOpen) => set({ isManualEntryOpen }),
 
   settings: {
-    language: 'hi-IN',
+    language: 'auto',
     effectsMode: initialLite ? 'lite' : 'auto',
     aiDisclosureDismissed: false,
     hapticFeedback: true,
-    wakeWordEnabled: false
+    wakeWordEnabled: false,
+    handsFree: false,
+    engineMode: 'browser'
   },
 
   updateSettings: (newSettings) => {

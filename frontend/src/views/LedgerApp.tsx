@@ -12,6 +12,8 @@ import { AnswerCard } from '../components/AnswerCard';
 import { SettingsModal } from '../components/SettingsModal';
 import { ManualEntryModal } from '../components/ManualEntryModal';
 import { DevPanel } from '../components/DevPanel';
+import { BolKhataLogo } from '../components/BolKhataLogo';
+import { VoiceKhataBackground3D } from '../components/VoiceKhataBackground3D';
 import { CustomersView } from './CustomersView';
 import { CustomerDetailView } from './CustomerDetailView';
 import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff } from 'lucide-react';
@@ -29,7 +31,9 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
     setDevPanelOpen,
     setManualEntryOpen,
     undoEntry,
-    fetchInitialData
+    fetchInitialData,
+    settings,
+    updateSettings
   } = useLedgerStore();
 
   const [currentView, setCurrentView] = useState<'home' | 'customers' | 'customer_detail'>('home');
@@ -47,6 +51,14 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
   const handleMicPressEnd = () => {
     if (voiceState === 'listening') {
       voiceService.stopRecording();
+    }
+  };
+
+  const handleMicToggle = () => {
+    if (voiceState === 'listening') {
+      voiceService.stopRecording();
+    } else if (voiceState === 'idle') {
+      voiceService.startRecording();
     }
   };
 
@@ -74,15 +86,15 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
   }
 
   return (
-    <div className="min-h-screen bg-ink text-paper flex flex-col justify-between selection:bg-emerald-500/20 pb-28 relative overflow-hidden">
-      {/* Top Bar */}
-      <header className="sticky top-0 z-40 bg-ink/80 backdrop-blur-md border-b border-white/10 px-4 py-3">
+    <div className="min-h-screen bg-transparent text-paper flex flex-col justify-between selection:bg-emerald-500/20 pb-28 relative overflow-hidden">
+      {/* 3D Voice & Khata Background */}
+      <VoiceKhataBackground3D />
+      {/* Top Bar - Frosted Glass */}
+      <header className="sticky top-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
         <div className="max-w-md mx-auto flex items-center justify-between">
           {/* Logo Tile */}
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={onNavigateLanding}>
-            <div className="w-8 h-8 rounded-xl bg-white text-ink flex items-center justify-center font-bold text-sm shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-              B
-            </div>
+          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={onNavigateLanding}>
+            <BolKhataLogo size="sm" />
             <div>
               <span className="font-serif tracking-tight text-lg text-white font-medium block leading-none">
                 BolKhata
@@ -225,13 +237,55 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
       {/* Floating Push-to-Talk Mic Bar */}
       <div className="fixed bottom-4 inset-x-0 z-30 flex flex-col items-center pointer-events-none">
         <div className="pointer-events-auto flex items-center flex-col gap-2">
+          {/* Hands-Free & 1-Click Multilingual Switcher */}
+          <div className="flex items-center gap-1.5 flex-wrap justify-center">
+            {/* Hands-Free Auto-Listening Toggle */}
+            <button
+              onClick={() => updateSettings({ handsFree: !settings.handsFree })}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono flex items-center gap-1 transition-all border ${
+                settings.handsFree
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] animate-pulse'
+                  : 'bg-black/50 text-white/50 border-white/10 hover:text-white'
+              }`}
+              title="Continuous Hands-Free Autonomous Listening"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${settings.handsFree ? 'bg-cyan-400' : 'bg-white/30'}`} />
+              <span>HANDS-FREE {settings.handsFree ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {/* Language Selector */}
+            <div className="flex items-center gap-0.5 p-0.5 rounded-full glass border border-white/10 bg-black/50 backdrop-blur-md shadow-lg">
+              {[
+                { id: 'auto', label: 'AUTO' },
+                { id: 'hi-IN', label: 'हिन्दी' },
+                { id: 'en-IN', label: 'ENG' },
+                { id: 'kn-IN', label: 'ಕನ್ನಡ' },
+                { id: 'te-IN', label: 'తెలుగు' }
+              ].map((lang) => (
+                <button
+                  key={lang.id}
+                  onClick={() => updateSettings({ language: lang.id })}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono transition-all ${
+                    settings.language === lang.id
+                      ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                      : 'text-white/50 hover:text-white border border-transparent'
+                  }`}
+                  title={`Language: ${lang.label}`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <MicButton
             state={voiceState}
             onPressStart={handleMicPressStart}
             onPressEnd={handleMicPressEnd}
+            onClickToggle={handleMicToggle}
           />
           <span className="text-[10px] text-white/40 font-mono tracking-wider uppercase">
-            {voiceState === 'listening' ? 'Release when done' : 'Hold to speak'}
+            {voiceState === 'listening' ? 'Recording... (release or tap)' : 'Hold or tap to speak'}
           </span>
         </div>
       </div>
