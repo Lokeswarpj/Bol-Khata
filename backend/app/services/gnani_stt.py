@@ -52,32 +52,39 @@ class GnaniSTTService:
             Dict with 'transcript', 'confidence', 'language', etc.
         """
         lang = language or self.language
+        if not lang or lang == "auto":
+            lang = "indic-auto"
         
-        # Encode audio to base64
-        audio_b64 = base64.b64encode(audio_data).decode("utf-8")
-        
-        payload = {
-            "audio": audio_b64,
-            "model": self.model,
-            "language": lang,
-            "encoding": content_type.split("/")[-1].upper(),
+        # Determine audio extension
+        ext = "wav"
+        if "webm" in content_type:
+            ext = "webm"
+        elif "ogg" in content_type:
+            ext = "ogg"
+        elif "mp3" in content_type:
+            ext = "mp3"
+
+        headers = {
+            "X-API-Key-ID": self.api_key,
         }
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{self.base_url}/stt/v3",
-                    json=payload,
-                    headers=self.headers,
+                    headers=headers,
+                    files={"audio_file": (f"speech.{ext}", audio_data, content_type)},
+                    data={"language_code": lang},
                 )
                 response.raise_for_status()
                 result = response.json()
                 
-                logger.info(f"STT result: {result.get('transcript', '')[:100]}")
+                transcript = result.get("transcript", "")
+                logger.info(f"STT result: {transcript[:100]}")
                 
                 return {
-                    "transcript": result.get("transcript", ""),
-                    "confidence": result.get("confidence", 0.0),
+                    "transcript": transcript,
+                    "confidence": result.get("confidence", 0.9),
                     "language": result.get("language", lang),
                     "words": result.get("words", []),
                     "success": True,
