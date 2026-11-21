@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sheet } from './Sheet';
 import { MonoLabel } from './MonoLabel';
-import { Store, Check, RefreshCw, UserCheck, Shield } from 'lucide-react';
+import { Store, Check, RefreshCw, UserCheck, Shield, PlusCircle, ArrowRight } from 'lucide-react';
 import { useLedgerStore } from '../store/useLedgerStore';
+import { api } from '../services/api';
 
 export const StoreSwitcherModal: React.FC = () => {
   const {
@@ -15,6 +16,12 @@ export const StoreSwitcherModal: React.FC = () => {
     fetchOwnerData
   } = useLedgerStore();
 
+  const [showNewStoreForm, setShowNewStoreForm] = useState(false);
+  const [newStoreName, setNewStoreName] = useState('');
+  const [newOwnerName, setNewOwnerName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     if (isStoreSwitcherOpen) {
       fetchOwnerData();
@@ -22,6 +29,32 @@ export const StoreSwitcherModal: React.FC = () => {
   }, [isStoreSwitcherOpen, fetchOwnerData]);
 
   if (!isStoreSwitcherOpen) return null;
+
+  const handleCreateStore = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStoreName.trim() || !newOwnerName.trim()) {
+      alert("Store Name and Owner Name are required.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await api.registerOwner({
+        store_name: newStoreName.trim(),
+        owner_name: newOwnerName.trim(),
+        phone: newPhone.trim() || undefined,
+      });
+      setNewStoreName('');
+      setNewOwnerName('');
+      setNewPhone('');
+      setShowNewStoreForm(false);
+      await fetchOwnerData();
+      alert("New Kirana Store successfully registered and activated!");
+    } catch (err: any) {
+      alert("Failed to register store: " + (err.message || 'Error'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Sheet
@@ -54,9 +87,61 @@ export const StoreSwitcherModal: React.FC = () => {
 
         {/* Switch Available Stores */}
         <div>
-          <label className="text-xs text-white/50 block mb-2 font-mono uppercase tracking-wider">
-            Available Kirana Stores ({allOwners.length || 3})
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-white/50 block font-mono uppercase tracking-wider">
+              Available Kirana Stores ({allOwners.length || 3})
+            </label>
+            <button
+              onClick={() => setShowNewStoreForm(!showNewStoreForm)}
+              className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{showNewStoreForm ? 'Cancel' : '+ Add Store'}</span>
+            </button>
+          </div>
+
+          {showNewStoreForm && (
+            <form onSubmit={handleCreateStore} className="p-3.5 rounded-2xl bg-white/[0.04] border border-emerald-500/30 space-y-3 mb-3">
+              <div className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
+                <Store className="w-3.5 h-3.5" /> Register New Kirana Store
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Store Name (e.g. Laxmi Provision)"
+                  value={newStoreName}
+                  onChange={(e) => setNewStoreName(e.target.value)}
+                  required
+                  className="w-full text-xs bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Owner Name (e.g. Suresh Kumar)"
+                  value={newOwnerName}
+                  onChange={(e) => setNewOwnerName(e.target.value)}
+                  required
+                  className="w-full text-xs bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="tel"
+                  placeholder="Phone (e.g. 9876500001)"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  className="flex-1 text-xs bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-black flex items-center gap-1 disabled:opacity-50"
+                >
+                  <span>{isSubmitting ? 'Saving...' : 'Register'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+          )}
           <div className="space-y-2">
             {(allOwners.length > 0
               ? allOwners
