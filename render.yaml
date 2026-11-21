@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: bolkhata
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PORT
+        value: 10000
+      - key: GNANI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        value: https://bniyjwlqzrnszxzacomp.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJuaXlqd2xxenJuc3p4emFjb21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNzE2MzEsImV4cCI6MjExMDg0NzYzMX0.7-YfHIR2yBEL6WicrC8jDNVZOT6CbDnufbiDjFZFl_c
