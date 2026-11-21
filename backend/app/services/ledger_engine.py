@@ -439,23 +439,13 @@ class LedgerEngine:
             pending = session.pending_action
             clean_reply = text.strip().lower()
 
-            # If the user speaks an explicit new intent (clear debt, stop, reset, query), cancel stale disambiguation
-            parsed_check = parse_voice_utterance(text)
-            is_new_explicit_command = any(
-                p.intent in (IntentType.CLEAR_DEBT, IntentType.STOP_LISTENING, IntentType.RESET_TODAYS_PAYMENTS, IntentType.QUERY_BALANCE)
-                for p in parsed_check
-            )
-
-            if is_new_explicit_command:
-                session.clear_pending_action()
-            else:
-                matched_cust: Optional[Dict[str, Any]] = None
-                for cand in pending.candidates:
-                    cand_name = cand["name"].lower()
-                    cand_nick = (cand.get("nickname") or "").lower()
-                    if (cand_nick and cand_nick in clean_reply) or (cand_name in clean_reply) or (clean_reply in cand_name):
-                        matched_cust = cand
-                        break
+            matched_cust: Optional[Dict[str, Any]] = None
+            for cand in pending.candidates:
+                cand_name = cand["name"].lower()
+                cand_nick = (cand.get("nickname") or "").lower()
+                if (cand_nick and cand_nick in clean_reply) or (cand_name in clean_reply) or (clean_reply in cand_name):
+                    matched_cust = cand
+                    break
 
             if matched_cust:
                 session.clear_pending_action()
@@ -495,21 +485,11 @@ class LedgerEngine:
                     else:
                         msg = f"{matched_cust['name']} ka pura udhaar chukta ho gaya. ₹{cur_bal:g} jama ho gaya. Baaki rakam ab ₹0 hai."
 
-                    calc_event = {
-                        "customer": matched_cust["name"],
-                        "old_balance": cur_bal,
-                        "change": -cur_bal,
-                        "new_balance": 0.0,
-                        "action": "clear_debt",
-                        "equation": f"₹{cur_bal:g} - ₹{cur_bal:g} = ₹0 (Debt Cleared)",
-                    }
-
                     return VoiceResponse(
                         success=True,
                         message=msg,
                         intent=intent,
                         language=lang,
-                        calculation_event=calc_event,
                         transaction=TransactionResponse(
                             id=txn.id,
                             customer_id=matched_cust["id"],
@@ -544,24 +524,11 @@ class LedgerEngine:
                     act_word = "udhaar likha" if direction == TransactionDirection.CREDIT else "jama kiya"
                     msg = f"Done! {matched_cust['name']} ka ₹{intent.amount:g} {act_word}. Ab total baaki: ₹{bal:g}."
 
-                change = intent.amount if direction == TransactionDirection.CREDIT else -intent.amount
-                old_bal = bal - change
-                sign = "+" if change >= 0 else "-"
-                calc_event = {
-                    "customer": matched_cust["name"],
-                    "old_balance": old_bal,
-                    "change": change,
-                    "new_balance": bal,
-                    "action": "credit" if direction == TransactionDirection.CREDIT else "payment",
-                    "equation": f"₹{old_bal:g} {sign} ₹{abs(change):g} = ₹{bal:g}",
-                }
-
                 return VoiceResponse(
                     success=True,
                     message=msg,
                     intent=intent,
                     language=lang,
-                    calculation_event=calc_event,
                     transaction=TransactionResponse(
                         id=txn.id,
                         customer_id=matched_cust["id"],
@@ -970,15 +937,6 @@ class LedgerEngine:
                         "transaction_id": new_txn.id,
                     }
 
-                    calc_event = {
-                        "customer": cust_name,
-                        "old_balance": bal - (corr_amount - old_amt),
-                        "change": corr_amount - old_amt,
-                        "new_balance": bal,
-                        "action": "correction",
-                        "equation": f"Corrected: ~~₹{old_amt:g}~~ → ₹{corr_amount:g} (Bal: ₹{bal:g})",
-                    }
-
                     if lang.startswith("kn"):
                         msg = f"ಆಯಿತು, ಬದಲಾಯಿಸಿದ್ದೇನೆ! ~~₹{old_amt:g}~~ ಬದಲಿಗೆ ₹{corr_amount:g}. {cust_name} ಅವರ ಒಟ್ಟು ಬಾಕಿ: ₹{bal:g}."
                     elif lang.startswith("te"):
@@ -992,7 +950,6 @@ class LedgerEngine:
                         intent=actions[0],
                         language=lang,
                         correction_event=strike_event,
-                        calculation_event=calc_event,
                     )
             return VoiceResponse(
                 success=False,
@@ -1055,15 +1012,7 @@ class LedgerEngine:
                     msg = f"Debt cleared for {customer.name}. Current balance is ₹0."
                 else:
                     msg = f"{customer.name} ka pura hisaab already clear hai. Baaki rakam ₹0 hai."
-                calc_event = {
-                    "customer": customer.name,
-                    "old_balance": 0.0,
-                    "change": 0.0,
-                    "new_balance": 0.0,
-                    "action": "clear_debt",
-                    "equation": "₹0 - ₹0 = ₹0 (Already Cleared)",
-                }
-                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang, calculation_event=calc_event)
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
 
             txn = await self.add_transaction(
                 customer_id=customer.id,
@@ -1085,21 +1034,11 @@ class LedgerEngine:
             else:
                 msg = f"{customer.name} ka pura udhaar chukta ho gaya. ₹{cur_bal:g} jama ho gaya. Baaki rakam ab ₹0 hai."
 
-            calc_event = {
-                "customer": customer.name,
-                "old_balance": cur_bal,
-                "change": -cur_bal,
-                "new_balance": 0.0,
-                "action": "clear_debt",
-                "equation": f"₹{cur_bal:g} - ₹{cur_bal:g} = ₹0 (Debt Cleared)",
-            }
-
             return VoiceResponse(
                 success=True,
                 message=msg,
                 intent=actions[0],
                 language=lang,
-                calculation_event=calc_event,
                 transaction=TransactionResponse(
                     id=txn.id,
                     customer_id=customer.id,
