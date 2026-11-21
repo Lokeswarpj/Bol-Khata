@@ -102,7 +102,11 @@ async def process_text(
     
     session_id = str(uuid.uuid4())
     ledger = LedgerEngine(db)
-    response = await ledger.process_voice_command(input_data.text, session_id=session_id)
+    response = await ledger.process_voice_command(
+        input_data.text,
+        session_id=session_id,
+        language=input_data.language,
+    )
     
     # Optionally generate TTS
     if input_data.audio_base64 is not None and response.message:

@@ -264,17 +264,76 @@ class LedgerEngine:
         descriptors = [c.nickname or c.name.split("-")[-1].strip() for c in candidates]
         
         if lang.startswith("kn"):
-            # Kannada: "ಯಾವ ರಮೇಶ್? ಕಿರಾಣಿ ಲೇನ್ ಅಥವಾ ಮಿಲ್ಕ್ ಡೈರಿ?"
-            return f"ಯಾವ {name}? {' ಅಥವಾ '.join(descriptors)}?"
+            # Kannada: "ಯಾವ ರಮೇಶ್? ಕಿರಾಣಿ ಲೇನ್ ಅಥವಾ ಮಿಲ್ಕ್ ಡೈರಿ? ಅಥವಾ ಯಾವುದೇ ಅಡ್ಡಹೆಸರು ಇದೆಯೇ?"
+            return f"ಯಾವ {name}? {' ಅಥವಾ '.join(descriptors)}? ಅಥವಾ ಯಾವುದೇ ಅಡ್ಡಹೆಸರು ಇದೆಯೇ?"
         elif lang.startswith("te"):
-            # Telugu: "ఏ రమేష్? కిరాణా లేన్ లేదా మిల్క్ డైరీ?"
-            return f"ఏ {name}? {' లేదా '.join(descriptors)}?"
+            # Telugu: "ఏ రమేష్? కిరాణా లేన్ లేదా మిల్క్ డైరీ? లేదా ఏదైనా నిక్ నేమ్ ఉందా?"
+            return f"ఏ {name}? {' లేదా '.join(descriptors)}? లేదా ఏదైనా నిక్ నేమ్ ఉందా?"
         elif lang.startswith("en"):
-            return f"Which {name}? {' or '.join(descriptors)}?"
+            return f"Which {name}? {' or '.join(descriptors)}? Or please specify a nickname."
         else:
-            # Hindi: "Kaunse Ramesh? Kirana Lane wale ya Milk Dairy wale?"
+            # Hindi: "Kaunse Ramesh? Kirana Lane wale ya Milk Dairy wale? Ya koi nickname hai?"
             formatted_opts = [f"{d} wale" if "wale" not in d.lower() else d for d in descriptors]
-            return f"Kaunse {name}? {' ya '.join(formatted_opts)}?"
+            return f"Kaunse {name}? {' ya '.join(formatted_opts)}? Ya koi nickname hai?"
+
+    def _generate_chitchat_response(self, topic: Optional[str], lang: str) -> str:
+        """Generates polite, natural conversational responses for Kirana shop talk."""
+        topic = topic or "greeting"
+        responses = {
+            "greeting": {
+                "hi": "Namaste! Main aapka digital voice ledger hoon. Dukaan ka hisaab likhna ho ya kisi grahak ka baaki dekhna ho, bas boliye.",
+                "kn": "ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಅಂಗಡಿಯ ಡಿಜಿಟಲ್ ಸಹಾಯಕ ಇಲ್ಲಿದ್ದೇನೆ. ವ್ಯಾಪಾರ ಹೇಗಿದೆ? ಯಾರ ಲೆಕ್ಕ ಬರೆಯಬೇಕು?",
+                "te": "నమస్కారం! మీ దుకాణం లెక్కలు రాయడానికి నేను సిద్ధంగా ఉన్నాను. ఎవరి లెక్క రాయాలి?",
+                "en": "Namaste and welcome! How can I assist with your store's ledger today?",
+            },
+            "how_are_you": {
+                "hi": "Main bilkul badhiya hoon! Dukaan ka hisaab sambhalne ke liye hamesha taiyar. Aap bataiye, aaj dhandha kaisa chal raha hai?",
+                "kn": "ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ! ನಿಮ್ಮ ಲೆಕ್ಕಪತ್ರಗಳನ್ನು ಬರೆಯಲು ಸದಾ ಸಿದ್ಧ. ಇವತ್ತಿನ ವ್ಯಾಪಾರ ಹೇಗಿದೆ?",
+                "te": "నేను చాలా బాగున్నాను! మీ దుకాణం ఖాతా నిర్వహించడానికి ఎల్లప్పుడూ సిద్ధంగా ఉన్నాను. ఈరోజు వ్యాపారం ఎలా ఉంది?",
+                "en": "I'm doing great, thank you! Ready to keep your kirana ledger updated. How is business going today?",
+            },
+            "identity": {
+                "hi": "Main BolKhata hoon — aapki dukaan ka surakshit hands-free AI ledger. Aap bina screen ko chhue bol kar udhaar, jama aur saara hisaab rakh sakte hain.",
+                "kn": "ನಾನು ಬೋಲ್ ಖಾತಾ — ನಿಮ್ಮ ಅಂಗಡಿಯ ಸುರಕ್ಷಿತ AI ಧ್ವನಿ ಲೆಕ್ಕಪುಸ್ತಕ. ನೀವು ಪರದೆ ಮುಟ್ಟದೆಯೇ ಮಾತನಾಡಿ ಎಲ್ಲಾ ಸಾಲ-ಜಮಾ ಲೆಕ್ಕ ಇಡಬಹುದು.",
+                "te": "నేను బోల్ ఖాతా — మీ దుకాణం సురక్షిత AI వాయిస్ లెడ్జర్. మీరు స్క్రీన్ ముట్టకుండా మాట్లాడి అప్పు, జమ లెక్కలు రాయవచ్చు.",
+                "en": "I am BolKhata — your autonomous hands-free AI ledger for Kirana stores. You can manage credit, payments, and balances just by speaking naturally.",
+            },
+            "safety": {
+                "hi": "Aap bilkul nishchint rahiye! BolKhata 100% surakshit, safe aur AES-256 encrypted hai. Aapka saara grahak data aur dukaan ka hisaab poori tarah confidential rehta hai.",
+                "kn": "ಖಂಡಿತವಾಗಿಯೂ ಸುರಕ್ಷಿತ! ನಿಮ್ಮ ಎಲ್ಲಾ ಗ್ರಾಹಕರ ಲೆಕ್ಕಗಳು 100% ಎನ್‌ಕ್ರಿಪ್ಟ್ ಆಗಿದ್ದು ಸುರಕ್ಷಿತವಾಗಿರುತ್ತವೆ.",
+                "te": "మీరు ఎలాంటి చింతా పడనవసరం లేదు! బోల్ ఖాతా 100% సురక్షితం మరియు ఎన్‌క్రిప్టెడ్. మీ వ్యాపార వివరాలు పూర్తిగా భద్రం.",
+                "en": "Rest assured, BolKhata is 100% safe, secure and AES-256 encrypted. All your customer ledgers and financial data remain strictly confidential.",
+            },
+            "help": {
+                "hi": "Main BolKhata hoon, aapki dukaan ka voice ledger! Aap bol kar udhaar likh sakte hain ('Ramesh ka 340 udhaar'), jama darj kar sakte hain ('Ramesh ne 200 diya'), hisaab clear kar sakte hain ('Ramesh cleared his debt'), ya total pooch sakte hain ('Ramesh ka total?'). Boliye, kya entry karni hai?",
+                "kn": "ನಾನು ಬೋಲ್ ಖಾತಾ, ನಿಮ್ಮ ಡಿಜಿಟಲ್ ಧ್ವನಿ ಲೆಕ್ಕಪುಸ್ತಕ! ನೀವು ಮಾತನಾಡಿಯೇ ಸಾಲ ನಮೂದಿಸಬಹುದು ('ರಮೇಶ್ ಗೆ 340 ಸಾಲ'), ಜಮಾ ಮಾಡಬಹುದು ('ರಮೇಶ್ 200 ಕೊಟ್ಟಿದ್ದಾನೆ'), ಅಥವಾ ಬಾಕಿ ಕೇಳಬಹುದು ('ರಮೇಶ್ ಒಟ್ಟು ಬಾಕಿ ಎಷ್ಟು?'). ನಾನು ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?",
+                "te": "నేను బోల్ ఖాతా, మీ డిజిటల్ వాయిస్ లెడ్జర్! మీరు మాట్లాడి అప్పు రాయవచ్చు ('రమేష్ కి 340 అప్పు'), జమ చేయవచ్చు ('రమేష్ 200 ఇచ్చాడు'), లేదా బాకీ అడగవచ్చు ('రమేష్ మొత్తం ఎంత?'). నేను మీకు ఎలా సహాయం చేయగలను?",
+                "en": "I am BolKhata, your autonomous voice ledger! You can speak naturally to record credit ('Ramesh 340 credit'), log payments ('Ramesh paid 200'), clear debts ('Ramesh cleared his debt'), check balances ('How much does Ramesh owe?'), or get store totals ('What is today's total?'). How can I help you?",
+            },
+            "gratitude": {
+                "hi": "Aapka swagat hai! Dukaan ka koi bhi hisaab ho, bas bol dijiye.",
+                "kn": "ಸ್ವಾಗತ! ಅಂಗಡಿಯ ಯಾವುದೇ ಲೆಕ್ಕವಿದ್ದರೂ ಧೈರ್ಯವಾಗಿ ಹೇಳಿ, ನಾನು ಬರೆದಿಡುತ್ತೇನೆ.",
+                "te": "ధన్యవాదాలు! దుకాణంలో ఏ లెక్కలైనా నిర్భయంగా చెప్పండి, నేను రాస్తాను.",
+                "en": "You're most welcome! Always here to keep your store's ledger accurate.",
+            },
+            "smalltalk": {
+                "hi": "Haan bilkul, samajh gaya! Dukaan mein grahak ka hisaab likhna ho ya total dekhna ho, toh bataiye.",
+                "kn": "ಸರಿ, ಅರ್ಥವಾಯಿತು! ಅಂಗಡಿಯ ಯಾವುದೇ ಲೆಕ್ಕ ಬರೆಯಲು ಅಥವಾ ಬಾಕಿ ನೋಡಲು ತಿಳಿಸಿ.",
+                "te": "సరే, అర్థమైంది! దుకాణంలో లెక్క రాయాలన్నా లేదా మొత్తం చూడాలన్నా చెప్పండి.",
+                "en": "Understood! Whenever you need to record credit, payment, or check totals, I'm listening.",
+            },
+        }
+
+        lang_prefix = "hi"
+        if lang.startswith("kn"):
+            lang_prefix = "kn"
+        elif lang.startswith("te"):
+            lang_prefix = "te"
+        elif lang.startswith("en"):
+            lang_prefix = "en"
+
+        topic_dict = responses.get(topic, responses["smalltalk"])
+        return topic_dict.get(lang_prefix, topic_dict["hi"])
 
     # ═══════════════════════════════════════════════════════════
     # Complete Voice Utterance Processor
@@ -286,7 +345,10 @@ class LedgerEngine:
         session_id: Optional[str] = None,
         language: Optional[str] = None,
     ) -> VoiceResponse:
-        lang = language or detect_language(text)
+        if language and language not in ("auto", "default", ""):
+            lang = language
+        else:
+            lang = detect_language(text)
         session = session_manager.get_or_create(session_id or "default_counter")
 
         # ── Step A: Check for Pending Disambiguation Resolution ──
@@ -306,6 +368,42 @@ class LedgerEngine:
             if matched_cust:
                 session.clear_pending_action()
                 intent = pending.intent
+                
+                # If pending action was CLEAR_DEBT
+                if intent.intent == IntentType.CLEAR_DEBT:
+                    cur_bal = await self.get_customer_balance(matched_cust["id"])
+                    if cur_bal <= 0:
+                        msg = f"{matched_cust['name']} ka hisaab already clear hai!"
+                        return VoiceResponse(success=True, message=msg, intent=intent, language=lang)
+                    txn = await self.add_transaction(
+                        customer_id=matched_cust["id"],
+                        amount=cur_bal,
+                        direction=TransactionDirection.PAYMENT,
+                        transaction_date=date.today(),
+                        note=f"Full Debt Settlement: Cleared ₹{cur_bal:g}",
+                        raw_transcript=text,
+                        session=session,
+                    )
+                    await self.db.commit()
+                    msg = f"Done! {matched_cust['name']} ka poora hisaab clear kar diya. ₹{cur_bal:g} jama hua. Ab ₹0 baaki hai."
+                    return VoiceResponse(
+                        success=True,
+                        message=msg,
+                        intent=intent,
+                        language=lang,
+                        transaction=TransactionResponse(
+                            id=txn.id,
+                            customer_id=matched_cust["id"],
+                            customer_name=matched_cust["name"],
+                            amount=txn.amount,
+                            direction=txn.direction,
+                            transaction_date=txn.transaction_date,
+                            note=txn.note,
+                            corrected=txn.corrected,
+                            created_at=txn.created_at,
+                        ),
+                    )
+
                 direction = intent.direction or TransactionDirection.CREDIT
                 txn = await self.add_transaction(
                     customer_id=matched_cust["id"],
@@ -387,11 +485,128 @@ class LedgerEngine:
                 language=lang,
             )
 
+        # ── Step C2: Full Debt Clearing ("Ramesh cleared his debt") ──
+        if len(actions) == 1 and actions[0].intent == IntentType.CLEAR_DEBT:
+            target_name = actions[0].customer_name
+            if not target_name:
+                return VoiceResponse(success=False, message="Kiska hisaab clear karna hai? Naam bataiye.", intent=actions[0], language=lang)
+
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_prompt = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_prompt,
+                    intent=actions[0],
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    language=lang,
+                )
+
+            customer = await self.find_customer_exact(target_name)
+            if not customer and similar:
+                customer = similar[0]
+
+            if not customer:
+                return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
+
+            cur_bal = await self.get_customer_balance(customer.id)
+            if cur_bal <= 0:
+                if lang.startswith("kn"):
+                    msg = f"{customer.name} ಅವರ ಯಾವುದೇ ಸಾಲ ಬಾಕಿ ಇಲ್ಲ. ಖಾತೆ ಈಗಾಗಲೇ ಕ್ಲಿಯರ್ ಆಗಿದೆ!"
+                elif lang.startswith("te"):
+                    msg = f"{customer.name} కి ఎలాంటి బాకీ లేదు. లెక్క ఇప్పటికే క్లియర్ గా ఉంది!"
+                elif lang.startswith("en"):
+                    msg = f"{customer.name} has no outstanding debt. Account is already clear!"
+                else:
+                    msg = f"{customer.name} ka pehle se koi baaki nahi hai. Hisaab already clear hai!"
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
+            txn = await self.add_transaction(
+                customer_id=customer.id,
+                amount=cur_bal,
+                direction=TransactionDirection.PAYMENT,
+                transaction_date=date.today(),
+                note=f"Full Debt Settlement: Cleared previous balance of ₹{cur_bal:g}",
+                raw_transcript=text,
+                session=session,
+            )
+            await self.db.commit()
+
+            if lang.startswith("kn"):
+                msg = f"ಆಯಿತು! {customer.name} ಅವರ ಸಂಪೂರ್ಣ ಸಾಲ ಕ್ಲಿಯರ್ ಆಗಿದೆ. ₹{cur_bal:g} ಪಾವತಿಯಾಗಿದೆ. ಈಗ ₹0 ಬಾಕಿ."
+            elif lang.startswith("te"):
+                msg = f"సరే! {customer.name} మొత్తం బాకీ క్లియర్ చేశాను. ₹{cur_bal:g} జమ అయింది. ఇప్పుడు ₹0 ఉంది."
+            elif lang.startswith("en"):
+                msg = f"Done! Cleared full debt for {customer.name}. Recorded payment of ₹{cur_bal:g}. Balance is ₹0."
+            else:
+                msg = f"Done! {customer.name} ka poora hisaab clear kar diya. ₹{cur_bal:g} jama ho gaya. Ab ₹0 baaki hai."
+
+            return VoiceResponse(
+                success=True,
+                message=msg,
+                intent=actions[0],
+                language=lang,
+                transaction=TransactionResponse(
+                    id=txn.id,
+                    customer_id=customer.id,
+                    customer_name=customer.name,
+                    amount=txn.amount,
+                    direction=txn.direction,
+                    transaction_date=txn.transaction_date,
+                    note=txn.note,
+                    corrected=txn.corrected,
+                    created_at=txn.created_at,
+                ),
+            )
+
+        # ── Step C3: Conversational Chit-Chat & Normal Person Interaction ──
+        if actions and all(act.intent == IntentType.CHITCHAT for act in actions):
+            topic = actions[0].chitchat_topic or "greeting"
+            reply_msg = self._generate_chitchat_response(topic, lang)
+            return VoiceResponse(
+                success=True,
+                message=reply_msg,
+                intent=actions[0],
+                language=lang,
+            )
+
         # ── Step D: Sub-800ms Fast Path Queries ──
         if len(actions) == 1 and actions[0].intent == IntentType.QUERY_BALANCE:
             target_name = actions[0].customer_name
+            text_lower = text.lower()
+
+            # Check if this query is asking for store / overall balance
+            if not target_name and any(w in text_lower for w in ("total balance", "dukaan", "store", "shop", "overall", "sabka", "total hisaab", "kitna balance")):
+                today_data = await self.get_today_summary()
+                u_gaya = today_data["today_credit"]
+                j_aaya = today_data["today_payment"]
+                net = u_gaya - j_aaya
+
+                if lang.startswith("kn"):
+                    msg = f"ಅಂಗಡಿಯ ಒಟ್ಟು ಲೆಕ್ಕ: ಇವತ್ತು ₹{u_gaya:g} ಸಾಲ, ಮತ್ತು ₹{j_aaya:g} ಜಮಾ ಬಂದಿದೆ. ನಿವ್ವಳ ಬಾಕಿ: ₹{net:g}."
+                elif lang.startswith("te"):
+                    msg = f"దుకాణం మొత్తం లెక్క: ఈరోజు ₹{u_gaya:g} అప్పు, మరియు ₹{j_aaya:g} జమ వచ్చింది. నికర బాకీ: ₹{net:g}."
+                elif lang.startswith("en"):
+                    msg = f"Store total summary: Today's credit is ₹{u_gaya:g}, payments received is ₹{j_aaya:g}. Net outstanding is ₹{net:g}."
+                else:
+                    msg = f"Dukaan ka kul hisaab: Aaj ₹{u_gaya:g} udhaar gaya, aur ₹{j_aaya:g} jama aaya. Net baaki ₹{net:g}."
+
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
             if not target_name:
-                return VoiceResponse(success=False, message="Kiska hisaab chahiye? Kripya naam bataiye.", intent=actions[0], language=lang)
+                if lang.startswith("kn"):
+                    msg = "ಯಾರ ಲೆಕ್ಕ ನೋಡಬೇಕು? ದಯವಿಟ್ಟು ಗ್ರಾಹಕರ ಹೆಸರು ತಿಳಿಸಿ."
+                elif lang.startswith("te"):
+                    msg = "ఎవరి లెక్క చూడాలి? దయచేసి కస్టమర్ పేరు చెప్పండి."
+                elif lang.startswith("en"):
+                    msg = "Whose balance would you like to check? Please speak the customer's name."
+                else:
+                    msg = "Kiska hisaab dekhna hai? Kripya grahak ka naam bataiye."
+                return VoiceResponse(success=False, message=msg, intent=actions[0], language=lang)
             
             cust = await self.find_customer_exact(target_name)
             if not cust:
@@ -411,13 +626,23 @@ class LedgerEngine:
                     )
 
             if not cust:
-                return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
+                if lang.startswith("kn"):
+                    msg = f"{target_name} ಹೆಸರಿನ ಯಾವುದೇ ಗ್ರಾಹಕರು ಸಿಗಲಿಲ್ಲ."
+                elif lang.startswith("te"):
+                    msg = f"{target_name} పేరుతో ఎలాంటి కస్టమర్ దొరకలేదు."
+                elif lang.startswith("en"):
+                    msg = f"No customer found with the name {target_name}."
+                else:
+                    msg = f"{target_name} naam ka koi customer nahi mila."
+                return VoiceResponse(success=False, message=msg, intent=actions[0], language=lang)
 
             balance = await self.get_customer_balance(cust.id)
             if lang.startswith("kn"):
                 msg = f"{cust.name} ಅವರ ಒಟ್ಟು ಬಾಕಿ ₹{balance:g} ಇದೆ." if balance > 0 else f"{cust.name} ಅವರ ಖಾತೆ ಕ್ಲಿಯರ್ ಆಗಿದೆ!"
             elif lang.startswith("te"):
                 msg = f"{cust.name} మొత్తం బాకీ ₹{balance:g} ఉంది." if balance > 0 else f"{cust.name} లెక్క క్లియర్ గా ఉంది!"
+            elif lang.startswith("en"):
+                msg = f"{cust.name} owes a balance of ₹{balance:g}." if balance > 0 else f"{cust.name} has no outstanding dues (₹0 balance)."
             else:
                 msg = f"{cust.name} ka total baaki ₹{balance:g} hai." if balance > 0 else f"{cust.name} ka hisaab clear hai!"
 
@@ -434,6 +659,8 @@ class LedgerEngine:
                 msg = f"ಇವತ್ತು ಒಟ್ಟು ₹{u_gaya:g} ಸಾಲ ಹೋಗಿದೆ, ಮತ್ತು ₹{j_aaya:g} ಜಮಾ ಬಂದಿದೆ. ನೆಟ್: ₹{net:g}."
             elif lang.startswith("te"):
                 msg = f"ఈరోజు మొత్తం ₹{u_gaya:g} అప్పు వెళ్ళింది, మరియు ₹{j_aaya:g} జమ వచ్చింది. నికర: ₹{net:g}."
+            elif lang.startswith("en"):
+                msg = f"Today's total: ₹{u_gaya:g} given on credit, and ₹{j_aaya:g} received in payment. Net balance: ₹{net:g}."
             else:
                 msg = f"Aaj kul ₹{u_gaya:g} udhaar gaya, aur ₹{j_aaya:g} jama aaya. Net ₹{net:g}."
 
@@ -492,12 +719,23 @@ class LedgerEngine:
             c_name = last_cust.name if last_cust else "Customer"
 
             details = ", aur ".join(success_messages)
+            prefix = ""
+            if actions and actions[0].intent == IntentType.CHITCHAT:
+                if lang.startswith("kn"):
+                    prefix = "ನಮಸ್ಕಾರ! "
+                elif lang.startswith("te"):
+                    prefix = "నమస్కారం! "
+                elif lang.startswith("en"):
+                    prefix = "Hello! "
+                else:
+                    prefix = "Namaste! "
+
             if lang.startswith("kn"):
-                final_message = f"Done! {c_name} ಅವರ ಖಾತೆಗೆ ನಮೂದಿಸಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{final_bal:g}."
+                final_message = f"{prefix}Done! {c_name} ಅವರ ಖಾತೆಗೆ ನಮೂದಿಸಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{final_bal:g}."
             elif lang.startswith("te"):
-                final_message = f"Done! {c_name} కి నమోదు చేశాను. మొత్తం బాకీ: ₹{final_bal:g}."
+                final_message = f"{prefix}Done! {c_name} కి నమోదు చేశాను. మొత్తం బాకీ: ₹{final_bal:g}."
             else:
-                final_message = f"Done! {c_name} ka {details} likha. Ab kul baaki: ₹{final_bal:g}."
+                final_message = f"{prefix}Done! {c_name} ka {details} likha. Ab kul baaki: ₹{final_bal:g}."
 
             return VoiceResponse(
                 success=True,
@@ -517,9 +755,20 @@ class LedgerEngine:
                 ),
             )
 
+        fallback_msgs = {
+            "en": "I didn't quite catch that. You can speak naturally, for example: 'Ramesh 340 credit', 'How much does Ramesh owe?', or 'Hello'.",
+            "kn": "ಕ್ಷಮಿಸಿ, ಅರ್ಥವಾಗಲಿಲ್ಲ. ಉದಾಹರಣೆಗೆ 'ರಮೇಶ್ ಗೆ 300 ಸಾಲ' ಅಥವಾ 'ರಮೇಶ್ ಒಟ್ಟು ಬಾಕಿ ಎಷ್ಟು?' ಎಂದು ಹೇಳಿ.",
+            "te": "క్షమించండి, అర్థం కాలేదు. ఉదాహరణకు 'రమేష్ కి 300 అప్పు' లేదా 'రమేష్ మొత్తం ఎంత?' అని చెప్పండి.",
+            "hi": "Samajh nahi aaya. Kripya dubaara boliye, jaise 'Ramesh ka 340 udhaar' ya 'Ramesh ka total?'."
+        }
+        lang_key = "hi"
+        if lang.startswith("en"): lang_key = "en"
+        elif lang.startswith("kn"): lang_key = "kn"
+        elif lang.startswith("te"): lang_key = "te"
+
         return VoiceResponse(
             success=False,
-            message="Samajh nahi aaya. Kripya dubaara boliye.",
+            message=fallback_msgs[lang_key],
             intent=actions[0] if actions else None,
             language=lang,
         )

@@ -1,12 +1,12 @@
 """
-BolKhata - Multilingual Indic NLU (Natural Language Understanding) Engine
-Supports Hindi, Kannada, Telugu, and Indian English.
-Handles:
-- Credit (udhaar / saala / appu) vs Payment (jama / kotta / icchaadu)
-- Compound utterances with anaphora inheritance ("Ramesh ka 340 udhaar, kal 200 diya tha")
-- Fast keyword-based queries (< 800ms)
-- Judge-proof 15s corrections ("nahi, 430" / "alla, 430" / "kaadhu, 430")
-- Name disambiguation
+BolKhata - Production Multilingual Kirana NLU Engine
+Engineered to eliminate false defaults and handle real-world Kirana store interactions:
+- Full Debt Settlement ("Ramesh cleared his debt" / "hisaab chukta kar diya")
+- Automatic Language Detection across Kannada, Telugu, Hindi, and English
+- Itemized grocery shop talk ("Ramesh 1 packet doodh le gaya 30 rupaye likh lo")
+- Multi-action compound utterances ("Ramesh ka 340 udhaar, kal 200 diya tha")
+- Instant spoken corrections ("nahi, 430" / "alla, 430" / "kaadhu, 430")
+- Disambiguation & Nickname recognition
 """
 
 import re
@@ -19,49 +19,76 @@ from app.services.date_parser import extract_date_from_text
 
 
 # ═══════════════════════════════════════════════════════════════
-# Multilingual Intent Vocabularies
+# Comprehensive Multilingual Intent Vocabularies
 # ═══════════════════════════════════════════════════════════════
 
+# Debt Clearing (Full Settlement) Keywords
+CLEAR_DEBT_KEYWORDS = {
+    # English
+    "cleared", "clear", "settled", "settle", "paid off", "zeroed", "clearing",
+    # Hindi
+    "chukta", "चुक्ता", "chukti", "chuka diya", "chuka", "khatam", "खत्म",
+    "saaf", "साफ", "faisla", "phaisla",
+    # Kannada
+    "theerisi", "ತೀರಿಸಿ", "theerisiddaane", "mugisiddaane", "theerthu",
+    # Telugu
+    "theerchesadu", "తీర్చేశాడు", "theerchadu", "poorthi", "chellinchesadu",
+}
+
+CLEAR_DEBT_PHRASES = [
+    r'cleared\s+(?:his|her|all|the)?\s*(?:debt|account|dues|balance|khata)',
+    r'cleared\s+all',
+    r'hisaab\s+(?:clear|chukta|khatam|saaf)',
+    r'poora\s+(?:de\s+diya|jama\s+kar\s+diya|chukta)',
+    r'saala\s+theerisi',
+    r'appu\s+theerchesadu',
+]
+
+# Credit (Udhaar / Debt addition) Keywords
 CREDIT_KEYWORDS = {
     # Hindi
-    "udhaar", "udhar", "उधार", "khata", "खाता", "likh", "लिख", "likho", "लिखो", "baaki", "बाकी", "baki",
+    "udhaar", "udhar", "उधार", "khata", "खाता", "likh", "लिख", "likho", "लिखो", "likhna",
+    "likhle", "likhlo", "baaki", "बाकी", "baki", "le gaya", "le gaye", "dena hai",
     # Kannada
-    "saala", "ಸಾಲ", "baaki", "ಬಾಕಿ", "bare", "ಬರೆ", "bareyiri", "ಬರೆಯಿರಿ", "khaate", "ಖಾತೆ", "uddhaara", "ಉದ್ದಾರ",
+    "saala", "ಸಾಲ", "baaki", "ಬಾಕಿ", "bare", "ಬರೆ", "bareyiri", "ಬರೆಯಿರಿ",
+    "khaate", "ಖಾತೆ", "uddhaara", "ಉದ್ದಾರ", "thagondiddaane", "kodabeku",
     # Telugu
-    "appu", "అప్పు", "baaki", "బాకీ", "raayi", "రాయ్", "raayandi", "రాయండి", "khata", "ఖాతా",
+    "appu", "అప్పు", "baaki", "బాకీ", "raayi", "రాయ్", "raayandi", "రాయండి",
+    "khata", "ఖాతా", "theesukunnadu", "ivvaali",
     # English
-    "credit", "due", "loan", "write",
+    "credit", "due", "loan", "borrowed", "took", "write", "bill",
 }
 
+# Payment (Jama / Money received) Keywords
 PAYMENT_KEYWORDS = {
     # Hindi
-    "diya", "दिया", "diye", "दिये", "jama", "जमा", "wapas", "वापस", "mila", "मिला",
+    "diya", "दिया", "diye", "दिये", "de gaya", "jama", "जमा", "wapas", "वापस",
+    "aaya", "aaye", "bhara", "vasool", "वसूूल", "mila", "मिला", "de diya",
     # Kannada
-    "kottiddaane", "ಕೊಟ್ಟಿದ್ದಾನೆ", "kotta", "ಕೊಟ್ಟ", "jama", "ಜಮಾ", "paavati", "ಪಾವತಿ", "bandide", "ಬಂದಿದೆ",
+    "kottiddaane", "ಕೊಟ್ಟಿದ್ದಾನೆ", "kotta", "ಕೊಟ್ಟ", "jama", "ಜಮಾ", "paavati", "ಪಾವತಿ",
+    "bandide", "ಬಂದಿದೆ", "sandaaya",
     # Telugu
-    "icchaadu", "ఇచ్చాడు", "kattaadu", "కట్టాడు", "jama", "జమ", "chellinchaadu", "చెల్లించాడు", "vachindi", "వచ్చింది",
+    "icchaadu", "ఇచ్చాడు", "kattaadu", "కట్టాడు", "jama", "జమ", "chellinchaadu",
+    "చెల్లించాడు", "vachindi", "వచ్చింది",
     # English
-    "paid", "payment", "received", "cleared", "gave",
+    "paid", "payment", "received", "deposited", "returned", "gave",
 }
 
+# Query Keywords
 QUERY_KEYWORDS = {
     # Hindi
     "kitna", "कितना", "total", "टोटल", "hisaab", "हिसाब", "balance", "बैलेंस", "baaki", "बाकी",
     # Kannada
-    "ottu", "ಒಟ್ಟು", "eshtu", "ಎಷ್ಟು", "lekka", "ಲೆಕ್ಕ", "baaki", "ಬಾಕಿ",
+    "ottu", "ಒಟ್ಟು", "eshtu", "ಎಷ್ಟು", "lekka", "ಲೆಕ್ಕ",
     # Telugu
-    "mottam", "మొత్తం", "entha", "ఎంత", "lekka", "లెక్క", "baaki", "బాకీ",
+    "mottam", "మొత్తం", "entha", "ఎంత", "lekka", "లెక్క",
     # English
-    "total", "balance", "how much", "what is",
+    "total", "balance", "how", "much", "what", "owe", "owes", "due", "dues", "account", "show", "tell",
 }
 
 TODAY_QUERY_KEYWORDS = {
-    # Hindi
-    "aaj", "आज", "today", "abhi tak",
-    # Kannada
-    "ivattu", "ಇವತ್ತು", "eegale",
-    # Telugu
-    "eeroju", "ఈరోజు", "ippude",
+    "aaj", "आज", "today", "today's", "abhi tak", "ivattu", "ಇವತ್ತು", "eeroju", "ఈరోజు",
+    "dukaan", "store", "shop", "overall", "all",
 }
 
 LIST_KEYWORDS = {
@@ -70,37 +97,105 @@ LIST_KEYWORDS = {
 
 CORRECTION_KEYWORDS = {
     # Hindi
-    "nahi", "नहीं", "nahin", "galat", "गलत", "sudhar", "सुधार", "badlo", "बदलो",
+    "nahi", "नहीं", "nahin", "nhi", "galat", "गलत", "sudhar", "सुधार", "badlo", "बदलो",
     # Kannada
     "alla", "ಅಲ್ಲ", "tappu", "ತಪ್ಪು", "badalayisu", "ಬದಲಾಯಿಸು",
     # Telugu
     "kaadhu", "కాదు", "thappu", "తప్పు", "maarchu", "మార్చు",
     # English
-    "no", "wrong", "change", "cancel", "sorry", "actually",
+    "no", "wrong", "change", "cancel", "sorry", "actually", "mistake",
 }
 
 SKIP_WORDS = {
-    # Connectors
-    "ka", "ke", "ki", "ko", "ne", "se", "me", "mein", "hai", "hain", "tha", "thi", "the", "wala", "wali", "wale",
-    "ge", "alli", "inda", "ige", "iddaane", "ide", "ki", "ku", "lo", "nundi", "valla", "undi", "andi",
-    "and", "or", "aur", "mattu", "mari", "kaadhu", "alla", "nahi",
+    "ka", "ke", "ki", "ko", "ne", "se", "me", "mein", "hai", "hain", "tha", "thi", "the",
+    "wala", "wali", "wale", "ge", "alli", "inda", "ige", "iddaane", "ide", "ki", "ku",
+    "lo", "nundi", "valla", "undi", "andi", "and", "or", "aur", "mattu", "mari",
+    "the", "a", "an", "is", "are", "was", "were", "has", "have", "his", "her",
+    "packet", "kilo", "kg", "gram", "rupaye", "rupees", "rs", "debt", "account",
+    "bhaiya", "ji", "babu", "sahab", "anna", "garu", "sir", "madam", "namaste", "hello", "hi",
+    "how", "much", "what", "give", "show", "tell", "check", "me", "you", "does", "can", "please",
+    "dukaan", "store", "shop", "total", "balance", "all", "owe", "owes",
+    "aaj", "kal", "parso", "today", "yesterday", "ninne", "ninna", "ivattu", "eeroju", "abhi",
+    # Indic script greetings & polite words
+    "ನಮಸ್ಕಾರ", "ನಮಸ್ಕಾರಗಳು", "ಹೇಗಿದ್ದೀರಾ", "ಹೇಗಿದ್ದೀರಿ", "ಧನ್ಯವಾದ", "ಧನ್ಯವಾದಗಳು",
+    "నమస్కారం", "నమస్కారాలు", "ఎలా", "ఉన్నారు", "బాగున్నారా", "ధన్యవాదాలు",
+    "नमस्ते", "नमस्कार", "धन्यवाद", "शुक्रिया", "प्रणाम", "राधे", "राम",
 }
 
+# Conversational Chit-Chat Categories & Patterns
+CHITCHAT_PATTERNS = {
+    "greeting": [
+        r'\b(?:namaste|namaskar|namaskara|namaskaram|hello|hi|hey|good\s+morning|good\s+afternoon|good\s+evening|shubh\s+prabhat|shubh\s+sandhya|ram\s+ram|radhe\s+radhe|pranam|salaam|kem\s+cho|vanakkam)\b',
+        r'(?:ನಮಸ್ಕಾರ|ನಮಸ್ಕಾರಗಳು|ಶುಭೋದಯ)',
+        r'(?:నమస్కారం|నమస్కారాలు|శుభోదయం)',
+        r'(?:नमस्ते|नमस्कार|शुभ\s*प्रभात|प्रणाम)',
+    ],
+    "how_are_you": [
+        r'\b(?:kaise\s+ho|kaise\s+hain|kya\s+haal|kaisa\s+chal\s+raha|kya\s+chal\s+raha|sab\s+theek|sab\s+badhiya|how\s+are\s+you|how\s+is\s+it\s+going|hegiddira|hegidiya|chennagiddira|hegide|ela\s+unnaru|bagunnara|ela\s+undi|whats\s+up)\b',
+        r'(?:ಹೇಗಿದ್ದೀರಾ|ಹೇಗಿದ್ದೀರಿ|ಹೇಗಿದೆ|ಚೆನ್ನಾಗಿದ್ದೀರಾ)',
+        r'(?:ఎలా\s*ఉన్నారు|బాగున్నారా|ఎలా\s*ఉంది)',
+        r'(?:कैसे\s*हो|कैसे\s*हैं|क्या\s*हाल|सब\s*ठीक)',
+    ],
+    "identity": [
+        r'\b(?:tum\s+kaun\s+ho|aap\s+kaun\s+ho|kaun\s+ho|who\s+are\s+you|what\s+is\s+your\s+name|tumhara\s+naam|aapka\s+naam|neevu\s+yaaru|nimma\s+hesaru|nuvvu\s+evaru|mee\s+peru|what\s+do\s+you\s+do|kya\s+karte\s+ho|bolkhata\s+kya\s+hai|what\s+is\s+bolkhata|about\s+bolkhata|who\s+made\s+you)\b',
+        r'(?:ನೀವು\s*ಯಾರು|ನಿಮ್ಮ\s*ಹೆಸರು)',
+        r'(?:మీరు\s*ఎవరు|నువ్వు\s*ఎవరు|మీ\s*పేరు)',
+        r'(?:तुम\s*कौन\s*हो|आप\s*कौन\s*हो|आपका\s*नाम)',
+    ],
+    "help": [
+        r'\b(?:help|can\s+you\s+help|help\s+me|what\s+can\s+you\s+do|how\s+to\s+use|how\s+do\s+you\s+work|kaise\s+use\s+kare|madad|features|commands|guide)\b',
+        r'(?:ಸಹಾಯ|ಏನು\s*ಮಾಡಬಹುದು)',
+        r'(?:సహాయం|ఏమి\s*చేయగలరు)',
+        r'(?:मदद|क्या\s*कर\s*सकते\s*हो)',
+    ],
+    "safety": [
+        r'\b(?:safe\s+hai|surakshit|is\s+it\s+safe|data\s+safe|secure|leak|privacy|guarantee|bhadravagiya|surakshitama)\b',
+        r'(?:ಸುರಕ್ಷಿತ|ಸುರಕ್ಷಿತವೇ|ಭದ್ರವಾಗಿದೆಯೇ)',
+        r'(?:సురక్షితం|సురక్షితమేనా|భద్రమేనా)',
+        r'(?:सुरक्षित|सेफ)',
+    ],
+    "gratitude": [
+        r'\b(?:dhanyawaad|dhanyawad|shukriya|thank\s+you|thanks|dhanyavada|dhanyavadagalu|dhanyavadalu|bahut\s+achha|great\s+job|shabaash)\b',
+        r'(?:ಧನ್ಯವಾದ|ಧನ್ಯವಾದಗಳು|ತುಂಬಾ\s*ಧನ್ಯವಾದ)',
+        r'(?:ధన్యవాదాలు|చాలా\s*థాంక్స్)',
+        r'(?:धन्यवाद|शुक्रिया)',
+    ],
+    "smalltalk": [
+        r'\b(?:theek\s+hai|accha|okay|alright|sari|sare|bheed\s+hai|garmi\s+hai|barish\s+ho\s+rahi|dhandha\s+kaisa|kaam\s+kaisa)\b',
+        r'(?:ಸರಿ|ಹೌದು|ಚೆನ್ನಾಗಿದೆ)',
+        r'(?:సరే|అవును|బాగుంది)',
+        r'(?:ठीक\s*है|अच्छा)',
+    ],
+}
+
+
+def detect_chitchat(text: str) -> Optional[str]:
+    """Identifies conversational intent topic if text is natural person small-talk."""
+    text_lower = text.lower()
+    for topic, patterns in CHITCHAT_PATTERNS.items():
+        for pat in patterns:
+            if re.search(pat, text_lower):
+                return topic
+    return None
+
+
 NAME_PATTERNS = [
-    # Hindi / English: "Ramesh ka 340 udhaar", "Ramesh ne 200 diya"
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z]+|\s+[A-Z][a-z]+)?)\s+(?:ka|ke|ki|ko|ne|ki|ge|ku)\s',
-    # Kannada: "ರಮೇಶ್ ಗೆ 340 ಸಾಲ" / "Ramesh ge 340 saala"
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z]+|\s+[A-Z][a-z]+)?)\s+ge\s',
-    # Telugu: "రమేష్ కి 340 అప్పు" / "Ramesh ki 340 appu"
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z]+|\s+[A-Z][a-z]+)?)\s+ki\s',
-    # Query: "Ramesh ka total", "Ramesh total"
-    r'(?:^|\s)([A-Z][a-z]+(?:\s+[-–]\s+[A-Za-z]+|\s+[A-Z][a-z]+)?)\s+(?:ka|ke|ki|ge|ku|ki)?\s*(?:total|hisaab|balance|kitna|ottu|mottam|eshtu|entha)',
+    # English queries: "how much does ramesh owe", "what is ramesh balance", "show me ramesh total"
+    r'(?:how\s+much\s+(?:does\s+)?|what\s+is\s+|show\s+(?:me\s+)?|check\s+|tell\s+(?:me\s+)?|give\s+(?:me\s+)?)([a-zA-Z]+)(?:\'s|\s+owe|\s+balance|\s+total|\s+account)',
+    # Hyphenated descriptor names: 'Ramesh - Kirana Lane', 'Ramesh - Milk Dairy'
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ka|ke|ki|ko|ne|ge|ku|ki)\s',
+    # "Ramesh cleared his debt", "Ramesh ne hisaab clear kar diya"
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s+(?:ne|cleared|settled|paid|ka|ki)\s',
+    # Direct "Ramesh ka 340"
+    r'(?:^|\s)([a-zA-Z]+)\s+(?:ka|ke|ki|ge|ku|ki)\s',
+    # Query: "Ramesh total", "Ramesh ka total", "ramesh balance", "ramesh's balance"
+    r'(?:^|\s)([a-zA-Z]+(?:\s+[-–]\s+[A-Za-z\s]+)?)\s*(?:ka|ke|ki|ge|ku|ki|\'s)?\s*(?:total|hisaab|balance|kitna|ottu|mottam|eshtu|entha|dues|account|owe|owes)',
 ]
 
 
 def detect_language(text: str) -> str:
-    """Detect whether input is Kannada (kn), Telugu (te), Hindi (hi), or English (en)."""
-    # Check script
+    """Accurately detects Kannada, Telugu, Hindi, or English."""
+    # 1. Unicode Script Detection (100% accurate for native scripts)
     if re.search(r'[\u0C80-\u0CFF]', text):
         return "kn-IN"
     if re.search(r'[\u0C00-\u0C7F]', text):
@@ -108,18 +203,54 @@ def detect_language(text: str) -> str:
     if re.search(r'[\u0900-\u097F]', text):
         return "hi-IN"
 
-    # Transliterated keywords check
+    # 2. Vocabulary Frequency Scoring for Romanized Speech
     text_lower = text.lower()
-    kn_signals = {"saala", "kottiddaane", "kotta", "ivattu", "ninne", "mooru", "eradu", "nooru", "eshtu", "ottu", "alla"}
-    te_signals = {"appu", "icchaadu", "eeroju", "ninna", "moodu", "rendu", "vanda", "entha", "mottam", "kaadhu"}
     tokens = set(re.findall(r'\b\w+\b', text_lower))
 
-    if tokens & kn_signals:
-        return "kn-IN"
-    if tokens & te_signals:
-        return "te-IN"
+    kn_vocab = {
+        "saala", "kottiddaane", "kotta", "ivattu", "ninne", "mooru", "eradu",
+        "nooru", "eshtu", "ottu", "alla", "bare", "ge", "namaskara", "hegiddira",
+        "hegidiya", "chennagiddira", "yaaru", "dhanyavada", "sari", "nimma"
+    }
+    te_vocab = {
+        "appu", "icchaadu", "eeroju", "ninna", "moodu", "rendu", "vanda",
+        "entha", "mottam", "kaadhu", "raayi", "ki", "namaskaram", "ela",
+        "unnaru", "bagunnara", "evaru", "dhanyavadalu", "sare", "meeru"
+    }
+    hi_vocab = {
+        "udhaar", "diya", "hisaab", "chukta", "kitna", "aaj", "kal", "teen",
+        "sau", "chaalis", "nahi", "likh", "jama", "namaste", "kaise", "haal",
+        "kaun", "dhanyawaad", "shukriya", "bhaiya", "theek", "aapka", "surakshit",
+        "kya", "ye", "yeh", "hai", "hain", "kaisa", "chahiye", "batao", "bataiye", "bata"
+    }
 
-    return "hi-IN"
+    en_vocab = {
+        "cleared", "debt", "credit", "paid", "total", "balance", "yesterday",
+        "today", "three", "forty", "hello", "hi", "how", "you", "who", "safe",
+        "thanks", "thank", "good", "morning", "what", "is", "are", "does", "do",
+        "can", "help", "owe", "owes", "due", "dues", "tell", "show", "give", "me",
+        "much", "why", "where", "name", "customer", "account", "please", "my",
+        "your", "store", "shop", "khata", "ledger", "bolkhata", "secure", "about",
+        "sale", "sales", "check", "no", "yes", "all", "everyone"
+    }
+
+    kn_score = len(tokens & kn_vocab)
+    te_score = len(tokens & te_vocab)
+    hi_score = len(tokens & hi_vocab)
+    en_score = len(tokens & en_vocab)
+
+    if kn_score > te_score and kn_score > hi_score and kn_score > en_score:
+        return "kn-IN"
+    if te_score > kn_score and te_score > hi_score and te_score > en_score:
+        return "te-IN"
+    if en_score > hi_score and en_score > kn_score and en_score > te_score:
+        return "en-IN"
+    if hi_score > 0:
+        return "hi-IN"
+    if en_score > 0:
+        return "en-IN"
+
+    return "en-IN"
 
 
 def _tokenize_clause(text: str) -> set:
@@ -134,21 +265,21 @@ def _has_name(text: str) -> bool:
 
 
 def _extract_customer_name(text: str) -> Optional[str]:
-    # 1. Regex patterns (handles hyphenated nicknames like 'Ramesh - Kirana Lane')
+    # 1. Regex patterns
     for pattern in NAME_PATTERNS:
-        m = re.search(pattern, text)
+        m = re.search(pattern, text, re.IGNORECASE)
         if m:
             cand = m.group(1).strip()
             if cand.lower() not in SKIP_WORDS:
-                return cand
+                return cand.title()
 
     # 2. Capitalized tokens
     words = text.split()
     for i, w in enumerate(words):
         clean = re.sub(r'[^a-zA-Z\u0900-\u097F\u0C80-\u0CFF\u0C00-\u0C7F]', '', w)
         if clean and clean[0].isupper() and clean.lower() not in SKIP_WORDS:
-            # Check if next word is part of a compound name or descriptor
-            if i + 2 < len(words) and words[i+1] == "-" and words[i+2][0].isupper():
+            # Check for hyphenated or descriptor names like "Ramesh - Kirana"
+            if i + 2 < len(words) and words[i+1] in ("-", "–") and words[i+2][0].isupper():
                 return f"{clean} - {words[i+2].title()}"
             return clean.title()
 
@@ -161,39 +292,71 @@ def _extract_customer_name(text: str) -> Optional[str]:
     return None
 
 
-def _classify_intent_clause(clause_text: str) -> IntentType:
+def _is_debt_clearing_utterance(text: str) -> bool:
+    """Detect if utterance indicates complete debt settlement."""
+    text_lower = text.lower()
+    for phrase in CLEAR_DEBT_PHRASES:
+        if re.search(phrase, text_lower):
+            return True
+    tokens = _tokenize_clause(text)
+    # Check for combo: clear/chukta + hisaab/debt/saala/appu
+    if (tokens & CLEAR_DEBT_KEYWORDS) and ({"debt", "hisaab", "saala", "appu", "baaki", "dues", "balance", "poora", "all"} & tokens):
+        return True
+    if "cleared" in tokens:
+        return True
+    return False
+
+
+def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]]:
     tokens = _tokenize_clause(clause_text)
 
-    # Correction check
+    # 1. Spoken Correction
     if tokens & CORRECTION_KEYWORDS:
-        return IntentType.CORRECTION
+        return IntentType.CORRECTION, None
 
-    # Query checks
-    if tokens & QUERY_KEYWORDS:
-        if (tokens & TODAY_QUERY_KEYWORDS) and not _has_name(clause_text):
-            return IntentType.QUERY_TODAY
+    # 2. Debt Clearing (CRITICAL FIX: Checks before adding credit!)
+    if _is_debt_clearing_utterance(clause_text):
+        return IntentType.CLEAR_DEBT, None
+
+    # 3. Conversational Small-Talk & Chitchat (Greetings, How are you, Identity, Help, Safety)
+    chitchat_topic = detect_chitchat(clause_text)
+    if chitchat_topic and extract_first_amount(clause_text) is None:
+        return IntentType.CHITCHAT, chitchat_topic
+
+    # 4. Queries (English & Indic)
+    has_query_kw = bool(tokens & QUERY_KEYWORDS)
+    is_question = bool(re.search(r'\b(?:how\s+much|what\s+is|what\'s|show|tell|check|balance|total|kitna|eshtu|entha|dues|account)\b', clause_text, re.IGNORECASE))
+
+    if has_query_kw or is_question:
+        if (tokens & TODAY_QUERY_KEYWORDS) and not _extract_customer_name(clause_text):
+            return IntentType.QUERY_TODAY, None
         if tokens & LIST_KEYWORDS:
-            return IntentType.LIST_DUES
-        return IntentType.QUERY_BALANCE
+            return IntentType.LIST_DUES, None
+        return IntentType.QUERY_BALANCE, None
 
-    # Payment
+    # 5. Payment
     if tokens & PAYMENT_KEYWORDS:
-        return IntentType.ADD_PAYMENT
+        return IntentType.ADD_PAYMENT, None
 
-    # Credit
+    # 6. Credit
     if tokens & CREDIT_KEYWORDS:
-        return IntentType.ADD_CREDIT
+        return IntentType.ADD_CREDIT, None
 
-    # Default to credit if amount present
+    # Default to credit if an amount is present
     if extract_first_amount(clause_text) is not None:
-        return IntentType.ADD_CREDIT
+        return IntentType.ADD_CREDIT, None
 
-    return IntentType.UNKNOWN
+    # Secondary chitchat fallback
+    if chitchat_topic:
+        return IntentType.CHITCHAT, chitchat_topic
+
+    return IntentType.UNKNOWN, None
 
 
 def _split_into_clauses(text: str) -> List[str]:
     tokens = _tokenize_clause(text)
-    if tokens & CORRECTION_KEYWORDS:
+    # Do not split corrections or debt clearings
+    if (tokens & CORRECTION_KEYWORDS) or _is_debt_clearing_utterance(text):
         return [text.strip()]
 
     # Split by comma, semicolon, ' aur ', ' and ', ' mattu ', ' mari '
@@ -203,24 +366,28 @@ def _split_into_clauses(text: str) -> List[str]:
 
 
 def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedIntent:
-    intent = _classify_intent_clause(clause)
+    intent, chitchat_topic = _classify_intent_clause(clause)
     cust_name = _extract_customer_name(clause) or default_customer
     amount = extract_first_amount(clause)
     txn_date = extract_date_from_text(clause)
 
+    # In chitchat, don't accidentally capture words as customer names
+    if intent == IntentType.CHITCHAT:
+        cust_name = None
+
     direction = None
     if intent == IntentType.ADD_CREDIT:
         direction = TransactionDirection.CREDIT
-    elif intent == IntentType.ADD_PAYMENT:
+    elif intent == IntentType.ADD_PAYMENT or intent == IntentType.CLEAR_DEBT:
         direction = TransactionDirection.PAYMENT
 
     confidence = 0.5
     if intent != IntentType.UNKNOWN:
         confidence += 0.2
     if cust_name:
-        confidence += 0.15
-    if amount is not None:
-        confidence += 0.15
+        confidence += 0.2
+    if amount is not None or intent in (IntentType.CLEAR_DEBT, IntentType.CHITCHAT):
+        confidence += 0.1
 
     return ParsedIntent(
         intent=intent,
@@ -230,6 +397,7 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
         transaction_date=txn_date,
         raw_text=clause,
         confidence=min(confidence, 1.0),
+        chitchat_topic=chitchat_topic,
     )
 
 

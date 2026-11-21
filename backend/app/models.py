@@ -75,10 +75,12 @@ class TransactionDirection(str, Enum):
 class IntentType(str, Enum):
     ADD_CREDIT = "add_credit"       # "Ramesh ka 340 udhaar"
     ADD_PAYMENT = "add_payment"     # "Ramesh ne 200 diya"
+    CLEAR_DEBT = "clear_debt"       # "Ramesh cleared his debt" / "hisaab clear kar diya"
     QUERY_BALANCE = "query_balance" # "Ramesh ka total?"
     QUERY_TODAY = "query_today"     # "Aaj kitna udhaar gaya?"
     CORRECTION = "correction"       # "nahi, 430"
     LIST_DUES = "list_dues"         # "Sabka hisaab bata"
+    CHITCHAT = "chitchat"           # Natural conversational chit-chat & greetings
     UNKNOWN = "unknown"
 
 
@@ -88,7 +90,7 @@ class VoiceInput(BaseModel):
     """Raw voice input (audio bytes sent via WebSocket or REST)."""
     audio_base64: Optional[str] = None
     text: Optional[str] = None  # Pre-transcribed text (for testing)
-    language: str = Field(default="hi-IN")
+    language: Optional[str] = None
 
 
 class ManualTransactionCreate(BaseModel):
@@ -167,6 +169,7 @@ class ParsedIntent(BaseModel):
     confidence: float = 0.0
     needs_disambiguation: bool = False
     disambiguation_options: List[str] = []
+    chitchat_topic: Optional[str] = None
 
 
 class VoiceResponse(BaseModel):

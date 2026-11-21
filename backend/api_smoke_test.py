@@ -88,6 +88,14 @@ async def main():
         assert res.status_code == 200
         print(f"  ✓ GET /api/compliance/export/{cust_id} -> AES-256 encrypted payload received")
 
+        # Conversational Chitchat test
+        res = await client.post("/api/voice/process-text", json={"text": "Namaste bhaiya, kaise ho?"})
+        assert res.status_code == 200
+        chat_data = res.json()
+        assert chat_data["success"] is True
+        assert chat_data["intent"]["intent"] == "chitchat"
+        print(f"  ✓ POST /api/voice/process-text (chitchat) -> \"{chat_data['message']}\"")
+
         # Purge demo transcripts
         res = await client.delete("/api/compliance/purge-demo-transcripts")
         assert res.status_code == 200
