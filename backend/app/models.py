@@ -179,3 +179,5 @@ class VoiceResponse(BaseModel):
     needs_confirmation: bool = False
     needs_disambiguation: bool = False
     disambiguation_options: List[str] = []
+    language: str = "hi-IN"
+    correction_event: Optional[dict] = None  # UI strike-through: {old_amount, new_amount, customer}
