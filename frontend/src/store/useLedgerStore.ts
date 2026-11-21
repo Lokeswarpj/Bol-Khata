@@ -57,6 +57,27 @@ interface LedgerState {
   } | null;
   setAnswerCard: (data: { isOpen: boolean; customerName: string; balance: number; lastEntryDate?: string; text: string } | null) => void;
 
+  // Store Owner & Multi-Store Management
+  ownerProfile: {
+    id?: number;
+    store_name: string;
+    owner_name: string;
+    phone?: string;
+  } | null;
+  allOwners: Array<{
+    id: number;
+    store_name: string;
+    owner_name: string;
+    phone?: string;
+    is_active: boolean;
+  }>;
+  isStoreSwitcherOpen: boolean;
+  setStoreSwitcherOpen: (open: boolean) => void;
+
+  // Active Ledger Tab (All, Udhaar/Credit, Jama/Payment)
+  activeTab: 'all' | 'credit' | 'payment';
+  setActiveTab: (tab: 'all' | 'credit' | 'payment') => void;
+
   // Modals
   isSettingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
@@ -71,6 +92,9 @@ interface LedgerState {
 
   // Async Actions
   fetchInitialData: () => Promise<void>;
+  fetchOwnerData: () => Promise<void>;
+  switchStore: (ownerId: number) => Promise<void>;
+  resetTodayPayments: () => Promise<void>;
   confirmPendingEntry: () => Promise<void>;
   cancelPendingEntry: () => void;
   undoEntry: (id?: number, remoteId?: number) => Promise<void>;
@@ -151,6 +175,16 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
   answerCard: null,
   setAnswerCard: (answerCard) => set({ answerCard }),
 
+  // Store Owner & Multi-Store Profile
+  ownerProfile: null,
+  allOwners: [],
+  isStoreSwitcherOpen: false,
+  setStoreSwitcherOpen: (isStoreSwitcherOpen) => set({ isStoreSwitcherOpen }),
+
+  // Active Ledger Tab (All, Udhaar/Credit, Jama/Payment)
+  activeTab: 'all',
+  setActiveTab: (activeTab) => set({ activeTab }),
+
   isSettingsOpen: false,
   setSettingsOpen: (isSettingsOpen) => set({ isSettingsOpen }),
   isDevPanelOpen: false,
@@ -222,6 +256,7 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
           await db.entries.clear();
           await db.entries.bulkPut(mappedEntries);
         }
+        await get().fetchOwnerData();
       } else {
         // Load from Dexie cache
         const localCustomers = await db.customers.toArray();
@@ -233,6 +268,46 @@ export const useLedgerStore = create<LedgerState>((set, get) => ({
       const localCustomers = await db.customers.toArray();
       const localEntries = await db.entries.toArray();
       set({ customers: localCustomers, entries: localEntries, isOnline: false });
+    }
+  },
+
+  fetchOwnerData: async () => {
+    try {
+      const [profileRes, allRes] = await Promise.all([
+        api.getOwnerProfile().catch(() => null),
+        api.getAllOwners().catch(() => null)
+      ]);
+      if (profileRes?.owner) {
+        set({
+          ownerProfile: profileRes.owner,
+          todayCredit: profileRes.total_credit ?? get().todayCredit,
+          todayPayment: profileRes.total_payments ?? get().todayPayment
+        });
+      }
+      if (allRes?.owners) {
+        set({ allOwners: allRes.owners });
+      }
+    } catch (e) {
+      console.warn('Could not load owner data', e);
+    }
+  },
+
+  switchStore: async (ownerId: number) => {
+    try {
+      await api.switchOwner(ownerId);
+      await get().fetchInitialData();
+      set({ isStoreSwitcherOpen: false });
+    } catch (e) {
+      console.error('Error switching store', e);
+    }
+  },
+
+  resetTodayPayments: async () => {
+    try {
+      await api.resetTodayPayments();
+      await get().fetchInitialData();
+    } catch (e) {
+      console.error('Error resetting today payments', e);
     }
   },
 

@@ -17,7 +17,8 @@ import { VoiceKhataBackground3D } from '../components/VoiceKhataBackground3D';
 import { getTranslation } from '../utils/i18n';
 import { CustomersView } from './CustomersView';
 import { CustomerDetailView } from './CustomerDetailView';
-import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff, Mic } from 'lucide-react';
+import { StoreSwitcherModal } from '../components/StoreSwitcherModal';
+import { Users, Settings, Wrench, Plus, ArrowUpRight, ArrowDownLeft, Wifi, WifiOff, Mic, Store, RotateCcw } from 'lucide-react';
 import { api } from '../services/api';
 import type { Customer } from '../types';
 
@@ -35,7 +36,12 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
     undoEntry,
     fetchInitialData,
     settings,
-    updateSettings
+    updateSettings,
+    ownerProfile,
+    setStoreSwitcherOpen,
+    activeTab,
+    setActiveTab,
+    resetTodayPayments
   } = useLedgerStore();
 
   const [currentView, setCurrentView] = useState<'home' | 'customers' | 'customer_detail'>('home');
@@ -103,21 +109,39 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
       {/* Top Bar - Frosted Glass */}
       <header className="sticky top-0 z-40 bg-black/20 backdrop-blur-xl border-b border-white/10 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
         <div className="max-w-md mx-auto flex items-center justify-between">
-          {/* Logo Tile */}
-          <div className="flex items-center gap-2.5 cursor-pointer group" onClick={onNavigateLanding}>
+          {/* Logo Tile & Store Indicator */}
+          <div
+            className="flex items-center gap-2.5 cursor-pointer group"
+            onClick={() => setStoreSwitcherOpen(true)}
+            title="Click to Switch Kirana Store"
+          >
             <BolKhataLogo size="sm" />
             <div>
-              <span className="font-serif tracking-tight text-lg text-white font-medium block leading-none">
-                BolKhata
-              </span>
-              <MonoLabel variant="emerald" className="text-[9px] tracking-[0.25em]">
-                {storeOwner ? `${storeOwner.store_name} · ${storeOwner.owner_name}` : getTranslation('voiceLedger', settings.language)}
+              <div className="flex items-center gap-1.5">
+                <span className="font-serif tracking-tight text-lg text-white font-medium block leading-none">
+                  {ownerProfile?.store_name || (storeOwner ? storeOwner.store_name : 'BolKhata')}
+                </span>
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 group-hover:bg-emerald-500/25 transition-all">
+                  SWITCH
+                </span>
+              </div>
+              <MonoLabel variant="emerald" className="text-[9px] tracking-[0.2em] mt-0.5">
+                {ownerProfile?.owner_name ? `Owner: ${ownerProfile.owner_name}` : (storeOwner ? `Owner: ${storeOwner.owner_name}` : getTranslation('voiceLedger', settings.language))}
               </MonoLabel>
             </div>
           </div>
 
           {/* Action Chips */}
           <div className="flex items-center gap-2">
+            {/* Store Switcher Chip */}
+            <button
+              onClick={() => setStoreSwitcherOpen(true)}
+              className="p-2 rounded-xl text-emerald-400 glass border border-emerald-500/30 hover:border-emerald-500/60 hover:bg-emerald-500/10 transition-colors"
+              title="Switch Active Store"
+            >
+              <Store className="w-4 h-4" />
+            </button>
+
             {/* Gnani Voice Badge */}
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono border bg-violet-500/10 border-violet-500/30 text-violet-300">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-ping"></span>
@@ -197,6 +221,19 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
               <span className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1">
                 <ArrowDownLeft className="w-3 h-3" /> {getTranslation('todayPayment', settings.language)}
               </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm("Reset today's collected cash drawer for this store?")) {
+                    resetTodayPayments();
+                  }
+                }}
+                className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all flex items-center gap-1"
+                title="Settle/Reset Today's Cash Drawer"
+              >
+                <RotateCcw className="w-2.5 h-2.5" />
+                <span>SETTLE</span>
+              </button>
             </div>
             <div className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-emerald-400">
               ₹{Math.round(todayPayment).toLocaleString('en-IN')}
@@ -233,25 +270,64 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
           </button>
         </div>
 
+        {/* Ledger Filter Tabs (All, Udhaar, Jama) */}
+        <div className="flex items-center gap-2 p-1 rounded-2xl glass border border-white/10">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-xl transition-all ${
+              activeTab === 'all'
+                ? 'bg-white/15 text-white shadow-sm border border-white/20'
+                : 'text-white/50 hover:text-white/80'
+            }`}
+          >
+            ALL ({entries.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('credit')}
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-xl transition-all ${
+              activeTab === 'credit'
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.2)]'
+                : 'text-rose-400/60 hover:text-rose-400'
+            }`}
+          >
+            UDHAAR ({entries.filter(e => e.type === 'credit').length})
+          </button>
+          <button
+            onClick={() => setActiveTab('payment')}
+            className={`flex-1 py-1.5 text-xs font-mono font-medium rounded-xl transition-all ${
+              activeTab === 'payment'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                : 'text-emerald-400/60 hover:text-emerald-400'
+            }`}
+          >
+            JAMA ({entries.filter(e => e.type === 'payment').length})
+          </button>
+        </div>
+
         {/* Recent Entries Header */}
         <div className="flex items-center justify-between pt-1">
           <MonoLabel variant="muted">
-            {getTranslation('recentLedgerEntries', settings.language)} ({entries.length})
+            {getTranslation('recentLedgerEntries', settings.language)} (
+            {entries.filter(e => activeTab === 'all' || e.type === activeTab).length}
+            )
           </MonoLabel>
           <span className="text-[11px] text-white/40">{getTranslation('latestOnTop', settings.language)}</span>
         </div>
 
         {/* Recent Entries List */}
         <div className="space-y-2 pb-6">
-          {entries.slice(0, 15).map((entry, idx) => (
-            <EntryCard
-              key={entry.id || idx}
-              entry={entry}
-              onUndo={() => undoEntry(entry.id, entry.remote_id)}
-            />
-          ))}
+          {entries
+            .filter(e => activeTab === 'all' || e.type === activeTab)
+            .slice(0, 20)
+            .map((entry, idx) => (
+              <EntryCard
+                key={entry.id || idx}
+                entry={entry}
+                onUndo={() => undoEntry(entry.id, entry.remote_id)}
+              />
+            ))}
 
-          {entries.length === 0 && (
+          {entries.filter(e => activeTab === 'all' || e.type === activeTab).length === 0 && (
             <div className="text-center py-12 glass rounded-3xl border border-white/5 space-y-2">
               <p className="font-serif text-lg text-white/70">{getTranslation('cleanKhata', settings.language)}</p>
               <p className="text-xs text-white/40 max-w-xs mx-auto">
@@ -329,6 +405,7 @@ export const LedgerApp: React.FC<{ onNavigateLanding: () => void }> = ({ onNavig
       <SettingsModal />
       <ManualEntryModal />
       <DevPanel />
+      <StoreSwitcherModal />
     </div>
   );
 };
