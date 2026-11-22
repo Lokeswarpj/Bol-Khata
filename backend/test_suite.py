@@ -239,12 +239,102 @@ async def run_all_tests():
         print(f"  ✓ Queued Outbox Transactions: {len(outbox_items)} pending records ready for cloud sync")
         assert outbox_items[0].status == "pending"
 
+        # ──────────────────────────────────────────────────────────
+        # 14. Disambiguation for Collection Lo & Voice-to-UPI
+        # ──────────────────────────────────────────────────────────
+        print("\n[TEST 14] Disambiguation for Collection Lo & Voice-to-UPI:")
+        # 1. "Ramesh se collection lo" -> Multiple matches triggers disambiguation
+        d_coll_resp = await ledger.process_voice_command("Ramesh se collection lo", session_id="live_demo_session")
+        assert d_coll_resp.needs_disambiguation is True
+        assert "Kirana Lane" in d_coll_resp.message and "Milk Dairy" in d_coll_resp.message
+        print(f"  ✓ Disambiguation Prompt: \"{d_coll_resp.message}\"")
+
+        # 2. Store owner verifies difference: "Kirana Lane wale"
+        resolve_coll_resp = await ledger.process_voice_command("Kirana Lane wale", session_id="live_demo_session")
+        assert resolve_coll_resp.success is True
+        assert resolve_coll_resp.upi_payload is not None
+        c_name = resolve_coll_resp.upi_payload.get("customer_name") if isinstance(resolve_coll_resp.upi_payload, dict) else resolve_coll_resp.upi_payload.customer_name
+        assert "Ramesh - Kirana Lane" in c_name
+        print(f"  ✓ Disambiguation Resolved: UPI QR for \"{c_name}\"")
+
+        # 3. Standalone "collection lo" prompt
+        d_stand_resp = await ledger.process_voice_command("collection lo", session_id="live_demo_session")
+        assert ("Whose collection" in d_stand_resp.message) or ("Kiska collection" in d_stand_resp.message)
+        print(f"  ✓ Standalone Prompt: \"{d_stand_resp.message}\"")
+
+        # 4. User replies "Milk Dairy"
+        resolve_stand_resp = await ledger.process_voice_command("Milk Dairy", session_id="live_demo_session")
+        assert resolve_stand_resp.upi_payload is not None
+        c_name2 = resolve_stand_resp.upi_payload.get("customer_name") if isinstance(resolve_stand_resp.upi_payload, dict) else resolve_stand_resp.upi_payload.customer_name
+        assert "Ramesh - Milk Dairy" in c_name2
+        print(f"  ✓ Resolved from Standalone: UPI QR for \"{c_name2}\"")
+
+        # ──────────────────────────────────────────────────────────
+        # 17. Same-Name Verification, Nickname Provision & Disambiguation
+        # ──────────────────────────────────────────────────────────
+        print("\n[TEST 17] Same-Name Detection, Disambiguation & Owner Nickname Provision:")
+        
+        # 17a. Check if customer with same name is present
+        exists_resp = await ledger.process_voice_command("Kya Ramesh naam ka koi grahak hai", session_id="live_demo_session")
+        assert exists_resp.success is True
+        assert "Kirana Lane" in exists_resp.message or "Ramesh" in exists_resp.message
+        print(f"  ✓ Same-Name Query Answer: \"{exists_resp.message}\"")
+
+        # 17b. Owner provides nickname explicitly via voice
+        set_nick_resp = await ledger.process_voice_command("Set nickname for Suresh as Auto wala", session_id="live_demo_session")
+        assert set_nick_resp.success is True
+        assert "Auto" in set_nick_resp.message
+        print(f"  ✓ Nickname Set Confirmation: \"{set_nick_resp.message}\"")
+        suresh_obj = await ledger.find_customer_exact("Suresh")
+        assert "Auto" in suresh_obj.nickname
+        print(f"  ✓ Database verified: Suresh nickname is now '{suresh_obj.nickname}'")
+
+        # 17c. Disambiguation with same name - Repeating ambiguous base name prompts for clarification
+        d_ambig = await ledger.process_voice_command("Ramesh ka 300 udhaar", session_id="test_nick_session")
+        assert d_ambig.needs_disambiguation is True
+        print(f"  ✓ Same-Name Disambiguation Prompt: \"{d_ambig.message}\"")
+        
+        repeat_name = await ledger.process_voice_command("Ramesh", session_id="test_nick_session")
+        assert repeat_name.needs_disambiguation is True
+        print(f"  ✓ Repetition Guard: Correctly recognized 'Ramesh' as still ambiguous: \"{repeat_name.message}\"")
+
+        # 17d. Owner resolves via ordinal choice ('pehla wala')
+        ord_resolve = await ledger.process_voice_command("pehla wala", session_id="test_nick_session")
+        assert ord_resolve.success is True
+        assert "Ramesh - Kirana Lane" in ord_resolve.message
+        print(f"  ✓ Ordinal Disambiguation Resolved: \"{ord_resolve.message}\"")
+
+        # 17e. Owner provides a NEW nickname for a new customer of the same name!
+        d_new_prompt = await ledger.process_voice_command("Ramesh ka 500 udhaar", session_id="test_new_nick_session")
+        assert d_new_prompt.needs_disambiguation is True
+
+        new_nick_resp = await ledger.process_voice_command("Naya Ramesh, nickname Chaiwala", session_id="test_new_nick_session")
+        assert new_nick_resp.success is True
+        assert "Chaiwala" in new_nick_resp.message
+        print(f"  ✓ New Nickname Customer Created & Entry Logged: \"{new_nick_resp.message}\"")
+        
+        chaiwala_cust = await ledger.find_customer_exact("Chaiwala")
+        assert chaiwala_cust is not None
+        assert "Chaiwala" in chaiwala_cust.nickname
+        chai_bal = await ledger.get_customer_balance(chaiwala_cust.id)
+        assert chai_bal == 500.0
+        print(f"  ✓ Database verified: New Customer '{chaiwala_cust.name}' has balance ₹{chai_bal:g} with nickname '{chaiwala_cust.nickname}'")
+
+        # 17f. Regional language queries for existing customers
+        kn_exist = await ledger.process_voice_command("ರಮೇಶ್ ಹೆಸರಿನ ಗ್ರಾಹಕರು ಇದ್ದಾರಾ", session_id="live_demo_session", language="kn-IN")
+        assert kn_exist.success is True
+        print(f"  ✓ Kannada Customer Exists Query: \"{kn_exist.message}\"")
+
+        te_exist = await ledger.process_voice_command("రమేష్ పేరుతో కస్టమర్ ఉన్నారా", session_id="live_demo_session", language="te-IN")
+        assert te_exist.success is True
+        print(f"  ✓ Telugu Customer Exists Query: \"{te_exist.message}\"")
+
     await engine.dispose()
 
     # ──────────────────────────────────────────────────────────
-    # 14. Enterprise Cryptographic Security & JWT Verification
+    # 15. Enterprise Cryptographic Security & JWT Verification
     # ──────────────────────────────────────────────────────────
-    print("\n[TEST 14] Salted PIN Hashing & HMAC-SHA256 JWT Authentication:")
+    print("\n[TEST 15] Salted PIN Hashing & HMAC-SHA256 JWT Authentication:")
     test_pin = "1234"
     hashed_pin = hash_pin(test_pin)
     assert hashed_pin != test_pin, "PIN must be hashed with salt"
@@ -259,9 +349,9 @@ async def run_all_tests():
     print("  ✓ Cryptographic JWT Access Token generated and verified")
 
     # ──────────────────────────────────────────────────────────
-    # 15. Multilingual Collections & Voice-to-UPI Verification
+    # 16. Multilingual Collections & Voice-to-UPI Verification
     # ──────────────────────────────────────────────────────────
-    print("\n[TEST 15] Multilingual Collections & Customer Voice-to-UPI Verification:")
+    print("\n[TEST 16] Multilingual Collections & Customer Voice-to-UPI Verification:")
     coll_tests = [
         ("aaj ka collection kitna hai", IntentType.QUERY_COLLECTIONS_TODAY, None),
         ("eeroju collection entha", IntentType.QUERY_COLLECTIONS_TODAY, None),
@@ -281,7 +371,7 @@ async def run_all_tests():
         print(f"  ✓ '{c_text}' -> {exp_intent.value} (cust={exp_cust})")
 
     print("\n" + "=" * 75)
-    print("🏆 ALL 15 UNFAIR ADVANTAGE & ZERO-FAIL SCENARIOS PASSED WITH 100% SUCCESS!")
+    print("🏆 ALL 17 UNFAIR ADVANTAGE & ZERO-FAIL SCENARIOS PASSED WITH 100% SUCCESS!")
     print("=" * 75)
 
 

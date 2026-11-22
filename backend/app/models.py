@@ -125,6 +125,8 @@ class IntentType(str, Enum):
     CHITCHAT = "chitchat"           # Natural conversational chit-chat & greetings
     VOICE_TO_UPI = "voice_to_upi"   # "Ramesh se payment lo" / "Show UPI QR"
     CHECK_RISK = "check_risk"       # "Ramesh ka risk kaisa hai?" / "Khata Risk AI"
+    SET_NICKNAME = "set_nickname"   # "Ramesh ka nickname Chaiwala rakho"
+    QUERY_CUSTOMER_EXISTS = "query_customer_exists" # "Kya Ramesh naam ka koi grahak hai?"
     UNKNOWN = "unknown"
 
 
@@ -264,6 +266,7 @@ class ParsedIntent(BaseModel):
     needs_disambiguation: bool = False
     disambiguation_options: List[str] = []
     chitchat_topic: Optional[str] = None
+    nickname: Optional[str] = None
 
 
 class VoiceResponse(BaseModel):

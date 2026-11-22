@@ -11,6 +11,7 @@ Engineered for zero-fail judge evaluation:
 8. Sub-800ms direct SQL fast path for queries
 """
 
+import re
 import time
 import logging
 from datetime import date, datetime
@@ -25,7 +26,7 @@ from app.models import (
     CustomerResponse, TransactionResponse, LedgerSummary,
     VoiceResponse,
 )
-from app.services.nlu_parser import parse_voice_utterance, detect_language
+from app.services.nlu_parser import parse_voice_utterance, detect_language, _extract_customer_name
 from app.services.number_parser import extract_first_amount
 import json
 from app.models import SyncOutbox
@@ -342,7 +343,16 @@ class LedgerEngine:
     # ═══════════════════════════════════════════════════════════
 
     def _format_disambiguation(self, name: str, candidates: List[Customer], lang: str) -> str:
-        descriptors = [c.nickname or c.name.split("-")[-1].strip() for c in candidates]
+        descriptors = []
+        for idx, c in enumerate(candidates, 1):
+            if c.nickname:
+                descriptors.append(c.nickname)
+            elif "-" in c.name:
+                descriptors.append(c.name.split("-")[-1].strip())
+            elif c.phone:
+                descriptors.append(f"phone ...{c.phone[-4:]}")
+            else:
+                descriptors.append(f"Customer #{idx}")
         
         if lang.startswith("kn"):
             return f"ಯಾವ {name}? {' ಅಥವಾ '.join(descriptors)}? ಅಥವಾ ಯಾವುದೇ ಅಡ್ಡಹೆಸರು ಇದೆಯೇ?"
@@ -351,7 +361,7 @@ class LedgerEngine:
         elif lang.startswith("en"):
             return f"Which {name}? {' or '.join(descriptors)}? Or please specify a nickname."
         else:
-            formatted_opts = [f"{d} wale" if "wale" not in d.lower() else d for d in descriptors]
+            formatted_opts = [f"{d} wale" if ("wale" not in d.lower() and not d.startswith("Customer")) else d for d in descriptors]
             return f"Kaunse {name}? {' ya '.join(formatted_opts)}? Ya koi nickname hai?"
 
     async def _generate_chitchat_response(self, topic: Optional[str], lang: str) -> str:
@@ -422,6 +432,46 @@ class LedgerEngine:
     # Complete Voice Utterance Processor
     # ═══════════════════════════════════════════════════════════
 
+    async def _build_voice_to_upi_response(self, cust: Customer, lang: str, intent: ParsedIntent) -> VoiceResponse:
+        bal = await self.get_customer_balance(cust.id)
+        if bal <= 0:
+            if lang.startswith("kn"):
+                msg = f"{cust.name} ಅವರ ಖಾತೆ ಈಗಾಗಲೇ ಕ್ಲಿಯರ್ ಆಗಿದೆ (₹0 ಬಾಕಿ)."
+            elif lang.startswith("te"):
+                msg = f"{cust.name} లెక్క ఇప్పటికే క్లియర్ గా ఉంది (₹0 బాకీ)."
+            elif lang.startswith("en"):
+                msg = f"{cust.name} has no dues pending (₹0 balance)."
+            else:
+                msg = f"{cust.name} ka hisaab pehle se clear hai (₹0 baaki)."
+            return VoiceResponse(success=True, message=msg, intent=intent, language=lang)
+
+        owner_res = await self.db.execute(select(StoreOwner).where(StoreOwner.is_active == True))
+        active_owner = owner_res.scalars().first()
+        store_title = active_owner.store_name if active_owner else "Kirana Store"
+
+        upi_payload = upi_service.generate_upi_payload(
+            customer_name=cust.name,
+            amount=bal,
+            store_name=store_title
+        )
+
+        if lang.startswith("kn"):
+            msg = f"{cust.name} ಅವರ ಒಟ್ಟು ಬಾಕಿ ₹{bal:g}. ಯುಪಿಐ ಕ್ಯೂಆರ್ ಕೋಡ್ ಪರದೆಯ ಮೇಲೆ ಸಿದ್ಧವಾಗಿದೆ."
+        elif lang.startswith("te"):
+            msg = f"{cust.name} గారి మొత్తం బాకీ ₹{bal:g}. యుపిಐ క్యూఆర్ కోడ్ స్క్రీన్ పై సిద్ధంగా ఉంది."
+        elif lang.startswith("en"):
+            msg = f"Total balance for {cust.name} is ₹{bal:g}. Dynamic UPI QR code is ready on counter screen."
+        else:
+            msg = f"{cust.name} ka total baaki ₹{bal:g} hai. Counter screen par dynamic UPI QR code generate kar diya hai."
+
+        return VoiceResponse(
+            success=True,
+            message=msg,
+            intent=intent,
+            language=lang,
+            upi_payload=upi_payload
+        )
+
     async def process_voice_command(
         self,
         text: str,
@@ -440,17 +490,175 @@ class LedgerEngine:
             clean_reply = text.strip().lower()
 
             matched_cust: Optional[Dict[str, Any]] = None
-            for cand in pending.candidates:
-                cand_name = cand["name"].lower()
-                cand_nick = (cand.get("nickname") or "").lower()
-                if (cand_nick and cand_nick in clean_reply) or (cand_name in clean_reply) or (clean_reply in cand_name):
-                    matched_cust = cand
-                    break
+            new_nick_created: bool = False
+
+            if pending.candidates:
+                base_name = (pending.intent.customer_name or "").strip().lower()
+
+                # 1. Check ordinals: pehla/first/1, doosra/second/2, teesra/third/3
+                ord_idx = None
+                if re.search(r'\b(?:pehla|first|1|one|number 1|ಒಂದನೇ|ಮೊದಲ|మొదటి)\b', clean_reply):
+                    ord_idx = 0
+                elif re.search(r'\b(?:doosra|dusra|second|2|two|number 2|ಎರಡನೇ|ರೆಂಡವ|రెండవది)\b', clean_reply):
+                    ord_idx = 1
+                elif re.search(r'\b(?:teesra|tisra|third|3|three|number 3|ಮೂರನೇ|మూడవ)\b', clean_reply):
+                    ord_idx = 2
+
+                if ord_idx is not None and ord_idx < len(pending.candidates):
+                    matched_cust = pending.candidates[ord_idx]
+                else:
+                    for cand in pending.candidates:
+                        cand_name = cand["name"].lower()
+                        cand_nick = (cand.get("nickname") or "").lower()
+                        cand_desc = cand["name"].split("-")[-1].strip().lower()
+                        cand_phone = (cand.get("phone") or "")
+                        clean_nick_clean = cand_nick.replace("-", " ").strip()
+
+                        # Guard against repeating ambiguous base name
+                        if base_name and clean_reply in (base_name, f"{base_name} ka", f"{base_name} ki", f"{base_name} ke"):
+                            continue
+
+                        if (cand_nick and cand_nick in clean_reply) or \
+                           (clean_nick_clean and clean_nick_clean in clean_reply) or \
+                           (cand_desc and cand_desc in clean_reply and cand_desc != base_name) or \
+                           (clean_reply == cand_name) or \
+                           (cand_phone and len(cand_phone) >= 4 and cand_phone[-4:] in clean_reply):
+                            matched_cust = cand
+                            break
+
+                # 2. If NO candidate matched, check if owner provides a new nickname for a new customer
+                if not matched_cust:
+                    if base_name and clean_reply in (base_name, f"{base_name} ka", f"{base_name} ki", f"{base_name} ke"):
+                        if lang.startswith("kn"):
+                            msg = f"ಖಾತೆಯಲ್ಲಿ '{pending.intent.customer_name}' ಹೆಸರಿನ ಹಲವು ಗ್ರಾಹಕರಿದ್ದಾರೆ. ದಯವಿಟ್ಟು ಅವರ ಅಡ್ಡಹೆಸರು ತಿಳಿಸಿ (ಉದಾ: Kirana Lane ಅಥವಾ Milk Dairy)."
+                        elif lang.startswith("te"):
+                            msg = f"ఖాతాలో '{pending.intent.customer_name}' పేరుతో ఒకరి కంటే ఎక్కువ కస్టమర్లు ఉన్నారు. దయచేసి వారి నిక్ నేమ్ చెప్పండి (ఉదా: Kirana Lane లేదా Milk Dairy)."
+                        elif lang.startswith("en"):
+                            msg = f"There are multiple customers with name '{pending.intent.customer_name}'. Please specify a nickname (e.g., Kirana Lane or Milk Dairy)."
+                        else:
+                            msg = f"'{pending.intent.customer_name}' naam ke ek se zyada grahak hain. Kripya unka nickname bataiye (jaise Kirana Lane ya Milk Dairy), ya naya nickname bataiye."
+                        return VoiceResponse(
+                            success=False,
+                            message=msg,
+                            intent=pending.intent,
+                            needs_disambiguation=True,
+                            disambiguation_options=[c["name"] for c in pending.candidates],
+                            language=lang,
+                        )
+
+                    # Extract new nickname from reply
+                    new_nick_raw = None
+                    m_nick = re.search(r'(?:naya|new|hosa|kottha)?\s*(?:customer|grahak)?\s*(?:nickname|nick\s*name|upnaam|ಅಡ್ಡಹೆಸರು|నిక్\s*నేమ్)\s*(?:hai|is|rakho|likho|rakhna|likhna|karo|batao|to|as|పెట్టు|ఇಡಿ)?\s*[:\s-]?\s*([a-zA-Z0-9\u0900-\u0D7F\s\-]+)', text, re.IGNORECASE)
+                    if m_nick:
+                        new_nick_raw = m_nick.group(1).strip()
+                    else:
+                        m_new = re.search(r'(?:naya|new|hosa|kottha)\s+(?:customer|grahak|person)?\s*([a-zA-Z0-9\u0900-\u0D7F\s\-]+)', text, re.IGNORECASE)
+                        if m_new:
+                            new_nick_raw = m_new.group(1).strip()
+                        elif len(clean_reply.split()) <= 4 and clean_reply not in ("koi nahi", "none", "neither", "no", "nahi", "alla", "kaadhu", "stop", "cancel"):
+                            new_nick_raw = text.strip()
+
+                    if new_nick_raw:
+                        new_nick_clean = re.sub(r'\b(?:hai|rakho|likho|rakhna|likhna|karo|batao|ka|ki|ke|wale|wali|wala|is|to|as|bhai|ji)\b', '', new_nick_raw, flags=re.IGNORECASE).strip().title()
+                        if base_name and base_name in new_nick_clean.lower():
+                            new_nick_clean = re.sub(rf'\b{re.escape(base_name)}\b', '', new_nick_clean, flags=re.IGNORECASE).strip().title()
+
+                        if new_nick_clean and len(new_nick_clean) >= 2:
+                            owner_id = await self._get_owner_id()
+                            base_cname = pending.intent.customer_name or "Customer"
+                            new_c = Customer(
+                                name=f"{base_cname} - {new_nick_clean}",
+                                nickname=new_nick_clean,
+                                owner_id=owner_id,
+                                opted_in_reminders=False,
+                            )
+                            self.db.add(new_c)
+                            await self.db.flush()
+                            matched_cust = {"id": new_c.id, "name": new_c.name, "nickname": new_c.nickname}
+                            new_nick_created = True
+
+            elif not pending.candidates:
+                # Standalone collection prompt resolution
+                raw_cand = _extract_customer_name(text) or text.strip()
+                extracted_name = re.sub(r'\b(?:se|ka|ki|ke|ko|nunchi|nundi|daggara|inda|hatthira|ge|ki|lo|karo|batao|chahiye|lena|hai)\b', '', raw_cand, flags=re.IGNORECASE).strip().title()
+
+                similar = await self.find_matching_customers(extracted_name)
+                if len(similar) > 1:
+                    candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname, "phone": c.phone} for c in similar]
+                    session.set_pending_action(pending.intent, candidates)
+                    dis_prompt = self._format_disambiguation(extracted_name, similar, lang)
+                    names = [c.name for c in similar]
+                    return VoiceResponse(
+                        success=False,
+                        message=dis_prompt,
+                        intent=pending.intent,
+                        needs_disambiguation=True,
+                        disambiguation_options=names,
+                        language=lang,
+                    )
+
+                cust = await self.find_customer_exact(extracted_name)
+                if not cust and similar:
+                    cust = similar[0]
+
+                if not cust:
+                    session.clear_pending_action()
+                    if lang.startswith("kn"):
+                        msg = f"{extracted_name} ಹೆಸರಿನ ಯಾವುದೇ ಗ್ರಾಹಕರು ಸಿಗಲಿಲ್ಲ."
+                    elif lang.startswith("te"):
+                        msg = f"{extracted_name} పేరుతో ఏ కస్టమర్ దొరకలేదు."
+                    elif lang.startswith("en"):
+                        msg = f"No customer found with name {extracted_name}."
+                    else:
+                        msg = f"{extracted_name} naam ka koi customer nahi mila."
+                    return VoiceResponse(success=False, message=msg, intent=pending.intent, language=lang)
+
+                session.clear_pending_action()
+                if pending.intent.intent == IntentType.VOICE_TO_UPI:
+                    return await self._build_voice_to_upi_response(cust, lang, pending.intent)
 
             if matched_cust:
                 session.clear_pending_action()
                 intent = pending.intent
-                
+
+                # Disambiguation resolved for VOICE_TO_UPI (Collection):
+                if intent.intent == IntentType.VOICE_TO_UPI:
+                    cust_obj = await self.db.get(Customer, matched_cust["id"])
+                    if not cust_obj:
+                        cust_obj = await self.find_customer_exact(matched_cust["name"])
+                    return await self._build_voice_to_upi_response(cust_obj, lang, intent)
+
+                # Disambiguation resolved for QUERY_BALANCE:
+                if intent.intent == IntentType.QUERY_BALANCE:
+                    bal = await self.get_customer_balance(matched_cust["id"])
+                    c_name = matched_cust["name"]
+                    if lang.startswith("kn"):
+                        msg = f"{c_name} ಅವರ ಒಟ್ಟು ಬಾಕಿ ₹{bal:g} ಇದೆ." if bal > 0 else f"{c_name} ಅವರ ಖಾತೆ ಕ್ಲಿಯರ್ ಆಗಿದೆ!"
+                    elif lang.startswith("te"):
+                        msg = f"{c_name} మొత్తం బాకీ ₹{bal:g} ఉంది." if bal > 0 else f"{c_name} లెక్క క్లియర్ గా ఉంది!"
+                    elif lang.startswith("en"):
+                        msg = f"{c_name} owes a balance of ₹{bal:g}." if bal > 0 else f"{c_name} has no outstanding dues (₹0 balance)."
+                    else:
+                        msg = f"{c_name} ka total baaki ₹{bal:g} hai." if bal > 0 else f"{c_name} ka hisaab clear hai!"
+                    return VoiceResponse(success=True, message=msg, intent=intent, language=lang)
+
+                # Disambiguation resolved for SET_NICKNAME:
+                if intent.intent == IntentType.SET_NICKNAME:
+                    cust_obj = await self.db.get(Customer, matched_cust["id"])
+                    new_nick = intent.nickname or "Kirana"
+                    if cust_obj:
+                        cust_obj.nickname = new_nick
+                        await self.db.commit()
+                    if lang.startswith("kn"):
+                        msg = f"{matched_cust['name']} ಅವರ ಅಡ್ಡಹೆಸರನ್ನು '{new_nick}' ಎಂದು ನವೀಕರಿಸಲಾಗಿದೆ."
+                    elif lang.startswith("te"):
+                        msg = f"{matched_cust['name']} గారి నిక్ నేమ్ '{new_nick}' గా సెట్ చేయబడింది."
+                    elif lang.startswith("en"):
+                        msg = f"Nickname for {matched_cust['name']} has been set to '{new_nick}'."
+                    else:
+                        msg = f"{matched_cust['name']} ka nickname '{new_nick}' set kar diya gaya hai."
+                    return VoiceResponse(success=True, message=msg, intent=intent, language=lang)
+
                 # If pending action was CLEAR_DEBT
                 if intent.intent == IntentType.CLEAR_DEBT:
                     cur_bal = await self.get_customer_balance(matched_cust["id"])
@@ -516,13 +724,25 @@ class LedgerEngine:
                 await self.db.commit()
                 bal = await self.get_customer_balance(matched_cust["id"])
 
-                if lang.startswith("kn"):
-                    msg = f"Done! {matched_cust['name']} ಅವರ ಖಾತೆಗೆ ₹{intent.amount:g} ದಾಖಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{bal:g}."
-                elif lang.startswith("te"):
-                    msg = f"Done! {matched_cust['name']} కి ₹{intent.amount:g} నమోదయింది. మొత్తం బాకీ: ₹{bal:g}."
+                if new_nick_created:
+                    nick_label = matched_cust.get("nickname") or ""
+                    if lang.startswith("kn"):
+                        msg = f"Done! ಹೊಸ ಗ್ರಾಹಕ {matched_cust['name']} ಅವರ ಖಾತೆಗೆ ₹{intent.amount:g} ದಾಖಲಾಗಿದೆ. ಅಡ್ಡಹೆಸರು '{nick_label}' ಉಳಿಸಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{bal:g}."
+                    elif lang.startswith("te"):
+                        msg = f"Done! కొత్త కస్టమర్ {matched_cust['name']} కి ₹{intent.amount:g} నమోదయింది. నిక్ నేమ్ '{nick_label}' సేవ్ అయింది. మొత్తం బాకీ: ₹{bal:g}."
+                    elif lang.startswith("en"):
+                        msg = f"Done! Recorded ₹{intent.amount:g} for new customer {matched_cust['name']} with nickname '{nick_label}'. Balance: ₹{bal:g}."
+                    else:
+                        act_word = "udhaar likha" if direction == TransactionDirection.CREDIT else "jama kiya"
+                        msg = f"Done! Naye grahak {matched_cust['name']} ka ₹{intent.amount:g} {act_word}. Nickname '{nick_label}' save ho gaya. Ab total baaki: ₹{bal:g}."
                 else:
-                    act_word = "udhaar likha" if direction == TransactionDirection.CREDIT else "jama kiya"
-                    msg = f"Done! {matched_cust['name']} ka ₹{intent.amount:g} {act_word}. Ab total baaki: ₹{bal:g}."
+                    if lang.startswith("kn"):
+                        msg = f"Done! {matched_cust['name']} ಅವರ ಖಾತೆಗೆ ₹{intent.amount:g} ದಾಖಲಾಗಿದೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{bal:g}."
+                    elif lang.startswith("te"):
+                        msg = f"Done! {matched_cust['name']} కి ₹{intent.amount:g} నమోదయింది. మొత్తం బాకీ: ₹{bal:g}."
+                    else:
+                        act_word = "udhaar likha" if direction == TransactionDirection.CREDIT else "jama kiya"
+                        msg = f"Done! {matched_cust['name']} ka ₹{intent.amount:g} {act_word}. Ab total baaki: ₹{bal:g}."
 
                 return VoiceResponse(
                     success=True,
@@ -542,7 +762,6 @@ class LedgerEngine:
                     ),
                 )
 
-        # ── Step B: Parse Utterance into Clauses ──
         actions = parse_voice_utterance(text)
 
         # ── Step B0a: Stop / Standby Command ("Stop" / "Ruko" / "Bas") ──
@@ -601,6 +820,112 @@ class LedgerEngine:
                 msg = f"Aaj ki saari jama (payments) reset ho gayi hai. Kul ₹{total_reset_amt:g} clear kar diya gaya."
 
             return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
+        # ── Step B0d: Set Customer Nickname ("Ramesh ka nickname Kirana Lane rakho") ──
+        if len(actions) == 1 and actions[0].intent == IntentType.SET_NICKNAME:
+            target_name = actions[0].customer_name
+            new_nick = actions[0].nickname
+            if not target_name or not new_nick:
+                return VoiceResponse(success=False, message="Kiska aur kya nickname rakhna hai? Kripya naam aur nickname bataiye.", intent=actions[0], language=lang)
+
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname, "phone": c.phone} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_prompt = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_prompt,
+                    intent=actions[0],
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    language=lang,
+                )
+
+            cust = await self.find_customer_exact(target_name)
+            if not cust and similar:
+                cust = similar[0]
+
+            if not cust:
+                owner_id = await self._get_owner_id()
+                cust = Customer(
+                    name=f"{target_name} - {new_nick}",
+                    nickname=new_nick,
+                    owner_id=owner_id,
+                )
+                self.db.add(cust)
+                await self.db.commit()
+                if lang.startswith("kn"):
+                    msg = f"ಹೊಸ ಗ್ರಾಹಕ {cust.name} ಅವರನ್ನು ನಮೂದಿಸಲಾಗಿದೆ ಮತ್ತು ಅಡ್ಡಹೆಸರು '{new_nick}' ಉಳಿಸಲಾಗಿದೆ."
+                elif lang.startswith("te"):
+                    msg = f"కొత్త కస్టమర్ {cust.name} నమోదు చేయబడింది మరియు నిక్ నేమ్ '{new_nick}' సేవ్ అయింది."
+                elif lang.startswith("en"):
+                    msg = f"Registered new customer {cust.name} with nickname '{new_nick}'."
+                else:
+                    msg = f"Naye grahak {cust.name} darj ho gaye hain aur nickname '{new_nick}' set ho gaya hai."
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
+            cust.nickname = new_nick
+            await self.db.commit()
+
+            if lang.startswith("kn"):
+                msg = f"{cust.name} ಅವರ ಅಡ್ಡಹೆಸರನ್ನು '{new_nick}' ಎಂದು ನವೀಕರಿಸಲಾಗಿದೆ."
+            elif lang.startswith("te"):
+                msg = f"{cust.name} గారి నిక్ నేమ్ '{new_nick}' గా సెట్ చేయబడింది."
+            elif lang.startswith("en"):
+                msg = f"Nickname for {cust.name} has been set to '{new_nick}'."
+            else:
+                msg = f"{cust.name} ka nickname '{new_nick}' set kar diya gaya hai."
+
+            return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+
+        # ── Step B0e: Query Customer Exists ("Kya Ramesh naam ka koi grahak hai?") ──
+        if len(actions) == 1 and actions[0].intent == IntentType.QUERY_CUSTOMER_EXISTS:
+            target_name = actions[0].customer_name
+            if not target_name:
+                return VoiceResponse(success=False, message="Kiska naam check karna hai?", intent=actions[0], language=lang)
+
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                descriptors = [c.nickname or c.name.split("-")[-1].strip() for c in similar]
+                if lang.startswith("kn"):
+                    msg = f"ಹೌದು, ಖಾತೆಯಲ್ಲಿ '{target_name}' ಹೆಸರಿನ {len(similar)} ಗ್ರಾಹಕರಿದ್ದಾರೆ: {', '.join(descriptors)}."
+                elif lang.startswith("te"):
+                    msg = f"అవును, ఖాతాలో '{target_name}' పేరుతో {len(similar)} మంది కస్టమర్లు ఉన్నారు: {', '.join(descriptors)}."
+                elif lang.startswith("en"):
+                    msg = f"Yes, there are {len(similar)} customers matching '{target_name}': {', '.join(descriptors)}."
+                else:
+                    msg = f"Haan, dukaan mein '{target_name}' naam ke {len(similar)} grahak hain: {', '.join(descriptors)}."
+                names = [c.name for c in similar]
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang, disambiguation_options=names)
+
+            cust = await self.find_customer_exact(target_name)
+            if not cust and similar:
+                cust = similar[0]
+
+            if cust:
+                bal = await self.get_customer_balance(cust.id)
+                nick_info = f" (nickname: {cust.nickname})" if cust.nickname else ""
+                if lang.startswith("kn"):
+                    msg = f"ಹೌದು, {cust.name}{nick_info} ಖಾತೆಯಲ್ಲಿದ್ದಾರೆ. ಒಟ್ಟು ಬಾಕಿ: ₹{bal:g}."
+                elif lang.startswith("te"):
+                    msg = f"అవును, {cust.name}{nick_info} ఖాతాలో ఉన్నారు. మొత్తం బాకీ: ₹{bal:g}."
+                elif lang.startswith("en"):
+                    msg = f"Yes, customer {cust.name}{nick_info} is registered. Outstanding balance is ₹{bal:g}."
+                else:
+                    msg = f"Haan, {cust.name}{nick_info} grahak darj hain. Total baaki: ₹{bal:g}."
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+            else:
+                if lang.startswith("kn"):
+                    msg = f"ಇಲ್ಲ, {target_name} ಹೆಸರಿನ ಯಾವುದೇ ಗ್ರಾಹಕರು ಸಿಗಲಿಲ್ಲ."
+                elif lang.startswith("te"):
+                    msg = f"లేదు, {target_name} పేరుతో ఎలాంటి కస్టమర్ లేరు."
+                elif lang.startswith("en"):
+                    msg = f"No customer found with the name '{target_name}'."
+                else:
+                    msg = f"Nahi, '{target_name}' naam ka koi grahak darj nahi hai."
+                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
 
         # ── Step B1: Owner Registration ("Mera naam Niranjan hai, dukaan Sri Balaji Kirana") ──
         if len(actions) == 1 and actions[0].intent == IntentType.REGISTER_OWNER:
@@ -775,11 +1100,24 @@ class LedgerEngine:
             if not target_name:
                 return VoiceResponse(success=False, message="Kisko reminder bhejna hai? Naam bataiye.", intent=actions[0], language=lang)
 
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname, "phone": c.phone} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_prompt = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_prompt,
+                    intent=actions[0],
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    language=lang,
+                )
+
             cust = await self.find_customer_exact(target_name)
-            if not cust:
-                matches = await self.find_matching_customers(target_name)
-                if matches:
-                    cust = matches[0]
+            if not cust and similar:
+                cust = similar[0]
 
             if not cust:
                 return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
@@ -820,55 +1158,49 @@ class LedgerEngine:
         if len(actions) == 1 and actions[0].intent == IntentType.VOICE_TO_UPI:
             target_name = actions[0].customer_name
             if not target_name:
-                return VoiceResponse(success=False, message="Kiska payment lena hai? Naam bataiye.", intent=actions[0], language=lang)
+                session.set_pending_action(actions[0], [])
+                if lang.startswith("kn"):
+                    msg = "ಯಾರಿಂದ ಕಲೆಕ್ಷನ್ ತಗೋಬೇಕು? ದಯವಿಟ್ಟು ಗ್ರಾಹಕರ ಹೆಸರು ಹೇಳಿ."
+                elif lang.startswith("te"):
+                    msg = "ఎవరి దగ్గర కలెక్షన్ తీసుకోవాలి? దయచేసి కస్టమర్ పేరు చెప్పండి."
+                elif lang.startswith("en"):
+                    msg = "Whose collection would you like to take? Please specify the customer name."
+                else:
+                    msg = "Kiska collection lena hai? Grahak ka naam bataiye."
+                return VoiceResponse(success=False, message=msg, intent=actions[0], language=lang)
+
+            # Check for multiple matching customers (Disambiguation)
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname, "phone": c.phone} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_prompt = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_prompt,
+                    intent=actions[0],
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    language=lang,
+                )
 
             cust = await self.find_customer_exact(target_name)
-            if not cust:
-                matches = await self.find_matching_customers(target_name)
-                if matches:
-                    cust = matches[0]
+            if not cust and similar:
+                cust = similar[0]
 
             if not cust:
-                return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
-
-            bal = await self.get_customer_balance(cust.id)
-            if bal <= 0:
                 if lang.startswith("kn"):
-                    msg = f"{cust.name} ಅವರ ಖಾತೆ ಈಗಾಗಲೇ ಕ್ಲಿಯರ್ ಆಗಿದೆ (₹0 ಬಾಕಿ)."
+                    msg = f"{target_name} ಹೆಸರಿನ ಯಾವುದೇ ಗ್ರಾಹಕರು ಸಿಗಲಿಲ್ಲ."
                 elif lang.startswith("te"):
-                    msg = f"{cust.name} లెక్క ఇప్పటికే క్లియర్ గా ఉంది (₹0 బాకీ)."
+                    msg = f"{target_name} పేరుతో ఏ కస్టమర్ దొరకలేదు."
                 elif lang.startswith("en"):
-                    msg = f"{cust.name} has no dues pending (₹0 balance)."
+                    msg = f"No customer found with name {target_name}."
                 else:
-                    msg = f"{cust.name} ka hisaab pehle se clear hai (₹0 baaki)."
-                return VoiceResponse(success=True, message=msg, intent=actions[0], language=lang)
+                    msg = f"{target_name} naam ka koi customer nahi mila."
+                return VoiceResponse(success=False, message=msg, intent=actions[0], language=lang)
 
-            owner_res = await self.db.execute(select(StoreOwner).where(StoreOwner.is_active == True))
-            active_owner = owner_res.scalars().first()
-            store_title = active_owner.store_name if active_owner else "Kirana Store"
-
-            upi_payload = upi_service.generate_upi_payload(
-                customer_name=cust.name,
-                amount=bal,
-                store_name=store_title
-            )
-
-            if lang.startswith("kn"):
-                msg = f"{cust.name} ಅವರ ಒಟ್ಟು ಬಾಕಿ ₹{bal:g}. ಯುಪಿಐ ಕ್ಯೂಆರ್ ಕೋಡ್ ಪರದೆಯ ಮೇಲೆ ಸಿದ್ಧವಾಗಿದೆ."
-            elif lang.startswith("te"):
-                msg = f"{cust.name} గారి మొత్తం బాకీ ₹{bal:g}. యుపిఐ క్యూఆర్ కోడ్ స్క్రీన్ పై సిద్ధంగా ఉంది."
-            elif lang.startswith("en"):
-                msg = f"Total balance for {cust.name} is ₹{bal:g}. Dynamic UPI QR code is ready on counter screen."
-            else:
-                msg = f"{cust.name} ka total baaki ₹{bal:g} hai. Counter screen par dynamic UPI QR code generate kar diya hai."
-
-            return VoiceResponse(
-                success=True,
-                message=msg,
-                intent=actions[0],
-                language=lang,
-                upi_payload=upi_payload
-            )
+            return await self._build_voice_to_upi_response(cust, lang, actions[0])
 
         # ── Step B3: Khata Risk AI (Predictive Credit Risk Protection) ──
         if len(actions) == 1 and actions[0].intent == IntentType.CHECK_RISK:
@@ -876,11 +1208,24 @@ class LedgerEngine:
             if not target_name:
                 return VoiceResponse(success=False, message="Kiska risk check karna hai? Naam bataiye.", intent=actions[0], language=lang)
 
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname, "phone": c.phone} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_prompt = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_prompt,
+                    intent=actions[0],
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    language=lang,
+                )
+
             cust = await self.find_customer_exact(target_name)
-            if not cust:
-                matches = await self.find_matching_customers(target_name)
-                if matches:
-                    cust = matches[0]
+            if not cust and similar:
+                cust = similar[0]
 
             if not cust:
                 return VoiceResponse(success=False, message=f"{target_name} naam ka koi customer nahi mila.", intent=actions[0], language=lang)
@@ -1097,22 +1442,24 @@ class LedgerEngine:
                     msg = "Kiska hisaab dekhna hai? Kripya grahak ka naam bataiye."
                 return VoiceResponse(success=False, message=msg, intent=actions[0], language=lang)
             
+            similar = await self.find_matching_customers(target_name)
+            if len(similar) > 1:
+                candidates = [{"id": c.id, "name": c.name, "nickname": c.nickname, "phone": c.phone} for c in similar]
+                session.set_pending_action(actions[0], candidates)
+                dis_msg = self._format_disambiguation(target_name, similar, lang)
+                names = [c.name for c in similar]
+                return VoiceResponse(
+                    success=False,
+                    message=dis_msg,
+                    needs_disambiguation=True,
+                    disambiguation_options=names,
+                    intent=actions[0],
+                    language=lang,
+                )
+
             cust = await self.find_customer_exact(target_name)
-            if not cust:
-                matches = await self.find_matching_customers(target_name)
-                if len(matches) == 1:
-                    cust = matches[0]
-                elif len(matches) > 1:
-                    dis_msg = self._format_disambiguation(target_name, matches, lang)
-                    names = [c.name for c in matches]
-                    return VoiceResponse(
-                        success=False,
-                        message=dis_msg,
-                        needs_disambiguation=True,
-                        disambiguation_options=names,
-                        intent=actions[0],
-                        language=lang,
-                    )
+            if not cust and similar:
+                cust = similar[0]
 
             if not cust:
                 if lang.startswith("kn"):

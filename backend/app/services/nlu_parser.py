@@ -441,23 +441,27 @@ def _is_customer_count_query(text: str) -> bool:
 
 
 COLLECTION_STOP_WORDS = {
-    "today", "aaj", "eeroju", "ivvala", "eroju", "ivattu", "ivattina", "indu",
+    # Time / Date
+    "today", "aaj", "eeroju", "ivvala", "eroju", "ivattu", "ivattina", "indu", "kal", "ninne", "ninna",
+    # Actions & Verbs
     "take", "collect", "collection", "payment", "qr", "upi", "code", "show",
     "generate", "display", "get", "dikhao", "batao", "chupinchu", "cheppandi",
     "heli", "thorisi", "inda", "hatthira", "nunchi", "nundi", "daggara", "se",
-    "ka", "ki", "ke", "ge", "karo", "lo", "teesuko", "thago", "thagoli", "maadu",
+    "ka", "ki", "ke", "ge", "karo", "karna", "kijiye", "lo", "lena", "liya", "do", "dijiye", "de",
+    "teesuko", "thago", "thagoli", "maadu", "beku", "chahiye", "hai", "kya", "na",
+    "bhai", "bhaiya", "ji", "sir", "andi", "ri", "wale", "wali", "wala", "par", "ko",
     "kitna", "kitni", "entha", "eshtu", "hua", "aaya", "vachindi", "aindi",
-    "aayitu", "agide", "hai", "kya", "total", "store", "dukaan", "shop", "khata",
+    "aayitu", "agide", "total", "store", "dukaan", "shop", "khata",
     "hisaab", "hisab", "vasool", "vasooli", "vasulu", "jama", "for", "of", "from",
-    "to", "the", "and", "or", "me", "we", "us", "did", "how", "much", "paisa", "cash",
+    "to", "the", "and", "or", "me", "we", "us", "did", "how", "much", "paisa", "paise", "cash", "rupees", "rupee",
     # Telugu
     "ఎంత", "ఈరోజు", "ఇవాళ", "తీసుకో", "చూపించు", "చెప్పండి", "నుండి", "దగ్గర",
-    "కలెక్షన్", "వసూలు", "జమ", "చెల్లింపు", "పేమెంట్", "క్యూఆర్",
+    "కలెక్షన్", "వసూలు", "జమ", "చెల్లింపు", "పేమెంట్", "క్యూఆర్", "అండి", "చేయి", "కావాలి",
     # Kannada
     "ಎಷ್ಟು", "ಇವತ್ತು", "ಇವತ್ತಿನ", "ಇಂದು", "ತಗೋಳಿ", "ಹೇಳಿ", "ಆಯಿತು", "ಆಗಿದೆ",
-    "ಮಾಡಿದ", "ಮಾಡು", "ಇಂದ", "ಹತ್ತಿರ", "ತೋರಿಸಿ", "ಕಲೆಕ್ಷನ್", "ವಸೂಲಿ", "ಜಮಾ", "ಪಾವತಿ",
+    "ಮಾಡಿದ", "ಮಾಡು", "ಇಂದ", "ಹತ್ತಿರ", "ತೋರಿಸಿ", "ಕಲೆಕ್ಷನ್", "ವಸೂಲಿ", "ಜಮಾ", "ಪಾವತಿ", "ಬೇಕು",
     # Hindi
-    "आज", "कितना", "कितनी", "बताओ", "दिखाओ", "करो", "लो", "हुआ", "आया", "कलेक्शन", "जमा", "वसूली", "हिसाब"
+    "आज", "कितना", "कितनी", "बताओ", "दिखाओ", "करो", "लो", "हुआ", "आया", "कलेक्शन", "जमा", "वसूली", "हिसाब", "लेना", "दीजिए", "कीजिए", "चाहिए", "पैसे", "पैसा"
 }
 
 
@@ -496,7 +500,7 @@ def _is_voice_to_upi(text: str) -> Tuple[bool, Optional[str]]:
 
     # 1. Action first: "collect from Suresh", "take collection from Suresh", "show QR for Suresh"
     m_act = re.search(
-        r'(?:collect(?:\s+(?:money|payment))?\s+from|take\s+collection\s+from|get\s+collection\s+from|show\s+qr\s+for|upi\s+for)\s+([a-zA-Z\u0900-\u0D7F]+)',
+        r'(?:collect(?:\s+(?:money|payment|paise|paisa|cash))?\s+from|take\s+collection\s+from|get\s+collection\s+from|show\s+qr\s+for|upi\s+for)\s+([a-zA-Z\u0900-\u0D7F]+(?:\s*[-–]\s*[a-zA-Z\u0900-\u0D7F\s]+)?)',
         text_lower
     )
     if m_act:
@@ -505,9 +509,9 @@ def _is_voice_to_upi(text: str) -> Tuple[bool, Optional[str]]:
             return True, c
 
     # 2. Customer first with collection / payment request:
-    # "Suresh se collection lo", "Suresh nunchi collection teesuko", "Suresh inda collection thagoli", "సురేష్ నుండి కలెక్షన్ తీసుకో", "ಸುರೇಶ್ ಇಂದ ಕಲೆಕ್ಷನ್ ತಗೋಳಿ"
+    # "Ramesh se collection lo", "Suresh nunchi collection teesuko", "Suresh inda collection thagoli", "ಸುರೇಶ್ ಇಂದ ಕಲೆಕ್ಷನ್ ತಗೋಳಿ"
     m_cust_coll = re.search(
-        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:nunchi|nundi|daggara|inda|hatthira|se|ka|ki|ke|ge|నుండి|దగ్గర|ఇంద|ಹತ್ತಿರ|ಇಂದ|से|का|की)?\s*(?:collection|payment|upi|hisaab|vasooli|కలెక్షన్|పేమెంట్|క్యూఆర్|ಕಲೆಕ್ಷನ್|ಪಾವತಿ|ವಸೂಲಿ)\s*(?:teesuko|thago|lo|karo|thagoli|maadu|తీసుకో|చూపించు|ತಗೋಳಿ|ಮಾಡು|दिखाओ)?',
+        r'([a-zA-Z\u0900-\u0D7F]+(?:\s*[-–]\s*[a-zA-Z\u0900-\u0D7F\s]+)?)\s*(?:se|ka|ki|ke|ge|nunchi|nundi|daggara|inda|hatthira|నుండి|దగ్గర|ఇంద|ಹತ್ತಿರ|ಇಂದ|से|का|की)?\s*(?:se\s+)?(?:paise|paisa|cash)?\s*(?:collection|payment|upi|hisaab|vasooli|కలెక్షన్|పేమెంట్|క్యూఆర్|ಕಲೆಕ್ಷನ್|ಪಾವತಿ|ವಸೂಲಿ)\s*(?:teesuko|thago|lo|karo|karna|kijiye|lena|chahiye|thagoli|maadu|తీసుకో|చూపించు|తగోಳಿ|ಮಾಡು|दिखाओ|लो)?',
         text_lower
     )
     if m_cust_coll:
@@ -518,7 +522,7 @@ def _is_voice_to_upi(text: str) -> Tuple[bool, Optional[str]]:
     # 3. Customer first with QR / UPI requests:
     # e.g. "Suresh ki upi qr", "Suresh qr code", "Suresh qr chupinchu", "Suresh upi qr dikhao", "Suresh ge qr"
     m_cust_qr = re.search(
-        r'([a-zA-Z\u0900-\u0D7F]+)\s*(?:ka|ki|ke|se|ge|inda|daggara|కి|యొక్క|ಗೆ|ఇంద|ಇಂದ)?\s*(?:upi\s*qr|qr\s*code|qr\s*chupinchu|qr\s*dikhao|upi\s*dikhao|qr\s*thorisi|క్యూఆర్|qr)',
+        r'([a-zA-Z\u0900-\u0D7F]+(?:\s*[-–]\s*[a-zA-Z\u0900-\u0D7F\s]+)?)\s*(?:ka|ki|ke|se|ge|inda|daggara|కి|యొక్క|ಗೆ|ఇంద|ಇಂದ)?\s*(?:upi\s*qr|qr\s*code|qr\s*chupinchu|qr\s*dikhao|upi\s*dikhao|qr\s*thorisi|క్యూఆర్|qr)',
         text_lower
     )
     if m_cust_qr:
@@ -526,12 +530,25 @@ def _is_voice_to_upi(text: str) -> Tuple[bool, Optional[str]]:
         if cust.lower() not in COLLECTION_STOP_WORDS:
             return True, cust
 
-    # 4. Fallback if collection/upi/qr keywords present:
+    # 4. Standalone collection / payment command without customer name (e.g. "collection lo", "take collection", "payment lo"):
+    standalone_patterns = [
+        r'\b(?:collection(?:\s*(?:lo|karo|lena(?:\s*hai)?|chahiye|kijiye))?|take\s+collection|collect\s+(?:money|payment|paise|cash)|payment\s+lo|upi\s+qr(?:\s*dikhao)?|qr\s*code(?:\s*dikhao)?)\b',
+        r'(?:కలెక్షన్\s*తీసుకో|క్యూఆర్\s*చూపించు|పేమెంట్\s*తీసుకో)',
+        r'(?:ಕಲೆಕ್ಷನ್\s*ತಗೋಳಿ|ಕ್ಯೂಆರ್\s*ತೋರಿಸಿ|ಪಾವತಿ\s*ತಗೋಳಿ)',
+    ]
+    if any(re.search(p, text_lower) for p in standalone_patterns):
+        words = [w.strip().title() for w in re.findall(r'[a-zA-Z\u0900-\u0D7F]+', text) if w.lower() not in COLLECTION_STOP_WORDS]
+        if words:
+            return True, words[0]
+        return True, None
+
+    # 5. Fallback if collection/upi/qr keywords present:
     trigger_words = {'collection', 'qr', 'upi', 'కలెక్షన్', 'క్యూఆర్', 'ಕಲೆಕ್ಷನ್', 'ವಸೂಲಿ'}
     if any(tw in text_lower for tw in trigger_words):
         words = [w.strip().title() for w in re.findall(r'[a-zA-Z\u0900-\u0D7F]+', text) if w.lower() not in COLLECTION_STOP_WORDS]
         if words:
             return True, words[0]
+        return True, None
 
     return False, None
 
@@ -576,6 +593,78 @@ def _is_reminder_trigger(text: str) -> Tuple[bool, Optional[str]]:
     cust = _extract_customer_name(text)
     if cust and cust.lower() not in SKIP_WORDS:
         return True, cust
+    return False, None
+
+
+
+def _is_set_nickname_utterance(text: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    """
+    Detects if shopkeeper wants to set or update a customer's nickname.
+    e.g.
+    - "Ramesh ka nickname Kirana Lane rakho"
+    - "Set nickname for Ramesh as Chaiwala"
+    - "ರಮೇಶ್ ಅಡ್ಡಹೆಸರು ಕಿರಾಣಿ ಲೇನ್ ಇಡಿ"
+    - "రమేష్ నిక్ నేమ్ కిరాణా లేన్ పెట్టు"
+    Returns (is_match, customer_name, nickname)
+    """
+    text_clean = text.strip()
+
+    # 1. Hindi patterns: "Ramesh ka nickname Kirana Lane rakho"
+    m1 = re.search(r'([a-zA-Zऀ-ॿ\s\-]+?)\s+(?:ka|ki|ke|ko)?\s*(?:nickname|nick\s*name|upnaam|उपनाम|निकनेम)\s+(?:badal\s*kar\s+)?([a-zA-Z0-9ऀ-ॿ\s\-]+?)\s+(?:rakho|rakhna|likho|likhna|karo|daalo|set\s*karo|kardo)$', text_clean, re.IGNORECASE)
+    if m1:
+        return True, m1.group(1).strip().title(), m1.group(2).strip().title()
+
+    # 2. English patterns: "Set nickname for Ramesh as Chaiwala", "Ramesh's nickname is Chaiwala"
+    m2 = re.search(r'(?:set|update|change|give|add)\s+(?:the\s+)?nickname\s+(?:for|of)?\s*([a-zA-Z0-9\s\-]+?)\s+(?:as|to|is)\s+([a-zA-Z0-9\s\-]+)$', text_clean, re.IGNORECASE)
+    if m2:
+        return True, m2.group(1).strip().title(), m2.group(2).strip().title()
+
+    m3 = re.search(r"([a-zA-Z0-9\s\-]+?)(?:'s)?\s+nickname\s+(?:is|to|as)\s+([a-zA-Z0-9\s\-]+)$", text_clean, re.IGNORECASE)
+    if m3:
+        return True, m3.group(1).strip().title(), m3.group(2).strip().title()
+
+    # 3. Kannada pattern: "ರಮೇಶ್ ಅಡ್ಡಹೆಸರು ಕಿರಾಣಿ ಲೇನ್ ಇಡಿ"
+    m4 = re.search(r'([a-zA-Zಀ-೿\s\-]+?)\s*(?:ge)?\s*(?:ಅಡ್ಡಹೆಸರು|ನಿಕ್\s*ನೇಮ್|nickname)\s*([a-zA-Z0-9ಀ-೿\s\-]+?)\s*(?:ಇಡಿ|ಹಾಕಿ|ಬರೆಯಿರಿ|ಮಾಡಿ|ಸೆಟ್\s*ಮಾಡಿ)$', text_clean, re.IGNORECASE)
+    if m4:
+        return True, m4.group(1).strip().title(), m4.group(2).strip().title()
+
+    # 4. Telugu pattern: "రమేష్ నిక్ నేమ్ కిరాణా లేన్ పెట్టు"
+    m5 = re.search(r'([a-zA-Zఀ-౿\s\-]+?)\s*(?:ki|ku)?\s*(?:నిక్\s*నేమ్|ముద్దుపేరు|nickname)\s*([a-zA-Z0-9ఀ-౿\s\-]+?)\s*(?:పెట్టు|రాయండి|పెట్టండి|సెట్\s*చేయి)$', text_clean, re.IGNORECASE)
+    if m5:
+        return True, m5.group(1).strip().title(), m5.group(2).strip().title()
+
+    return False, None, None
+
+
+def _is_query_customer_exists(text: str) -> Tuple[bool, Optional[str]]:
+    """Detects inquiries whether a customer with a name already exists in store."""
+    text_lower = text.lower().strip()
+    
+    # 1. Hindi: "kya Ramesh naam ka koi grahak hai", "Ramesh naam ka grahak hai kya", "Ramesh naam ke kitne grahak hain"
+    m_hi = re.search(r'(?:kya\s+)?([a-zA-Zऀ-ॿ\s\-]+?)\s+naam\s+(?:ka|ke)\s+(?:koi\s+)?(?:grahak|customer)\s*(?:hai|hai\s+kya|pehle\s+se\s+hai|kitne\s+hain)?', text_lower)
+    if m_hi:
+        cust = re.sub(r'\b(?:kya|koi|hai|grahak|customer)\b', '', m_hi.group(1), flags=re.IGNORECASE).strip().title()
+        if cust and cust.lower() not in ("kya", "koi", "grahak"):
+            return True, cust
+
+    # 2. English: "does customer Ramesh exist", "is there a customer named Ramesh", "is Ramesh registered"
+    m_en = re.search(r'(?:does\s+(?:customer\s+)?|is\s+there\s+a\s+customer\s+(?:named\s+)?|is\s+customer\s+)([a-zA-Z\s\-]+?)(?:\s+exist|\s+present|\s+registered|\s+already)?$', text_lower)
+    if m_en:
+        cust = m_en.group(1).strip().title()
+        if cust and cust.lower() not in ("customer", "the"):
+            return True, cust
+
+    # 3. Kannada / Telugu (Roman & Native Script)
+    m_kn = re.search(r'([a-zA-Zಀ-೿\s\-]+?)\s*(?:hesarina|ಹೆಸರಿನ)\s*(?:yaaradaru\s*)?(?:grahakaru|ಗ್ರಾಹಕರು)?\s*(?:iddara|ಇದ್ದಾರಾ)', text_lower)
+    if m_kn:
+        cust = m_kn.group(1).strip().title()
+        return True, cust
+
+    m_te = re.search(r'([a-zA-Zఀ-౿\s\-]+?)\s*(?:perutho|పేరుతో)\s*(?:evaraina\s*)?(?:customerlu|కస్టమర్|కస్టమర్లు)?\s*(?:unnara|ఉన్నారా)', text_lower)
+    if m_te:
+        cust = m_te.group(1).strip().title()
+        return True, cust
+
     return False, None
 
 
@@ -631,6 +720,16 @@ def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]
     if is_risk:
         return IntentType.CHECK_RISK, risk_cust
 
+    # 0k1. Set Customer Nickname ("Ramesh ka nickname Kirana Lane rakho" / "Set nickname for Ramesh as Chaiwala")
+    is_nick, nick_cust, nick_val = _is_set_nickname_utterance(clause_text)
+    if is_nick:
+        return IntentType.SET_NICKNAME, f"{nick_cust}|{nick_val}"
+
+    # 0k2. Query Customer Exists ("Kya Ramesh naam ka koi grahak hai?")
+    is_exists, exists_cust = _is_query_customer_exists(clause_text)
+    if is_exists:
+        return IntentType.QUERY_CUSTOMER_EXISTS, exists_cust
+
     # 1. Spoken Correction ("nahi, 430")
     if tokens & CORRECTION_KEYWORDS:
         return IntentType.CORRECTION, None
@@ -684,7 +783,7 @@ def _classify_intent_clause(clause_text: str) -> Tuple[IntentType, Optional[str]
 def _split_into_clauses(text: str) -> List[str]:
     tokens = _tokenize_clause(text)
     # Do not split corrections, debt clearings, reset payments, or owner registrations
-    if (tokens & CORRECTION_KEYWORDS) or _is_debt_clearing_utterance(text) or _is_reset_payments_query(text) or _is_owner_registration(text)[0]:
+    if (tokens & CORRECTION_KEYWORDS) or _is_debt_clearing_utterance(text) or _is_reset_payments_query(text) or _is_owner_registration(text)[0] or _is_set_nickname_utterance(text)[0] or _is_query_customer_exists(text)[0]:
         return [text.strip()]
 
     # Split by comma, semicolon, ' aur ', ' and ', ' mattu ', ' mari '
@@ -699,11 +798,18 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
     amount = extract_first_amount(clause)
     txn_date = extract_date_from_text(clause)
 
+    nickname = None
     # In chitchat and global queries, don't accidentally capture words as customer names
     if intent in (IntentType.CHITCHAT, IntentType.STOP_LISTENING, IntentType.WAKE_UP, IntentType.RESET_TODAYS_PAYMENTS, IntentType.QUERY_TODAY, IntentType.LIST_DUES):
         cust_name = None
         amount = None
     elif intent in (IntentType.TRIGGER_REMINDER, IntentType.VOICE_TO_UPI, IntentType.CHECK_RISK):
+        cust_name = chitchat_topic or cust_name
+    elif intent == IntentType.SET_NICKNAME and chitchat_topic:
+        parts = chitchat_topic.split("|")
+        cust_name = parts[0]
+        nickname = parts[1] if len(parts) > 1 else None
+    elif intent == IntentType.QUERY_CUSTOMER_EXISTS:
         cust_name = chitchat_topic or cust_name
     elif intent in (IntentType.QUERY_TOP_DEBTOR, IntentType.QUERY_CUSTOMERS_COUNT, IntentType.QUERY_COLLECTIONS_TODAY, IntentType.QUERY_OWNER):
         cust_name = None
@@ -732,6 +838,7 @@ def parse_clause(clause: str, default_customer: Optional[str] = None) -> ParsedI
         raw_text=clause,
         confidence=min(confidence, 1.0),
         chitchat_topic=chitchat_topic,
+        nickname=nickname,
     )
 
 

@@ -1898,6 +1898,28 @@ CREATE POLICY "Allow anon all on transactions" ON public.transactions FOR ALL TO
                 `;
             }
 
+            // Check if Disambiguation Options were returned
+            if (window.lastVoiceData && window.lastVoiceData.needs_disambiguation && window.lastVoiceData.disambiguation_options) {
+                const opts = window.lastVoiceData.disambiguation_options;
+                extrasHtml += `
+                    <div class="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
+                        <div class="text-[11px] font-semibold text-amber-300 mb-2 flex items-center">
+                            <i class="fa-solid fa-users text-xs mr-1.5"></i> Multiple matches found — Speak choice or tap:
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${opts.map(opt => `
+                                <button onclick="selectDisambiguationChoice('${opt}')" class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-medium transition active:scale-95">
+                                    ${opt}
+                                </button>
+                            `).join('')}
+                            <button onclick="promptNewNickname()" class="px-3 py-1.5 rounded-xl bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/40 text-violet-200 text-xs font-medium transition active:scale-95 flex items-center">
+                                <i class="fa-solid fa-plus text-[10px] mr-1.5"></i> + New (Nickname)
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
             // Check if WhatsApp receipt was returned
             if (window.lastVoiceData && window.lastVoiceData.whatsapp_receipt) {
                 const wa = window.lastVoiceData.whatsapp_receipt;
@@ -2346,6 +2368,17 @@ CREATE POLICY "Allow anon all on transactions" ON public.transactions FOR ALL TO
         // ── Breakthrough Feature 2: Conversational Dynamic UPI Soundbox ──
         function triggerVoiceUpi(custName, balance) {
             sendVoiceCommand(`${custName} se collection lo`);
+        }
+
+        function selectDisambiguationChoice(choice) {
+            sendVoiceCommand(choice);
+        }
+
+        function promptNewNickname() {
+            const nick = prompt("Naya grahak ke liye nickname / jagah likhiye (jaise Chaiwala, Medical, Station Road):");
+            if (nick && nick.trim()) {
+                sendVoiceCommand(`Naya grahak, nickname ${nick.trim()}`);
+            }
         }
 
         function openUPIModal(payload) {
